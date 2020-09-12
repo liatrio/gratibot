@@ -1,28 +1,68 @@
 //const { emoji, maximum } = require('../config')
-const recognition = require('../service/recognition')
+const recognition = require('../service/recognition');
+const winston = require('../winston');
 
 const rank = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
 
 module.exports = function(controller) {
-    controller.hears('leaderboard', 'direct_message, direct_mention', async (bot, message) => {
+    controller.hears(
+        'leaderboard',
+        ['direct_message', 'direct_mention'],
+        respondToLeaderboard
+    );
 
-        let blocks = [];
-        blocks = blocks.concat(getContentHeading());
+    controller.on(
+        'block_actions',
+        updateLeaderboardResponse,
+    );
+}
 
-        const recognitionData = await recognition.getPreviousXDaysOfRecognition('America/Los_Angeles', 30);
-        const data = aggregateData(recognitionData);
+async function respondToLeaderboard(bot, message) {
+    winston.info(
+        '@gratibot leaderboard Called',
+        {
+            callingUser: message.user,
+            slackMessage: message.text,
+        },
+    );
+    await bot.replyEphemeral(
+        message,
+        await createLeaderboardBlocks(30),
+    );
+}
 
-        blocks = blocks.concat(formatRecognizerContent(data.recognizerLeaderboard));
-        blocks = blocks.concat(formatRecognizeeContent(data.recognizeeLeaderboard));
+async function updateLeaderboardResponse(bot, message) {
+    if (message.actions[0].block_id !== 'leaderboardButtons') {
+        return;
+    }
 
-        const response = {
-            blocks
-        }
-        await bot.replyEphemeral(
-            message,
-            response
-        )
-    });
+    winston.info(
+        'Gratibot interactive leaderboard button clicked',
+        {
+            callingUser: message.user,
+        },
+    );
+
+    await bot.replyInteractive(
+        message,
+        await createLeaderboardBlocks(message.actions[0].value),
+    );
+}
+
+async function createLeaderboardBlocks(dataPeriod) {
+    let blocks = [];
+    blocks = blocks.concat(getContentHeading());
+
+    const recognitionData = await recognition.getPreviousXDaysOfRecognition('America/Los_Angeles', dataPeriod);
+    const data = aggregateData(recognitionData);
+
+    blocks = blocks.concat(formatRecognizerContent(data.recognizerLeaderboard));
+    blocks = blocks.concat(formatRecognizeeContent(data.recognizeeLeaderboard));
+
+    blocks.push(dataTimePeriodBlock(dataPeriod));
+    blocks.push(timePeriodButtons());
+
+    return { blocks }
 }
 
 function getContentHeading() {
@@ -136,4 +176,63 @@ function convertData(leaderboardData) {
     });
     sortableData.slice(0, 10);
     return sortableData;
+}
+
+function dataTimePeriodBlock(dataPeriod) {
+    return {
+        type: 'context',
+        block_id: 'timeRange',
+        elements: [
+            {
+                type: 'plain_text',
+                text: `Last ${dataPeriod} days`,
+                emoji: true,
+            },
+        ],
+    };
+}
+
+function timePeriodButtons() {
+    return {
+        type: 'actions',
+        block_id: 'leaderboardButtons',
+        elements: [
+            {
+                type: 'button',
+                text: {
+                    type: 'plain_text',
+                    emoji: true,
+                    text: 'Today',
+                },
+                value: '1',
+            },
+            {
+                type: 'button',
+                text: {
+                    type: 'plain_text',
+                    emoji: true,
+                    text: 'Week',
+                },
+                value: '7',
+            },
+            {
+                type: 'button',
+                text: {
+                    type: 'plain_text',
+                    emoji: true,
+                    text: 'Month',
+                },
+                value: '30',
+            },
+            {
+                type: 'button',
+                text: {
+                    type: 'plain_text',
+                    emoji: true,
+                    text: 'Year',
+                },
+                value: '365',
+            },
+        ],
+    }
 }

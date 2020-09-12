@@ -38,6 +38,7 @@ BOT_USER_OAUTH_ACCESS_TOKEN=SECRET GOES HERE
 Replace the values after the equals sign with the values you saved before.
 There is no need for quotes. **Make sure to not share these values, and to not
 publish them online such as by pushing them to GitHub.**
+
 5. Now that your environment variables are configured, run your local copy
 of Gratibot with `docker-compose up`
 6. Forward the local application to a public hostname with `ngrok http 3000`,

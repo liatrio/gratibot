@@ -1,5 +1,5 @@
-//const { emoji, maximum } = require('../config')
 const balance = require('../service/balance');
+const winston = require('../winston')
 
 module.exports = function(controller) {
     controller.hears(
@@ -9,14 +9,21 @@ module.exports = function(controller) {
     );
 }
 
+// TODO: Error Handling
 async function respondToBalance(bot, message) {
-    // TODO: Error Handling
-    const userInfo = await bot.api.users.info({user: message.user }).user;
+    winston.info(
+        '@gratibot balance Called',
+        {
+            callingUser: message.user,
+            slackMessage: message.text,
+        },
+    );
+    const userInfo = await bot.api.users.info({user: message.user });
     const currentBalance = await balance.currentBalance(message.user);
     const lifetimeTotal = await balance.lifetimeEarnings(message.user);
     const remainingToday = await balance.dailyGratitudeRemaining(
         message.user,
-        userInfo.tz,
+        userInfo.user.tz,
         1,
     )
 

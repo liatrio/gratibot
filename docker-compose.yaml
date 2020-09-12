@@ -1,0 +1,19 @@
+version: '2.2'
+services:
+  gratibot:
+    container_name: gratibot
+    entrypoint: npm start
+    depends_on:
+      - mongodb
+    ports:
+      - 3000:3000
+    build: .
+    environment:
+      - SIGNING_SECRET
+      - BOT_USER_OAUTH_ACCESS_TOKEN
+      - EMOJI
+      - MONGO_URL=mongodb://mongodb:27017/gratibot
+  mongodb:
+    ports:
+      - 27017:27017
+    image: mongo:3.6

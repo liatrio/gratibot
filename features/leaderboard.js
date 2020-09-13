@@ -1,4 +1,3 @@
-//const { emoji, maximum } = require('../config')
 const recognition = require('../service/recognition');
 const winston = require('../winston');
 
@@ -17,6 +16,12 @@ module.exports = function(controller) {
     );
 }
 
+/*
+ * Replies to a Slack user message with a leaderboard.
+ * @param {object} bot A Botkit bot object.
+ * @param {object} message A botkit message object, denoting the message triggering.
+ *     this call.
+ */
 async function respondToLeaderboard(bot, message) {
     winston.info(
         '@gratibot leaderboard Called',
@@ -31,6 +36,12 @@ async function respondToLeaderboard(bot, message) {
     );
 }
 
+/*
+ * Replies to a Slack block_action on an existing leaderboard with updated info.
+ * @param {object} bot A Botkit bot object.
+ * @param {object} message A botkit message object, denoting the message triggering
+ *     this call.
+ */
 async function updateLeaderboardResponse(bot, message) {
     if (message.actions[0].block_id !== 'leaderboardButtons') {
         return;
@@ -49,43 +60,52 @@ async function updateLeaderboardResponse(bot, message) {
     );
 }
 
-async function createLeaderboardBlocks(dataPeriod) {
+/*
+ * Generates leaderboard message data in Slack's Block Kit style format.
+ * @param {number} timeRange A number denoting the number of days of data
+ *     the created leaderboard will include.
+ * @return {object} A Block Kit style object, storing a Gratibot leaderboard.
+ */
+async function createLeaderboardBlocks(timeRange) {
     let blocks = [];
-    blocks = blocks.concat(getContentHeading());
 
-    const recognitionData = await recognition.getPreviousXDaysOfRecognition('America/Los_Angeles', dataPeriod);
-    const data = aggregateData(recognitionData);
+    const { giverScores, receiverScores } = await leaderboardScoreData(timeRange);
 
-    blocks = blocks.concat(formatRecognizerContent(data.recognizerLeaderboard));
-    blocks = blocks.concat(formatRecognizeeContent(data.recognizeeLeaderboard));
-
-    blocks.push(dataTimePeriodBlock(dataPeriod));
-    blocks.push(timePeriodButtons());
+    blocks.push(leaderboardHeader());
+    blocks.push(...topGivers(giverScores));
+    blocks.push(...topReceivers(receiverScores));
+    blocks.push(timeRangeInfo(timeRange));
+    blocks.push(timeRangeButtons());
 
     return { blocks }
 }
 
-function getContentHeading() {
-    return [{
+/* Block Kit Content */
+
+/*
+ * Generates a Block Kit style object, storing a leaderboard header.
+ * @return {object} A Block Kit style object, storing a leaderboard header.
+ */
+function leaderboardHeader() {
+    return {
         type: 'section',
-        block_id: 'heading',
+        block_id: 'leaderboard_header',
         text: {
             type: 'mrkdwn',
             text: '*Leaderboard*',
         }
-    }]
-};
-
-function formatSortedRankData(entry, index) {
-    return {
-        type: 'context',
-        elements: [
-            { type: 'mrkdwn', text: `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}\n` },
-        ],
-    }
+    };
 }
 
-function formatRecognizerContent(recognizerLeaderboard) {
+/*
+ * Generates an array of Block Kit style objects, storing a Top Givers section
+ *    header, and leaderboard entries for provided scores.
+ * @param {Array<object>} giverScores An array of objects containing a user ID
+ *     and a score.
+ * @return {Array<object>} An array of Block Kit style objects, storing a
+ *     section header and leaderboard entries.
+ */
+function topGivers(giverScores) {
     let content = [{
         type: 'section',
         block_id: 'recognizersTitle',
@@ -94,13 +114,20 @@ function formatRecognizerContent(recognizerLeaderboard) {
             text: '*Top Givers*',
         },
     }]
-    let cleanedData = convertData(recognizerLeaderboard);
-    let formatedData = cleanedData.map(formatSortedRankData);
-    content = content.concat(formatedData);
-    return content
+    return content.concat(
+        giverScores.map(leaderboardEntry)
+    );
 }
 
-function formatRecognizeeContent(recognizeeLeaderboard) {
+/*
+ * Generates an array of Block Kit style objects, storing a Top Receivers section
+ *    header, and leaderboard entries for provided scores.
+ * @param {Array<object>} receiverScores An array of objects containing a user
+ *     ID and a score.
+ * @return {Array<object>} An array of Block Kit style objects, storing a
+ *     section header and leaderboard entries.
+ */
+function topReceivers(receiverScores) {
     let content = [{
         type: 'section',
         block_id: 'recognizeesTitle',
@@ -109,90 +136,40 @@ function formatRecognizeeContent(recognizeeLeaderboard) {
             text: '*Top Receivers*',
         },
     }]
-    let cleanedData = convertData(recognizeeLeaderboard);
-    let formatedData = cleanedData.map(formatSortedRankData);
-    content = content.concat(formatedData);
-    return content
-}
-function aggregateData(response) {
-    /*
-     * leaderboard = {
-     *     userId: {
-     *       totalRecognition: int
-     *       uniqueUsers: Set<string>
-     *     }
-     *   }
-     */
-    let recognizerLeaderboard = {}
-    let recognizeeLeaderboard = {}
-
-
-    for(let i = 0; i < response.length; i++) {
-        let recognizer = response[i].recognizer;
-        let recognizee = response[i].recognizee;
-
-        if(!(recognizer in recognizerLeaderboard)) {
-            recognizerLeaderboard[recognizer] = {
-                totalRecognition: 0,
-                uniqueUsers: new Set()
-            }
-        }
-        if(!(recognizee in recognizeeLeaderboard)) {
-            recognizeeLeaderboard[recognizee] = {
-                totalRecognition: 0,
-                uniqueUsers: new Set()
-            }
-        }
-    }
-
-    for(let i = 0; i < response.length; i++) {
-        let recognizer = response[i].recognizer;
-        let recognizee = response[i].recognizee;
-
-        recognizerLeaderboard[recognizer].totalRecognition++;
-        recognizerLeaderboard[recognizer].uniqueUsers.add(recognizee);
-        recognizeeLeaderboard[recognizee].totalRecognition++;
-        recognizeeLeaderboard[recognizee].uniqueUsers.add(recognizer);
-    }
-    return {
-        recognizerLeaderboard,
-        recognizeeLeaderboard
-    }
+    return content.concat(
+        receiverScores.map(leaderboardEntry)
+    );
 }
 
-function convertData(leaderboardData) {
-    let sortableData = [];
-    for(const user in leaderboardData) {
-        let userStats = leaderboardData[user]
-        let score = 1 + userStats.totalRecognition - (userStats.totalRecognition / userStats.uniqueUsers.size)
-        score = Math.round(score * 100) / 100;
-        sortableData.push({
-            userID: user,
-            score: score
-        });
-    }
-    sortableData.sort((a, b) => {
-        return b.score - a.score;
-    });
-    sortableData.slice(0, 10);
-    return sortableData;
-}
-
-function dataTimePeriodBlock(dataPeriod) {
+/*
+ * Generates a Block Kit style object, storing information denoting the
+ *     timeRange of the generated leaderboard.
+ * @param {number} timeRange A number denoting the number of days of data
+ *     the created leaderboard includes.
+ * @return {object} A Block Kit style objects, storing information denoting
+ *     the timeRange of the generated leaderboard.
+ */
+function timeRangeInfo(timeRange) {
     return {
         type: 'context',
         block_id: 'timeRange',
         elements: [
             {
                 type: 'plain_text',
-                text: `Last ${dataPeriod} days`,
+                text: `Last ${timeRange} days`,
                 emoji: true,
             },
         ],
     };
 }
 
-function timePeriodButtons() {
+/*
+ * Generates a Block Kit style object, containing buttons for generating
+ *     a leaderboard with different timeRanges.
+ * @return {object} A Block Kit style objects, containing buttons for generating
+ *     a leaderboard with different timeRanges.
+ */
+function timeRangeButtons() {
     return {
         type: 'actions',
         block_id: 'leaderboardButtons',
@@ -235,4 +212,89 @@ function timePeriodButtons() {
             },
         ],
     }
+}
+
+/*
+ * Generates a Block Kit style object, containing a single leaderboard
+ *     entry. Used with Array.map() to format score data.
+ * @param {object} entry An object containing a userID and a corresponding
+ *    score for a leaderboard entry.
+ * @param {number} index A number denoting the rank a particular entry should
+ *    be marked with in the leaderboard entry. (Ex: 1st, 2nd 3rd, etc)
+ * @return {object} A Block Kit style object, storing a single leaderboard
+ *     entry.
+ */
+function leaderboardEntry(entry, index) {
+    return {
+        type: 'context',
+        elements: [
+            { type: 'mrkdwn', text: `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}\n` },
+        ],
+    }
+}
+
+/* Data Processing */
+
+async function leaderboardScoreData(timeRange) {
+    const recognitionData = await recognition.getPreviousXDaysOfRecognition('America/Los_Angeles', timeRange);
+    return aggregateData(recognitionData);
+}
+
+function aggregateData(response) {
+    /*
+     * leaderboard = {
+     *     userId: {
+     *       totalRecognition: int
+     *       uniqueUsers: Set<string>
+     *     }
+     *   }
+     */
+    let recognizerLeaderboard = {}
+    let recognizeeLeaderboard = {}
+
+    for(let i = 0; i < response.length; i++) {
+        let recognizer = response[i].recognizer;
+        let recognizee = response[i].recognizee;
+
+        if(!(recognizer in recognizerLeaderboard)) {
+            recognizerLeaderboard[recognizer] = {
+                totalRecognition: 0,
+                uniqueUsers: new Set()
+            }
+        }
+        if(!(recognizee in recognizeeLeaderboard)) {
+            recognizeeLeaderboard[recognizee] = {
+                totalRecognition: 0,
+                uniqueUsers: new Set()
+            }
+        }
+
+        recognizerLeaderboard[recognizer].totalRecognition++;
+        recognizerLeaderboard[recognizer].uniqueUsers.add(recognizee);
+        recognizeeLeaderboard[recognizee].totalRecognition++;
+        recognizeeLeaderboard[recognizee].uniqueUsers.add(recognizer);
+    }
+
+    return {
+        giverScores: convertToScores(recognizerLeaderboard),
+        receiverScores: convertToScores(recognizeeLeaderboard),
+    }
+}
+
+function convertToScores(leaderboardData) {
+    let scores = [];
+    for(const user in leaderboardData) {
+        let userStats = leaderboardData[user]
+        let score = 1 + userStats.totalRecognition - (userStats.totalRecognition / userStats.uniqueUsers.size)
+        score = Math.round(score * 100) / 100;
+        scores.push({
+            userID: user,
+            score: score
+        });
+    }
+    scores.sort((a, b) => {
+        return b.score - a.score;
+    });
+    scores.slice(0, 10);
+    return scores;
 }

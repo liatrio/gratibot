@@ -59,6 +59,7 @@ functionality requires the following:
     - `message.groups`
     - `message.im`
     - `message.mpim`
+    - `reaction_added`
 If you're developing new functionality, you may need additional event
 subscriptions.
 4. Return to the 'OAuth & Permissions' tab, as we'll need to add a few more

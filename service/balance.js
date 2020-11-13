@@ -1,3 +1,6 @@
+const moment = require('moment-timezone');
+const { maximum } = require('../config')
+
 const recognitionCollection = require('../database/recognitionCollection');
 const deductionCollection = require('../database/deductionCollection');
 
@@ -8,7 +11,7 @@ async function currentBalance(user) {
 }
 
 async function lifetimeEarnings(user) {
-    return await recognitionCollection.count({ recognizee: user });
+    return recognitionCollection.count({ recognizee: user });
 }
 
 async function lifetimeSpendings(user) {
@@ -17,9 +20,17 @@ async function lifetimeSpendings(user) {
     return deductionAmounts.reduce((total, num) => total + num, 0);
 }
 
-async function dailyGratitudeRemaining(user, timezone, days) {
-    return 0;
-    // TODO
+async function dailyGratitudeRemaining(user, timezone) {
+    const midnight = moment(Date.now())
+        .tz(timezone)
+        .startOf('day')
+    const recognitionGivenToday = await recognitionCollection.count({
+        recognizer: user,
+        timestamp: {
+            $gte: new Date(midnight),
+        },
+    });
+    return maximum - recognitionGivenToday;
 }
 
 module.exports = {

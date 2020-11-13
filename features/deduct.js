@@ -52,7 +52,7 @@ async function attemptDeduction(bot, message) {
             "You can only deduct positve numbers.",
         );
     }
-    if(!isBalanceSufficent(message.user, deductionValue)) {
+    if(! await isBalanceSufficent(message.user, deductionValue)) {
         return await bot.replyEphemeral(
             message,
             "Your current balance isn't high enough to deduct that much",
@@ -66,5 +66,5 @@ async function attemptDeduction(bot, message) {
 }
 
 async function isBalanceSufficent(user, deductionValue) {
-    return balance.currentBalance(user) >= deductionValue;
+    return await balance.currentBalance(user) >= deductionValue;
 }

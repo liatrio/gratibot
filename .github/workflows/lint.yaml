@@ -1,0 +1,17 @@
+name: lint
+
+on:
+  push:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container: node:14.7.0
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Run Linter
+        run: |
+          npm ci
+          npm run lint

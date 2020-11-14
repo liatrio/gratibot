@@ -1,4 +1,4 @@
-const { recognizeEmoji, minimumMessageLength, usersExemptFromMaximum, reactionEmoji } = require('../config')
+const { recognizeEmoji, maximum, minimumMessageLength, usersExemptFromMaximum, reactionEmoji } = require('../config')
 const recognition = require('../service/recognition')
 const balance = require('../service/balance')
 const winston = require('../winston')

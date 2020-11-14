@@ -1,4 +1,4 @@
-version: '2.2'
+version: "2.2"
 services:
   gratibot:
     container_name: gratibot
@@ -7,7 +7,6 @@ services:
       - mongodb
     ports:
       - 3000:3000
-      - 9229:9229
     build: .
     environment:
       - SIGNING_SECRET

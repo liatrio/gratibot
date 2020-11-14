@@ -15,4 +15,4 @@ jobs:
         run: |
           npm ci
           npm test
-          npm run coverage
+          npm run report-coverage

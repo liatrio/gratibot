@@ -1,19 +1,15 @@
-const { recognizeEmoji, maximum } = require('../config')
-const winston = require('../winston')
+const { recognizeEmoji, maximum } = require("../config");
+const winston = require("../winston");
 
-module.exports = function(controller) {
-    controller.hears(
-        'help',
-        ['direct_message', 'direct_mention'],
-        respondToHelp
-    );
+module.exports = function (controller) {
+  controller.hears("help", ["direct_message", "direct_mention"], respondToHelp);
 
-    controller.hears(
-        ['thunderfury', 'Thunderfury'],
-        ['direct_message', 'direct_mention', 'mention', 'message'],
-        respondToEasterEgg,
-    );
-}
+  controller.hears(
+    ["thunderfury", "Thunderfury"],
+    ["direct_message", "direct_mention", "mention", "message"],
+    respondToEasterEgg
+  );
+};
 
 const helpMarkdown = `
 :wave: Hi there! Let's take a look at what I can do!
@@ -69,33 +65,27 @@ and receiving the most recognition.
 
 Send me a direct message with 'metrics' and I'll show you how many times \
 people have given recognition over the last month.
-`
+`;
 
 async function respondToHelp(bot, message) {
-    winston.info(
-        '@gratibot help Called',
-        {
-            callingUser: message.user,
-            slackMessage: message.text,
-        },
-    );
-    await bot.replyEphemeral(message, helpMarkdown);
+  winston.info("@gratibot help Called", {
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+  await bot.replyEphemeral(message, helpMarkdown);
 }
 
 const thunderfuryResponse = [
-    'Did someone say',
-    ':thunderfury_blessed_blade_of_the_windseeker:',
-    '[Thunderfury, Blessed Blade of the Windseeker]',
-    ':thunderfury_blessed_blade_of_the_windseeker:?',
-].join(' ')
+  "Did someone say",
+  ":thunderfury_blessed_blade_of_the_windseeker:",
+  "[Thunderfury, Blessed Blade of the Windseeker]",
+  ":thunderfury_blessed_blade_of_the_windseeker:?",
+].join(" ");
 
 async function respondToEasterEgg(bot, message) {
-    winston.info(
-        'heard reference to thunderfury',
-        {
-            callingUser: message.user,
-            slackMessage: message.text,
-        },
-    );
-    await bot.reply(message, thunderfuryResponse);
+  winston.info("heard reference to thunderfury", {
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+  await bot.reply(message, thunderfuryResponse);
 }

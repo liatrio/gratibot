@@ -7,7 +7,7 @@ const {
 } = require("../config");
 const recognition = require("../service/recognition");
 const balance = require("../service/balance");
-const winston = require("../winston");
+// const winston = require("../winston");
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
@@ -119,25 +119,27 @@ async function userDetails(bot, message, giver) {
 // TODO clean this up. Maybe check for errors after each API call?
 function parseUserDetailsRequest(userInfo) {
   let infoRequestIsOk = true;
+  /*
   if (!userInfo.giver.ok) {
     winston.error("User info request failed", {
       user: message.user,
       error: userInfo.giver.error,
     });
     infoRequestIsOk = false;
-  } else {
-    userInfo.giver = userInfo.giver.user;
   }
+  */
+  userInfo.giver = userInfo.giver.user;
   for (let i = 0; i < userInfo.receivers.length; i++) {
+    /*
     if (!userInfo.receivers[i].ok) {
       winston.error("User info request failed", {
         user: userIds[i],
         error: userInfo.receivers[i].error,
       });
       infoRequestIsOk = false;
-    } else {
-      userInfo.receivers[i] = userInfo.receivers[i].user;
     }
+    */
+    userInfo.receivers[i] = userInfo.receivers[i].user;
   }
   return infoRequestIsOk ? userInfo : null;
 }

@@ -15,164 +15,61 @@ module.exports = function(controller) {
     );
 }
 
-const helpBlocks = {
-    blocks: [
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: ":wave: Hi there, let's take a look at what I can do!",
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: '*Give Recognition*',
-            },
-        },
-        {
-            type: 'divider',
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: [
-                    `You can give up to \`${maximum}\` recognitions per`,
-                    `day.\n\nFirst, make sure I have been invited to the channel`,
-                    `you want to recognize someone in.  Then, write a brief message`,
-                    `describing what someone did, \`@mention\` them and include`,
-                    `the ${emoji} emoji...I'll take it from there!`,
-                ].join(' '),
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: `> Thanks <@alice> for helping me fix my pom.xml ${emoji}`,
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: 'Recognize multiple people at once!',
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: `> <@bob> and <@alice> crushed that showcase! ${emoji}`,
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: 'Use `#tags` to call out specific Liatrio values that were demonstrated.',
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: `> I love the #energy in your Terraform demo <@alice>! ${emoji}`,
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: 'The more emojis you add, the more recognition they get.',
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: [
-                    `> <@alice> just pushed the cleanest code I've ever`,
-                    `seen! ${emoji} ${emoji} ${emoji}`,
-                ].join(' '),
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: '*View Balance*',
-            },
-        },
-        {
-            type: 'divider',
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: [
-                    "Send me a direct message with `balance` and I'll let you",
-                    "know how many recognitions you have left to give and",
-                    "how many you have received.",
-                ].join(' '),
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: [
-                    `> You have received 0 ${emoji} and you have`,
-                    `${maximum} ${emoji} remaining to give away today`,
-                ].join(' '),
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: '*View Leaderboard*',
-            },
-        },
-        {
-            type: 'divider',
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: [
-                    "Send me a direct message with `leaderboard` and I'll",
-                    "show you who is giving and receiving the most recognition.",
-                ].join(' '),
-            },
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: '*View Metrics*',
-            },
-        },
-        {
-            type: 'divider',
-        },
-        {
-            type: 'section',
-            text: {
-                type: 'mrkdwn',
-                text: [
-                    "Send me a direct message with `metrics` and",
-                    "I'll show you how many times people have given recognition",
-                    "over the last month.",
-                ].join(' '),
-            },
-        },
-    ],
-};
+const helpMarkdown = `
+:wave: Hi there! Let's take a look at what I can do!
+
+
+
+
+*Give Recognition*
+
+You can give up to ${maximum} recognitions per day.
+
+First, make sure I have been invited to the channel you want to recognize \
+someone in. Then, write a brief message describing what someone did, \
+\`@mention\` them and include the ${emoji} emoji...I'll take it from there!
+
+> Thanks @alice for helping me fix my pom.xml ${emoji}
+
+Recognize multiple people at once!
+
+> @bob and @alice crushed that showcase! ${emoji}
+
+Use \`#tags\` to call out specific Liatrio values!
+
+> I love the #energy in your Terraform demo @alice! ${emoji}
+
+The more emojis you add, the more recognition they get!
+
+> @alice just pushed the cleanest code I've ever seen! ${emoji} ${emoji} ${emoji}
+
+
+
+
+*View Balance*
+
+Send me a direct message with 'balance' and I'll let you know how many \
+recognitions you have left to give and how many you have received.
+
+> You have received 0 ${emoji} and you have ${maximum} ${emoji} remaining to \
+give away today
+
+
+
+
+*View Leaderboard*
+
+Send me a direct message with 'leaderboard' and I'll show you who is giving \
+and receiving the most recognition.
+
+
+
+
+*View Metrics*
+
+Send me a direct message with 'metrics' and I'll show you how many times \
+people have given recognition over the last month.
+`
 
 async function respondToHelp(bot, message) {
     winston.info(
@@ -182,7 +79,7 @@ async function respondToHelp(bot, message) {
             slackMessage: message.text,
         },
     );
-    await bot.replyEphemeral(message, helpBlocks);
+    await bot.replyEphemeral(message, helpMarkdown);
 }
 
 const thunderfuryResponse = [

@@ -11,7 +11,7 @@ services:
     environment:
       - SIGNING_SECRET
       - BOT_USER_OAUTH_ACCESS_TOKEN
-      - EMOJI
+      - RECOGNIZE_EMOJI
       - MONGO_URL=mongodb://mongodb:27017/gratibot
   mongodb:
     ports:

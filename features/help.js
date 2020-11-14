@@ -1,4 +1,4 @@
-const { emoji, maximum } = require('../config')
+const { recognizeEmoji, maximum } = require('../config')
 const winston = require('../winston')
 
 module.exports = function(controller) {
@@ -27,21 +27,21 @@ You can give up to ${maximum} recognitions per day.
 
 First, make sure I have been invited to the channel you want to recognize \
 someone in. Then, write a brief message describing what someone did, \
-\`@mention\` them and include the ${emoji} emoji...I'll take it from there!
+\`@mention\` them and include the ${recognizeEmoji} emoji...I'll take it from there!
 
-> Thanks @alice for helping me fix my pom.xml ${emoji}
+> Thanks @alice for helping me fix my pom.xml ${recognizeEmoji}
 
 Recognize multiple people at once!
 
-> @bob and @alice crushed that showcase! ${emoji}
+> @bob and @alice crushed that showcase! ${recognizeEmoji}
 
 Use \`#tags\` to call out specific Liatrio values!
 
-> I love the #energy in your Terraform demo @alice! ${emoji}
+> I love the #energy in your Terraform demo @alice! ${recognizeEmoji}
 
 The more emojis you add, the more recognition they get!
 
-> @alice just pushed the cleanest code I've ever seen! ${emoji} ${emoji} ${emoji}
+> @alice just pushed the cleanest code I've ever seen! ${recognizeEmoji} ${recognizeEmoji} ${recognizeEmoji}
 
 
 
@@ -51,7 +51,7 @@ The more emojis you add, the more recognition they get!
 Send me a direct message with 'balance' and I'll let you know how many \
 recognitions you have left to give and how many you have received.
 
-> You have received 0 ${emoji} and you have ${maximum} ${emoji} remaining to \
+> You have received 0 ${recognizeEmoji} and you have ${maximum} ${recognizeEmoji} remaining to \
 give away today
 
 

@@ -1,4 +1,3 @@
-const { emoji } = require('../config')
 const deduction = require('../service/deduction')
 const balance = require('../service/balance')
 const winston = require('../winston')

@@ -1,14 +1,15 @@
-const { maximum, minimumMessageLength, usersExemptFromMaximum, reactionEmoji } = require('../config')
+const { recognizeEmoji, minimumMessageLength, usersExemptFromMaximum, reactionEmoji } = require('../config')
 const recognition = require('../service/recognition')
 const balance = require('../service/balance')
 const winston = require('../winston')
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
-const emojiRegex = /:(\S+):/g;
+const generalEmojiRegex = /:([a-z-_']+):/g;
+const recognizeEmojiRegex = new RegExp(recognizeEmoji, 'g');
 
 module.exports = function(controller) {
-    controller.hears(emoji , ['direct_message', 'direct_mention', 'mention', 'message'], async (bot, message) => {
+    controller.hears(recognizeEmoji , ['direct_message', 'direct_mention', 'mention', 'message'], async (bot, message) => {
 
         const userInfo = await userDetails(bot, message, message.user);
         if (!userInfo) {
@@ -21,7 +22,7 @@ module.exports = function(controller) {
             await bot.replyEphemeral(
                 message,
                 [
-                    `Sending ${emoji} failed with the following error(s):`,
+                    `Sending ${recognizeEmoji} failed with the following error(s):`,
                     errors,
                 ].join('\n')
             )
@@ -36,7 +37,7 @@ module.exports = function(controller) {
             sendNotificationToReceivers(bot, message, userInfo),
             bot.replyEphemeral(
                 message,
-                `Your ${emoji} has been sent. You have ${gratitudeRemaining} left to give today.`
+                `Your ${recognizeEmoji} has been sent. You have ${gratitudeRemaining} left to give today.`
             )
         ]);
     });
@@ -72,7 +73,7 @@ async function testFunction(bot, message) {
         await bot.replyEphemeral(
             message,
             [
-                `Sending ${emoji} failed with the following error(s):`,
+                `Sending ${recognizeEmoji} failed with the following error(s):`,
                 errors,
             ].join('\n')
         )
@@ -87,7 +88,7 @@ async function testFunction(bot, message) {
         sendNotificationToReceivers(bot, originalMessage, userInfo),
         bot.replyEphemeral(
             message,
-            `Your ${emoji} has been sent. You have ${gratitudeRemaining} left to give today.`
+            `Your ${recognizeEmoji} has been sent. You have ${gratitudeRemaining} left to give today.`
         )
     ]);
 }
@@ -136,7 +137,7 @@ function parseUserDetailsRequest(userInfo) {
 }
 
 async function checkForRecognitionErrors(message, userInfo) {
-    const trimmedMessage = message.text.replace(userRegex, '').replace(emojiRegex, '');
+    const trimmedMessage = message.text.replace(userRegex, '').replace(generalEmojiRegex, '');
 
     return [
         userInfo.receivers.length === 0 ? '- Mention who you want to recognize with @user' : '',
@@ -146,7 +147,7 @@ async function checkForRecognitionErrors(message, userInfo) {
         userInfo.receivers.find(x => x.is_bot) ? '- You can\'t give recognition to bots' : '',
         userInfo.receivers.find(x => x.is_restricted) ? '- You can\' give recognition to guest users' : '',
         trimmedMessage.length < minimumMessageLength ? `- Your message must be at least ${minimumMessageLength} characters` : '',
-//        ! await isRecognitionWithinSpendingLimits(message, userInfo) ? `- A maximum of ${maximum} ${emoji} can be sent per day` : '',
+//        ! await isRecognitionWithinSpendingLimits(message, userInfo) ? `- A maximum of ${maximum} ${recognizeEmoji} can be sent per day` : '',
     ].filter(x => x !== '').join('\n');
 }
 
@@ -154,7 +155,7 @@ async function isRecognitionWithinSpendingLimits(message, userInfo) {
     if (usersExemptFromMaximum.includes(userInfo.giver.id)) {
         return true;
     }
-    const emojiInMessage = (message.text.match(emojiRegex) || []).length;
+    const emojiInMessage = (message.text.match(recognizeEmojiRegex) || []).length;
     const recognitionGivenToday = await balance.dailyGratitudeRemaining(userInfo.giver.id, userInfo.giver.tz);
     const recognitionInMessage = userInfo.receivers.length * emojiInMessage
     return recognitionGivenToday + recognitionInMessage <= maximum
@@ -162,7 +163,7 @@ async function isRecognitionWithinSpendingLimits(message, userInfo) {
 
 async function sendRecognition(message, userInfo) {
     const tags = (message.text.match(tagRegex) || []).map(tag => tag.slice(1));
-    const emojiCount = (message.text.match(emojiRegex) || []).length;
+    const emojiCount = (message.text.match(recognizeEmojiRegex) || []).length;
     let results = []
     for(let i = 0; i < userInfo.receivers.length; i++) {
         for(let j = 0; j < emojiCount; j++) {

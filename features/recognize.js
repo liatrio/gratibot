@@ -1,11 +1,11 @@
-const { emoji, maximum, minimumMessageLength, usersExemptFromMaximum, reactionEmoji } = require('../config')
+const { maximum, minimumMessageLength, usersExemptFromMaximum, reactionEmoji } = require('../config')
 const recognition = require('../service/recognition')
 const balance = require('../service/balance')
 const winston = require('../winston')
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
-const emojiRegex = new RegExp(emoji, 'g');
+const emojiRegex = /:(\S+):/g;
 
 module.exports = function(controller) {
     controller.hears(emoji , ['direct_message', 'direct_mention', 'mention', 'message'], async (bot, message) => {

@@ -4,248 +4,246 @@ const sinon = require("sinon");
 const mockBot = require("./bot");
 
 class MockController {
-    constructor(config) {
-        this.chance = new Chance();
+  constructor(config) {
+    this.chance = new Chance();
 
-        this.config = config;
-        this.behavior = [];
-        this.replies = [];
-        this.reactions = [];
-        this.messages = [];
-        this.files = [];
-        this.info = {
-            id: this.chance.word(),
-            channel: this.chance.word(),
-            channelName: this.chance.word(),
-        };
-        this.bot = mockBot(this);
-        this.addPluginExtension = sinon.stub();
-        this.plugins = {
-            slack: {
-                getUserInfo: sinon.stub(),
-            },
-            help: {},
-            participants: {},
-            storage: {},
-            kubernetes: {},
-        };
+    this.config = config;
+    this.behavior = [];
+    this.replies = [];
+    this.reactions = [];
+    this.messages = [];
+    this.files = [];
+    this.info = {
+      id: this.chance.word(),
+      channel: this.chance.word(),
+      channelName: this.chance.word(),
+    };
+    this.bot = mockBot(this);
+    this.addPluginExtension = sinon.stub();
+    this.plugins = {
+      slack: {
+        getUserInfo: sinon.stub(),
+      },
+      help: {},
+      participants: {},
+      storage: {},
+      kubernetes: {},
+    };
+  }
+
+  getConfig(prop) {
+    return this.config[prop];
+  }
+
+  hears(pattern, type, cb) {
+    if (!Array.isArray(pattern)) {
+      pattern = [pattern];
     }
+    this.behavior.push({
+      pattern,
+      type,
+      cb,
+    });
+  }
 
-    getConfig(prop) {
-        return this.config[prop];
-    }
+  on(type, cb) {
+    this.behavior.push({
+      type,
+      cb,
+    });
+  }
 
-    hears(pattern, type, cb) {
-        if (!Array.isArray(pattern)) {
-            pattern = [pattern];
+  botInfo() {
+    return this.info;
+  }
+
+  spawn() {
+    return this.bot;
+  }
+
+  async userInput(message) {
+    let matches = [];
+
+    const response = this.behavior.find((b) =>
+      b.pattern.some((pattern) => {
+        const match = message.text.match(pattern);
+
+        if (match !== null) {
+          matches = match;
+
+          return true;
         }
-        this.behavior.push({
-            pattern,
-            type,
-            cb,
-        });
+
+        return false;
+      })
+    );
+
+    if (response) {
+      await response.cb(
+        this.bot,
+        this.formatMessage({
+          ...message,
+          matches,
+        })
+      );
     }
+  }
 
-    on(type, cb) {
-        this.behavior.push({
-            type,
-            cb,
-        });
+  async interactiveMessage(message) {
+    const matches = [];
+    const response = this.behavior.find(
+      (b) => b.type === "interactive_message"
+    );
+
+    if (response) {
+      await response.cb(
+        this.bot,
+        this.formatInteractiveMessage({
+          ...message,
+          matches,
+        })
+      );
     }
+  }
 
-    botInfo() {
-        return this.info;
+  async event(type, message) {
+    const handler = this.behavior.find((b) => b.type === type);
+    if (handler) {
+      await handler.cb(this.bot, message);
     }
+  }
 
-    spawn() {
-        return this.bot;
-    }
+  formatMessage(message) {
+    return {
+      ts: this.chance.word(),
+      channel: this.botInfo().channel,
+      ...message,
+      incoming_message: {
+        recipient: {
+          id: this.botInfo().id,
+        },
+      },
+    };
+  }
 
-    async userInput(message) {
-        let matches = [];
+  formatInteractiveMessage(message) {
+    return {
+      ts: this.chance.word(),
+      channel: this.botInfo().channel,
+      ...message,
+    };
+  }
 
-        const response = this.behavior.find((b) =>
-            b.pattern.some((pattern) => {
-                const match = message.text.match(pattern);
+  reply(type, message, response) {
+    return new Promise((resolve) => {
+      this.replies.push({
+        message,
+        response,
+        type,
+      });
 
-                if (match !== null) {
-                    matches = match;
+      resolve();
+    });
+  }
 
-                    return true;
-                }
-
-                return false;
-            })
+  file(type, file) {
+    return new Promise((resolve, reject) => {
+      if (!file.channels) {
+        return reject(
+          new Error("attempted to upload a file without a channel")
         );
+      }
 
-        if (response) {
-            await response.cb(
-                this.bot,
-                this.formatMessage({
-                    ...message,
-                    matches,
-                })
-            );
-        }
-    }
+      this.files.push({
+        type,
+        file: {
+          content: file.content,
+          channel: file.channels,
+          title: file.title,
+          name: file.filename,
+          type: file.filetype,
+        },
+      });
 
-    async interactiveMessage(message) {
-        const matches = [];
-        const response = this.behavior.find(
-            (b) => b.type === "interactive_message"
+      return resolve();
+    });
+  }
+
+  message(type, message) {
+    return new Promise((resolve, reject) => {
+      if (!message.channel) {
+        return reject(new Error("attempted to post message without a channel"));
+      }
+
+      const ts = this.chance.word();
+      const cacheMessage = {
+        ...message,
+        ts,
+      };
+
+      this.messages.push({
+        message: cacheMessage,
+        type,
+        updated: false,
+      });
+
+      return resolve(cacheMessage);
+    });
+  }
+
+  update(type, message) {
+    return new Promise((resolve, reject) => {
+      if (!message.channel) {
+        return reject(
+          new Error("attempted to update message without a channel")
         );
+      }
 
-        if (response) {
-            await response.cb(
-                this.bot,
-                this.formatInteractiveMessage({
-                    ...message,
-                    matches,
-                })
-            );
-        }
-    }
+      const messageIndex = this.messages.findIndex(
+        (m) => m.message.ts === message.ts && m.type === type
+      );
 
-    async event(type, message) {
-        const handler = this.behavior.find((b) => b.type === type);
-        if (handler) {
-            await handler.cb(this.bot, message);
-        }
-    }
+      if (messageIndex === -1) {
+        reject(new Error("cannot update message, not found"));
+      }
 
-    formatMessage(message) {
-        return {
-            ts: this.chance.word(),
-            channel: this.botInfo().channel,
+      this.messages = [
+        ...this.messages.slice(0, messageIndex),
+        {
+          ...this.messages[messageIndex],
+          message: {
+            ...this.messages[messageIndex].message,
             ...message,
-            incoming_message: {
-                recipient: {
-                    id: this.botInfo().id,
-                },
-            },
-        };
-    }
+          },
+          type,
+          updated: true,
+        },
+        ...this.messages.slice(messageIndex + 1),
+      ];
 
-    formatInteractiveMessage(message) {
-        return {
-            ts: this.chance.word(),
-            channel: this.botInfo().channel,
-            ...message,
-        };
-    }
+      return resolve();
+    });
+  }
 
-    reply(type, message, response) {
-        return new Promise((resolve) => {
-            this.replies.push({
-                message,
-                response,
-                type,
-            });
+  getMessages() {
+    return this.messages;
+  }
 
-            resolve();
-        });
-    }
+  getFiles() {
+    return this.files;
+  }
 
-    file(type, file) {
-        return new Promise((resolve, reject) => {
-            if (!file.channels) {
-                return reject(
-                    new Error("attempted to upload a file without a channel")
-                );
-            }
+  getReplies() {
+    return this.replies;
+  }
 
-            this.files.push({
-                type,
-                file: {
-                    content: file.content,
-                    channel: file.channels,
-                    title: file.title,
-                    name: file.filename,
-                    type: file.filetype,
-                },
-            });
+  getReactions() {
+    return this.reactions;
+  }
 
-            return resolve();
-        });
-    }
-
-    message(type, message) {
-        return new Promise((resolve, reject) => {
-            if (!message.channel) {
-                return reject(
-                    new Error("attempted to post message without a channel")
-                );
-            }
-
-            const ts = this.chance.word();
-            const cacheMessage = {
-                ...message,
-                ts,
-            };
-
-            this.messages.push({
-                message: cacheMessage,
-                type,
-                updated: false,
-            });
-
-            return resolve(cacheMessage);
-        });
-    }
-
-    update(type, message) {
-        return new Promise((resolve, reject) => {
-            if (!message.channel) {
-                return reject(
-                    new Error("attempted to update message without a channel")
-                );
-            }
-
-            const messageIndex = this.messages.findIndex(
-                (m) => m.message.ts === message.ts && m.type === type
-            );
-
-            if (messageIndex === -1) {
-                reject(new Error("cannot update message, not found"));
-            }
-
-            this.messages = [
-                ...this.messages.slice(0, messageIndex),
-                {
-                    ...this.messages[messageIndex],
-                    message: {
-                        ...this.messages[messageIndex].message,
-                        ...message,
-                    },
-                    type,
-                    updated: true,
-                },
-                ...this.messages.slice(messageIndex + 1),
-            ];
-
-            return resolve();
-        });
-    }
-
-    getMessages() {
-        return this.messages;
-    }
-
-    getFiles() {
-        return this.files;
-    }
-
-    getReplies() {
-        return this.replies;
-    }
-
-    getReactions() {
-        return this.reactions;
-    }
-
-    addDialog(/* confirmation */) {
-        // Do Nothing
-    }
+  addDialog(/* confirmation */) {
+    // Do Nothing
+  }
 }
 
 module.exports = MockController;

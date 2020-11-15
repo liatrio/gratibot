@@ -28,7 +28,6 @@ describe("features / help", () => {
 
     context("when user sends help command", function () {
       let replies;
-      let spy;
 
       beforeEach(async () => {
         await controller.userInput({ text: "help" });
@@ -43,7 +42,6 @@ describe("features / help", () => {
 
     context("when user sends thunderfury command", function () {
       let replies;
-      let spy;
 
       beforeEach(async () => {
         await controller.userInput({ text: "thunderfury" });

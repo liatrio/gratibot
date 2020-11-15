@@ -1,20 +1,28 @@
-const recognition = require('../service/recognition');
-const winston = require('../winston');
+const recognition = require("../service/recognition");
+const winston = require("../winston");
 
-const rank = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+const rank = [
+  "1st",
+  "2nd",
+  "3rd",
+  "4th",
+  "5th",
+  "6th",
+  "7th",
+  "8th",
+  "9th",
+  "10th",
+];
 
-module.exports = function(controller) {
-    controller.hears(
-        'leaderboard',
-        ['direct_message', 'direct_mention'],
-        respondToLeaderboard
-    );
+module.exports = function (controller) {
+  controller.hears(
+    "leaderboard",
+    ["direct_message", "direct_mention"],
+    respondToLeaderboard
+  );
 
-    controller.on(
-        'block_actions',
-        updateLeaderboardResponse,
-    );
-}
+  controller.on("block_actions", updateLeaderboardResponse);
+};
 
 /*
  * Replies to a Slack user message with a leaderboard.
@@ -23,17 +31,11 @@ module.exports = function(controller) {
  *     this call.
  */
 async function respondToLeaderboard(bot, message) {
-    winston.info(
-        '@gratibot leaderboard Called',
-        {
-            callingUser: message.user,
-            slackMessage: message.text,
-        },
-    );
-    await bot.replyEphemeral(
-        message,
-        await createLeaderboardBlocks(30),
-    );
+  winston.info("@gratibot leaderboard Called", {
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+  await bot.replyEphemeral(message, await createLeaderboardBlocks(30));
 }
 
 /*
@@ -43,21 +45,18 @@ async function respondToLeaderboard(bot, message) {
  *     this call.
  */
 async function updateLeaderboardResponse(bot, message) {
-    if (message.actions[0].block_id !== 'leaderboardButtons') {
-        return;
-    }
+  if (message.actions[0].block_id !== "leaderboardButtons") {
+    return;
+  }
 
-    winston.info(
-        'Gratibot interactive leaderboard button clicked',
-        {
-            callingUser: message.user,
-        },
-    );
+  winston.info("Gratibot interactive leaderboard button clicked", {
+    callingUser: message.user,
+  });
 
-    await bot.replyInteractive(
-        message,
-        await createLeaderboardBlocks(message.actions[0].value),
-    );
+  await bot.replyInteractive(
+    message,
+    await createLeaderboardBlocks(message.actions[0].value)
+  );
 }
 
 /*
@@ -67,17 +66,17 @@ async function updateLeaderboardResponse(bot, message) {
  * @return {object} A Block Kit style object, storing a Gratibot leaderboard.
  */
 async function createLeaderboardBlocks(timeRange) {
-    let blocks = [];
+  let blocks = [];
 
-    const { giverScores, receiverScores } = await leaderboardScoreData(timeRange);
+  const { giverScores, receiverScores } = await leaderboardScoreData(timeRange);
 
-    blocks.push(leaderboardHeader());
-    blocks.push(...topGivers(giverScores));
-    blocks.push(...topReceivers(receiverScores));
-    blocks.push(timeRangeInfo(timeRange));
-    blocks.push(timeRangeButtons());
+  blocks.push(leaderboardHeader());
+  blocks.push(...topGivers(giverScores));
+  blocks.push(...topReceivers(receiverScores));
+  blocks.push(timeRangeInfo(timeRange));
+  blocks.push(timeRangeButtons());
 
-    return { blocks }
+  return { blocks };
 }
 
 /* Block Kit Content */
@@ -87,14 +86,14 @@ async function createLeaderboardBlocks(timeRange) {
  * @return {object} A Block Kit style object, storing a leaderboard header.
  */
 function leaderboardHeader() {
-    return {
-        type: 'section',
-        block_id: 'leaderboard_header',
-        text: {
-            type: 'mrkdwn',
-            text: '*Leaderboard*',
-        }
-    };
+  return {
+    type: "section",
+    block_id: "leaderboard_header",
+    text: {
+      type: "mrkdwn",
+      text: "*Leaderboard*",
+    },
+  };
 }
 
 /*
@@ -106,17 +105,17 @@ function leaderboardHeader() {
  *     section header and leaderboard entries.
  */
 function topGivers(giverScores) {
-    let content = [{
-        type: 'section',
-        block_id: 'recognizersTitle',
-        text: {
-            type: 'mrkdwn',
-            text: '*Top Givers*',
-        },
-    }]
-    return content.concat(
-        giverScores.map(leaderboardEntry)
-    );
+  let content = [
+    {
+      type: "section",
+      block_id: "recognizersTitle",
+      text: {
+        type: "mrkdwn",
+        text: "*Top Givers*",
+      },
+    },
+  ];
+  return content.concat(giverScores.map(leaderboardEntry));
 }
 
 /*
@@ -128,17 +127,17 @@ function topGivers(giverScores) {
  *     section header and leaderboard entries.
  */
 function topReceivers(receiverScores) {
-    let content = [{
-        type: 'section',
-        block_id: 'recognizeesTitle',
-        text: {
-            type: 'mrkdwn',
-            text: '*Top Receivers*',
-        },
-    }]
-    return content.concat(
-        receiverScores.map(leaderboardEntry)
-    );
+  let content = [
+    {
+      type: "section",
+      block_id: "recognizeesTitle",
+      text: {
+        type: "mrkdwn",
+        text: "*Top Receivers*",
+      },
+    },
+  ];
+  return content.concat(receiverScores.map(leaderboardEntry));
 }
 
 /*
@@ -150,17 +149,17 @@ function topReceivers(receiverScores) {
  *     the timeRange of the generated leaderboard.
  */
 function timeRangeInfo(timeRange) {
-    return {
-        type: 'context',
-        block_id: 'timeRange',
-        elements: [
-            {
-                type: 'plain_text',
-                text: `Last ${timeRange} days`,
-                emoji: true,
-            },
-        ],
-    };
+  return {
+    type: "context",
+    block_id: "timeRange",
+    elements: [
+      {
+        type: "plain_text",
+        text: `Last ${timeRange} days`,
+        emoji: true,
+      },
+    ],
+  };
 }
 
 /*
@@ -170,48 +169,48 @@ function timeRangeInfo(timeRange) {
  *     a leaderboard with different timeRanges.
  */
 function timeRangeButtons() {
-    return {
-        type: 'actions',
-        block_id: 'leaderboardButtons',
-        elements: [
-            {
-                type: 'button',
-                text: {
-                    type: 'plain_text',
-                    emoji: true,
-                    text: 'Today',
-                },
-                value: '1',
-            },
-            {
-                type: 'button',
-                text: {
-                    type: 'plain_text',
-                    emoji: true,
-                    text: 'Week',
-                },
-                value: '7',
-            },
-            {
-                type: 'button',
-                text: {
-                    type: 'plain_text',
-                    emoji: true,
-                    text: 'Month',
-                },
-                value: '30',
-            },
-            {
-                type: 'button',
-                text: {
-                    type: 'plain_text',
-                    emoji: true,
-                    text: 'Year',
-                },
-                value: '365',
-            },
-        ],
-    }
+  return {
+    type: "actions",
+    block_id: "leaderboardButtons",
+    elements: [
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          emoji: true,
+          text: "Today",
+        },
+        value: "1",
+      },
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          emoji: true,
+          text: "Week",
+        },
+        value: "7",
+      },
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          emoji: true,
+          text: "Month",
+        },
+        value: "30",
+      },
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          emoji: true,
+          text: "Year",
+        },
+        value: "365",
+      },
+    ],
+  };
 }
 
 /*
@@ -225,76 +224,85 @@ function timeRangeButtons() {
  *     entry.
  */
 function leaderboardEntry(entry, index) {
-    return {
-        type: 'context',
-        elements: [
-            { type: 'mrkdwn', text: `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}\n` },
-        ],
-    }
+  return {
+    type: "context",
+    elements: [
+      {
+        type: "mrkdwn",
+        text: `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}\n`,
+      },
+    ],
+  };
 }
 
 /* Data Processing */
 
 async function leaderboardScoreData(timeRange) {
-    const recognitionData = await recognition.getPreviousXDaysOfRecognition('America/Los_Angeles', timeRange);
-    return aggregateData(recognitionData);
+  const recognitionData = await recognition.getPreviousXDaysOfRecognition(
+    "America/Los_Angeles",
+    timeRange
+  );
+  return aggregateData(recognitionData);
 }
 
 function aggregateData(response) {
-    /*
-     * leaderboard = {
-     *     userId: {
-     *       totalRecognition: int
-     *       uniqueUsers: Set<string>
-     *     }
-     *   }
-     */
-    let recognizerLeaderboard = {}
-    let recognizeeLeaderboard = {}
+  /*
+   * leaderboard = {
+   *     userId: {
+   *       totalRecognition: int
+   *       uniqueUsers: Set<string>
+   *     }
+   *   }
+   */
+  let recognizerLeaderboard = {};
+  let recognizeeLeaderboard = {};
 
-    for(let i = 0; i < response.length; i++) {
-        let recognizer = response[i].recognizer;
-        let recognizee = response[i].recognizee;
+  for (let i = 0; i < response.length; i++) {
+    let recognizer = response[i].recognizer;
+    let recognizee = response[i].recognizee;
 
-        if(!(recognizer in recognizerLeaderboard)) {
-            recognizerLeaderboard[recognizer] = {
-                totalRecognition: 0,
-                uniqueUsers: new Set()
-            }
-        }
-        if(!(recognizee in recognizeeLeaderboard)) {
-            recognizeeLeaderboard[recognizee] = {
-                totalRecognition: 0,
-                uniqueUsers: new Set()
-            }
-        }
-
-        recognizerLeaderboard[recognizer].totalRecognition++;
-        recognizerLeaderboard[recognizer].uniqueUsers.add(recognizee);
-        recognizeeLeaderboard[recognizee].totalRecognition++;
-        recognizeeLeaderboard[recognizee].uniqueUsers.add(recognizer);
+    if (!(recognizer in recognizerLeaderboard)) {
+      recognizerLeaderboard[recognizer] = {
+        totalRecognition: 0,
+        uniqueUsers: new Set(),
+      };
+    }
+    if (!(recognizee in recognizeeLeaderboard)) {
+      recognizeeLeaderboard[recognizee] = {
+        totalRecognition: 0,
+        uniqueUsers: new Set(),
+      };
     }
 
-    return {
-        giverScores: convertToScores(recognizerLeaderboard),
-        receiverScores: convertToScores(recognizeeLeaderboard),
-    }
+    recognizerLeaderboard[recognizer].totalRecognition++;
+    recognizerLeaderboard[recognizer].uniqueUsers.add(recognizee);
+    recognizeeLeaderboard[recognizee].totalRecognition++;
+    recognizeeLeaderboard[recognizee].uniqueUsers.add(recognizer);
+  }
+
+  return {
+    giverScores: convertToScores(recognizerLeaderboard),
+    receiverScores: convertToScores(recognizeeLeaderboard),
+  };
 }
 
 function convertToScores(leaderboardData) {
-    let scores = [];
-    for(const user in leaderboardData) {
-        let userStats = leaderboardData[user]
-        let score = 1 + userStats.totalRecognition - (userStats.totalRecognition / userStats.uniqueUsers.size)
-        score = Math.round(score * 100) / 100;
-        scores.push({
-            userID: user,
-            score: score
-        });
-    }
-    scores.sort((a, b) => {
-        return b.score - a.score;
+  let scores = [];
+  for (const user in leaderboardData) {
+    let userStats = leaderboardData[user];
+    let score =
+      1 +
+      userStats.totalRecognition -
+      userStats.totalRecognition / userStats.uniqueUsers.size;
+    score = Math.round(score * 100) / 100;
+    scores.push({
+      userID: user,
+      score: score,
     });
-    scores.slice(0, 10);
-    return scores;
+  }
+  scores.sort((a, b) => {
+    return b.score - a.score;
+  });
+  scores.slice(0, 10);
+  return scores;
 }

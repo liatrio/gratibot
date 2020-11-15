@@ -1,6 +1,6 @@
-const winston = require('winston');
-const config = require('./config')
-const loggingLevel = config.logLevel
+const winston = require("winston");
+const config = require("./config");
+const loggingLevel = config.logLevel;
 
 winston.configure({
   level: loggingLevel,

@@ -57,7 +57,10 @@ module.exports = function (controller) {
 };
 
 async function testFunction(bot, message) {
-  if (!message.reaction.includes(reactionEmoji) || message.item.type !== "message") {
+  if (
+    !message.reaction.includes(reactionEmoji) ||
+    message.item.type !== "message"
+  ) {
     return;
   }
 

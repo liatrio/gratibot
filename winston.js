@@ -2,18 +2,12 @@ const winston = require("winston");
 const config = require("./config");
 const loggingLevel = config.logLevel;
 
-winston.configure({
+const logger = winston.createLogger({
   level: loggingLevel,
+  format: winston.format.json(),
   transports: [
-    new winston.transports.Console({
-      format: winston.format.json(),
-    }),
-  ],
-  exceptionHandlers: [
-    new winston.transports.Console({
-      format: winston.format.json(),
-    }),
+    new winston.transports.Console(),
   ],
 });
 
-module.exports = winston;
+module.exports = logger;

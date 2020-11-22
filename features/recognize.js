@@ -37,6 +37,7 @@ async function respondToRecognitionMessage(bot, message) {
     //TODO Error handing
   }
 
+
   const recognitionInfo = {
     text: message.text,
     channel: message.channel,
@@ -177,12 +178,12 @@ async function isRecognitionWithinSpendingLimits(messageText, userInfo) {
     return true;
   }
   const emojiInMessage = (messageText.match(recognizeEmojiRegex) || []).length;
-  const recognitionGivenToday = await balance.dailyGratitudeRemaining(
+  const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
     userInfo.giver.id,
     userInfo.giver.tz
   );
   const recognitionInMessage = userInfo.receivers.length * emojiInMessage;
-  return recognitionGivenToday + recognitionInMessage <= maximum;
+  return dailyGratitudeRemaining >= recognitionInMessage;
 }
 
 // TODO Can we add a 'count' field to the recognition?

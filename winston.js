@@ -5,9 +5,7 @@ const loggingLevel = config.logLevel;
 const logger = winston.createLogger({
   level: loggingLevel,
   format: winston.format.json(),
-  transports: [
-    new winston.transports.Console(),
-  ],
+  transports: [new winston.transports.Console()],
 });
 
 module.exports = logger;

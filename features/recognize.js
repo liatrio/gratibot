@@ -34,9 +34,19 @@ async function respondToRecognitionMessage(bot, message) {
   try {
     userInfo = await userDetails(bot, message.text, message.user);
   } catch (err) {
-    //TODO Error handing
+    winston.error("Slack API returned error from users.info", {
+      callingUser: message.user,
+      slackMessage: message.text,
+      APIResponse: err,
+    });
+    await bot.replyEphemeral(
+      message,
+      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: \n ${JSON.stringify(
+        err
+      )} \n Recognition has not been sent.`
+    );
+    return;
   }
-
 
   const recognitionInfo = {
     text: message.text,
@@ -72,7 +82,16 @@ async function respondToRecognitionReaction(bot, message) {
   try {
     userInfo = await userDetails(bot, messageReactedTo.text, message.user);
   } catch (err) {
-    //TODO Error handing
+    winston.error("Slack API returned error from users.info", {
+      callingUser: message.user,
+      slackMessage: message.text,
+      APIResponse: err,
+    });
+    await bot.replyEphemeral(
+      message,
+      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: \n ${err} \n Recognition has not been sent.`
+    );
+    return;
   }
   const recognitionInfo = {
     text: messageReactedTo.text,
@@ -101,8 +120,7 @@ async function singleUserDetails(bot, userId) {
   if (singleUserInfo.ok) {
     return singleUserInfo.user;
   }
-  // TODO Create a better type for this error (Is currently string)
-  throw singleUserInfo.error;
+  throw singleUserInfo;
 }
 
 async function validateAndSendRecognition(

@@ -19,6 +19,9 @@ const mockBot = (controller) => ({
         return controller.update.call(controller, "main", message);
       },
     },
+    conversations: {
+      history: sinon.stub(),
+    },
     reactions: {
       add: function (reaction) {
         return new Promise((resolve) => {

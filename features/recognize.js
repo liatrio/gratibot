@@ -1,14 +1,9 @@
-const {
-  recognizeEmoji,
-  maximum,
-  minimumMessageLength,
-  usersExemptFromMaximum,
-  reactionEmoji,
-} = require("../config");
+const config = require("../config");
 const recognition = require("../service/recognition");
 const balance = require("../service/balance");
 const winston = require("../winston");
 
+const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji } = config;
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
@@ -37,13 +32,11 @@ async function respondToRecognitionMessage(bot, message) {
     winston.error("Slack API returned error from users.info", {
       callingUser: message.user,
       slackMessage: message.text,
-      APIResponse: err,
+      error: err.message,
     });
     await bot.replyEphemeral(
       message,
-      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: \n ${JSON.stringify(
-        err
-      )} \n Recognition has not been sent.`
+      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${err.message} \n Recognition has not been sent.`
     );
     return;
   }
@@ -69,6 +62,8 @@ async function respondToRecognitionReaction(bot, message) {
     reactionEmoji: message.reaction,
   });
 
+  // TODO: Error handle this API call
+  // Consider refactoring API calls for standardized error handling
   const messageReactedTo = (
     await bot.api.conversations.history({
       channel: message.item.channel,
@@ -85,11 +80,11 @@ async function respondToRecognitionReaction(bot, message) {
     winston.error("Slack API returned error from users.info", {
       callingUser: message.user,
       slackMessage: message.text,
-      APIResponse: err,
+      APIResponse: err.message,
     });
     await bot.replyEphemeral(
       message,
-      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: \n ${err} \n Recognition has not been sent.`
+      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${err.message} \n Recognition has not been sent.`
     );
     return;
   }
@@ -115,12 +110,13 @@ async function userDetails(bot, messageText, giver) {
   return userInfo;
 }
 
+// TODO: Consider refactoring API calls for standardized error handling
 async function singleUserDetails(bot, userId) {
   const singleUserInfo = await bot.api.users.info({ user: userId });
   if (singleUserInfo.ok) {
     return singleUserInfo.user;
   }
-  throw singleUserInfo;
+  throw new Error(singleUserInfo.error);
 }
 
 async function validateAndSendRecognition(
@@ -192,7 +188,7 @@ async function checkForRecognitionErrors(messageText, userInfo) {
 }
 
 async function isRecognitionWithinSpendingLimits(messageText, userInfo) {
-  if (usersExemptFromMaximum.includes(userInfo.giver.id)) {
+  if (config.usersExemptFromMaximum.includes(userInfo.giver.id)) {
     return true;
   }
   const emojiInMessage = (messageText.match(recognizeEmojiRegex) || []).length;

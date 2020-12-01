@@ -6,6 +6,7 @@ const MockController = require("../mocks/controller");
 const recognizeFeature = require("../../features/recognize");
 const recognition = require("../../service/recognition");
 const balance = require("../../service/balance");
+const config = require("../../config");
 
 describe("features/recognize", () => {
   let controller;
@@ -101,7 +102,9 @@ describe("features/recognize", () => {
     });
 
     it("should handle Slack API errors", async () => {
-      sinon.stub(recognition, "giveRecognition").resolves("");
+      const giveRecognition = sinon
+        .stub(recognition, "giveRecognition")
+        .resolves("");
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
@@ -111,28 +114,26 @@ describe("features/recognize", () => {
         channel: "SomeChannel",
       });
 
-      // TODO: Test something
+      expect(giveRecognition.called).to.be.false;
     });
 
-    /*
-     * TODO: Need to figure out the correct way to mock config
     it("should allow exempt users to give recognition over the maximum", async () => {
-      const giveRecognition = sinon.stub(recognition, 'giveRecognition').resolves("");
-      sinon.stub(recognition, 'countRecognitionsReceived').resolves(1);
-      sinon.stub(balance, 'dailyGratitudeRemaining').resolves(0);
-      sinon.stub(config, 'usersExemptFromMaximum').value("Test");
+      const giveRecognition = sinon
+        .stub(recognition, "giveRecognition")
+        .resolves("");
+      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(0);
+      sinon.stub(config, "usersExemptFromMaximum").value("Giver");
 
-      await controller.userInput(
-        {
-          text: ":fistbump: <@Receiver> Test Test Test Test Test",
-          user: "Giver",
-          channel: "SomeChannel",
-        }
-      )
+      await controller.userInput({
+        text: ":fistbump: <@Receiver> Test Test Test Test Test",
+        user: "Giver",
+        channel: "SomeChannel",
+      });
 
       expect(giveRecognition.called).to.be.true;
-    })
-    */
+    });
+
     it("shouldn't update database when there are no receivers", async () => {
       const giveRecognition = sinon
         .stub(recognition, "giveRecognition")
@@ -288,7 +289,9 @@ describe("features/recognize", () => {
     });
 
     it("should handle Slack API errors", async () => {
-      sinon.stub(recognition, "giveRecognition").resolves("");
+      const giveRecognition = sinon
+        .stub(recognition, "giveRecognition")
+        .resolves("");
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
@@ -308,10 +311,10 @@ describe("features/recognize", () => {
         },
       });
 
-      // TODO: Test something
+      expect(giveRecognition.called).to.be.false;
     });
 
-    it("shouldn't update database when the the wrong reaction emoji is used", async () => {
+    it("shouldn't update database when the wrong reaction emoji is used", async () => {
       const giveRecognition = sinon
         .stub(recognition, "giveRecognition")
         .resolves("");

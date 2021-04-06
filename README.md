@@ -1,7 +1,7 @@
 # Gratibot
 
 Gratibot is a Slack bot for recognizing the accomplishments of friends and
-colleagues. Read more about Gratibot in our blog: TODO: Add blog
+colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatrio.com/blog/gratibot-chatbot)
 
 ### Development
 
@@ -17,7 +17,6 @@ This will help others to identify who owns the bot.
 4. Click the *Create App* button.
 
 ##### Run Your Local Copy
-TODO: Update for k8s development.
 
 1. Give your app a very basic permission so we have the ability to install
 our app. We'll need to re-install the app later as we add new permission scopes.
@@ -60,7 +59,7 @@ functionality requires the following:
     - `message.im`
     - `message.mpim`
     - `reaction_added`
-    
+
 If you're developing new functionality, you may need additional event
 subscriptions.
 4. Return to the *OAuth & Permissions* tab, as we'll need to add a few more
@@ -69,7 +68,7 @@ subscriptions we already set. In addition to those, we'll also need to add the
 following:
     - `chat:write`
     - `users:read`
-    
+
 Once again, if you're developing new functionality, you may need additional
 scopes to be granted.
 5. Reinstall the app by clicking the button at the top of this tab. You'll need

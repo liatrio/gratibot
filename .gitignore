@@ -110,3 +110,6 @@ dist
 
 # VsCode
 .vscode/
+
+tf/*.tfstate
+tf/.terraform

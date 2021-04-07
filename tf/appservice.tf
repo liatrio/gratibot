@@ -1,4 +1,4 @@
-resource "azurerm_app_service_plan" "my_service_plan" {
+resource "azurerm_app_service_plan" "gratibot_app_service_plan" {
  name                = "gratibot-service-plan"
  location            = var.location
  resource_group_name = var.resource_group_name
@@ -12,7 +12,7 @@ resource "azurerm_app_service_plan" "my_service_plan" {
  }
 }
 
-resource "azurerm_app_service" "gratibot-app-service" {
+resource "azurerm_app_service" "gratibot_app_service" {
  name                    = "gratibot-app-service"
  location                = var.location
  resource_group_name     = var.resource_group_name

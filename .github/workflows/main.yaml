@@ -7,18 +7,20 @@ jobs:
   apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    container: "liatrio/az-go-tf-tg:0.0.1"
+    container: "hashicorp/terraform:0.14.10"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Deploy Gratibot to Nonprod
-        working-directory: users-and-groups
-        run: terraform apply -auto-approve
+        working-directory: tf
+        run: |
+          terraform init
+          terraform apply -auto-approve    
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
-          TF_VAR_acr_subscription_id: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
+          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "docker.io/grantesparza/gratibot:v0.1.0"
           TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}

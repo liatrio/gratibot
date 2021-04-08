@@ -62,8 +62,10 @@ jobs:
             const output = `
             #### Terragrunt Plan \`${{ steps.plan_gratibot_staging_deployment.outcome }}\`
             <details><summary>Show Plan</summary>
+
             \`\`\`${fs.readFileSync('tf/plan.txt')}\`\`\`
             </details>`;
+
             github.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

@@ -1,0 +1,77 @@
+name: "Pull Request"
+on:
+  pull_request:
+jobs:
+  fmt:
+    name: "Terraform fmt check"
+    runs-on: ubuntu-latest
+    container: "hashicorp/terraform:0.14.10"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+  validate:
+    name: "Terraform validate check"
+    runs-on: ubuntu-latest
+    container: "hashicorp/terraform:0.14.10"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Terraform validate check
+        run: terraform validate
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_gratibot_image: "docker.io/grantesparza/gratibot:v0.1.0"
+          TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
+          TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}
+  plan:
+    name: "Terraform plan"
+    runs-on: ubuntu-latest
+    container: "hashicorp/terraform:0.14.10"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Plan Gratibot staging deployment
+        id: plan_gratibot_staging_deployment
+        working-directory: tf
+        run: |
+          terraform init
+          terraform plan -out plan.out
+          terraform show -no-color plan.out > plan.txt
+        continue-on-error: true
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_gratibot_image: "docker.io/grantesparza/gratibot:v0.1.0"
+          TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
+          TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}
+
+      - name: Comment on pull request
+        uses: actions/github-script@v3
+        with:
+          script: |
+            const fs = require('fs');
+            const output = `
+            #### Terragrunt Plan \`${{ steps.plan_gratibot_staging_deployment.outcome }}\`
+            <details><summary>Show Plan</summary>
+
+            \`\`\`${fs.readFileSync('tf/plan.txt')}\`\`\`
+            </details>`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      - name: Status
+        if: contains(steps.*.outcome, 'failure')
+        run: exit 1

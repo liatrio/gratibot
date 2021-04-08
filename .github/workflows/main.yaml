@@ -21,10 +21,6 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-<<<<<<< Updated upstream
-=======
-          TF_VAR_acr_subscription_id: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
->>>>>>> Stashed changes
           TF_VAR_gratibot_image: "docker.io/grantesparza/gratibot:v0.1.0"
           TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}

@@ -5,7 +5,7 @@ jobs:
   fmt:
     name: "Terraform fmt check"
     runs-on: ubuntu-latest
-    container: "liatrio/az-go-tf-tg:0.0.1"
+    container: "liatrio/az-go-tf-tg:2.1.0"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -14,7 +14,7 @@ jobs:
   validate:
     name: "Terraform validate check"
     runs-on: ubuntu-latest
-    container: "liatrio/az-go-tf-tg:0.0.1"
+    container: "liatrio/az-go-tf-tg:2.1.0"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -27,7 +27,7 @@ jobs:
   plan:
     name: "Terraform plan"
     runs-on: ubuntu-latest
-    container: "liatrio/az-go-tf-tg:0.0.1"
+    container: "liatrio/az-go-tf-tg:2.1.0"
     steps:
       - name: Checkout
         uses: actions/checkout@v2

@@ -6,9 +6,9 @@ resource "azurerm_app_service_plan" "gratibot_app_service_plan" {
   reserved            = true
 
   sku {
-    tier     = "PremiumV2"
-    size     = "P2v2"
-    capacity = "3"
+    tier     = var.instance_tier
+    size     = var.instance_size
+    capacity = var.instance_capacity
   }
 }
 

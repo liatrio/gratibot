@@ -26,9 +26,9 @@ resource "azurerm_app_service" "gratibot_app_service" {
   }
 
   app_settings = {
-    "MONGO_URL"            = azurerm_cosmosdb_account.db_account.connection_strings[0]
-    "SIGNING_SECRET"       = var.signing_secret
+    "MONGO_URL"                   = azurerm_cosmosdb_account.db_account.connection_strings[0]
+    "SIGNING_SECRET"              = var.signing_secret
     "BOT_USER_OAUTH_ACCESS_TOKEN" = var.bot_user_token
-    "RECOGNIZE_EMOJI"      = ":oof:"
+    "RECOGNIZE_EMOJI"             = ":oof:"
   }
 }

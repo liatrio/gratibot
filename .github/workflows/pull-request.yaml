@@ -1,7 +1,22 @@
 name: "Pull Request"
 on:
   pull_request:
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
+
 jobs:
+  build:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Generate tag
+        id: tag
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+      - name: Build image
+        run: docker build . --file Dockerfile --tag $IMAGE_NAME:${{ steps.tag.outputs.sha_short }} --label "runnumber=${GITHUB_RUN_ID}"
   fmt:
     name: "Terraform fmt check"
     runs-on: ubuntu-latest
@@ -15,6 +30,7 @@ jobs:
     name: "Terraform validate check"
     runs-on: ubuntu-latest
     container: "hashicorp/terraform:0.14.10"
+    needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -26,7 +42,7 @@ jobs:
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          TF_VAR_gratibot_image: "docker.io/grantesparza/gratibot:v0.1.1"
+          TF_VAR_gratibot_image: "$IMAGE_NAME:${{ needs.build.outputs.sha_short }}"
           TF_VAR_environment: "nonprod"
           TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}
@@ -34,6 +50,7 @@ jobs:
     name: "Terraform plan"
     runs-on: ubuntu-latest
     container: "hashicorp/terraform:0.14.10"
+    needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -51,7 +68,7 @@ jobs:
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          TF_VAR_gratibot_image: "docker.io/grantesparza/gratibot:v0.1.0"
+          TF_VAR_gratibot_image: "$IMAGE_NAME:${{ needs.build.outputs.sha_short }}"
           TF_VAR_environment: "nonprod"
           TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}

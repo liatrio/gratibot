@@ -52,6 +52,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "docker.io/grantesparza/gratibot:v0.1.0"
+          TF_VAR_environment: "nonprod"
           TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}
 

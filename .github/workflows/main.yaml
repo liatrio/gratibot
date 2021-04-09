@@ -25,6 +25,8 @@ jobs:
 
       - name: Push image
         run: docker push $IMAGE_NAME:${{ steps.tag.outputs.sha_short }}
+    outputs:
+      docker_tag: ${{ steps.tag.outputs.sha_short }}
   apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
@@ -44,7 +46,7 @@ jobs:
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          TF_VAR_gratibot_image: "$IMAGE_NAME:${{ needs.build.outputs.sha_short }}"
+          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "nonprod"
           TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}

@@ -15,6 +15,11 @@ variable "location" {
   type        = string
 }
 
+variable "environment" {
+  description = "Environment for Gratibot deployment(nonprod, prod)"
+  type        = string
+}
+
 variable "gratibot_image" {
   description = "Docker image to be used for Gratibot service"
   type        = string

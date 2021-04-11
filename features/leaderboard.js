@@ -105,8 +105,8 @@ function leaderboardHeader() {
  *     section header and leaderboard entries.
  */
 function topGivers(giverScores) {
-  markdown = '*Top Givers*\n\n'
-  markdown += giverScores.map(leaderboardEntry).join('\n')
+  let markdown = "*Top Givers*\n\n";
+  markdown += giverScores.map(leaderboardEntry).join("\n");
 
   return {
     type: "section",
@@ -127,8 +127,8 @@ function topGivers(giverScores) {
  *     section header and leaderboard entries.
  */
 function topReceivers(receiverScores) {
-  markdown = '*Top Receivers*\n\n'
-  markdown += receiverScores.map(leaderboardEntry).join('\n')
+  let markdown = "*Top Receivers*\n\n";
+  markdown += receiverScores.map(leaderboardEntry).join("\n");
 
   return {
     type: "section",
@@ -224,7 +224,7 @@ function timeRangeButtons() {
  *     entry.
  */
 function leaderboardEntry(entry, index) {
-  return `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}`
+  return `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}`;
 }
 
 /* Data Processing */

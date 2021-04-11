@@ -88,7 +88,7 @@ async function createLeaderboardBlocks(timeRange) {
 function leaderboardHeader() {
   return {
     type: "section",
-    block_id: "leaderboard_header",
+    block_id: "leaderboardHeader",
     text: {
       type: "mrkdwn",
       text: "*Leaderboard*",
@@ -110,7 +110,7 @@ function topGivers(giverScores) {
 
   return {
     type: "section",
-    block_id: "recognizersTitle",
+    block_id: "topGivers",
     text: {
       type: "mrkdwn",
       text: markdown,
@@ -132,7 +132,7 @@ function topReceivers(receiverScores) {
 
   return {
     type: "section",
-    block_id: "recognizeesTitle",
+    block_id: "topReceivers",
     text: {
       type: "mrkdwn",
       text: markdown,

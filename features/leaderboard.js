@@ -71,8 +71,8 @@ async function createLeaderboardBlocks(timeRange) {
   const { giverScores, receiverScores } = await leaderboardScoreData(timeRange);
 
   blocks.push(leaderboardHeader());
-  blocks.push(...topGivers(giverScores));
-  blocks.push(...topReceivers(receiverScores));
+  blocks.push(topGivers(giverScores));
+  blocks.push(topReceivers(receiverScores));
   blocks.push(timeRangeInfo(timeRange));
   blocks.push(timeRangeButtons());
 
@@ -97,47 +97,47 @@ function leaderboardHeader() {
 }
 
 /*
- * Generates an array of Block Kit style objects, storing a Top Givers section
+ * Generates a Block Kit style object, storing a Top Givers section
  *    header, and leaderboard entries for provided scores.
  * @param {Array<object>} giverScores An array of objects containing a user ID
  *     and a score.
- * @return {Array<object>} An array of Block Kit style objects, storing a
+ * @return {object} A Block Kit style object, storing a
  *     section header and leaderboard entries.
  */
 function topGivers(giverScores) {
-  let content = [
-    {
-      type: "section",
-      block_id: "recognizersTitle",
-      text: {
-        type: "mrkdwn",
-        text: "*Top Givers*",
-      },
+  markdown = '*Top Givers*\n\n'
+  markdown += giverScores.map(leaderboardEntry).join('\n')
+
+  return {
+    type: "section",
+    block_id: "recognizersTitle",
+    text: {
+      type: "mrkdwn",
+      text: markdown,
     },
-  ];
-  return content.concat(giverScores.map(leaderboardEntry));
+  };
 }
 
 /*
- * Generates an array of Block Kit style objects, storing a Top Receivers section
+ * Generates a Block Kit style object, storing a Top Receivers section
  *    header, and leaderboard entries for provided scores.
  * @param {Array<object>} receiverScores An array of objects containing a user
  *     ID and a score.
- * @return {Array<object>} An array of Block Kit style objects, storing a
+ * @return {object} A Block Kit style object, storing a
  *     section header and leaderboard entries.
  */
 function topReceivers(receiverScores) {
-  let content = [
-    {
-      type: "section",
-      block_id: "recognizeesTitle",
-      text: {
-        type: "mrkdwn",
-        text: "*Top Receivers*",
-      },
+  markdown = '*Top Receivers*\n\n'
+  markdown += receiverScores.map(leaderboardEntry).join('\n')
+
+  return {
+    type: "section",
+    block_id: "recognizeesTitle",
+    text: {
+      type: "mrkdwn",
+      text: markdown,
     },
-  ];
-  return content.concat(receiverScores.map(leaderboardEntry));
+  };
 }
 
 /*
@@ -214,25 +214,17 @@ function timeRangeButtons() {
 }
 
 /*
- * Generates a Block Kit style object, containing a single leaderboard
+ * Generates a markdown string, containing a single leaderboard
  *     entry. Used with Array.map() to format score data.
  * @param {object} entry An object containing a userID and a corresponding
  *    score for a leaderboard entry.
  * @param {number} index A number denoting the rank a particular entry should
  *    be marked with in the leaderboard entry. (Ex: 1st, 2nd 3rd, etc)
- * @return {object} A Block Kit style object, storing a single leaderboard
+ * @return {string} A string of markdown, storing a single leaderboard
  *     entry.
  */
 function leaderboardEntry(entry, index) {
-  return {
-    type: "context",
-    elements: [
-      {
-        type: "mrkdwn",
-        text: `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}\n`,
-      },
-    ],
-  };
+  return `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}`
 }
 
 /* Data Processing */
@@ -303,6 +295,5 @@ function convertToScores(leaderboardData) {
   scores.sort((a, b) => {
     return b.score - a.score;
   });
-  scores.slice(0, 10);
-  return scores;
+  return scores.slice(0, 10);
 }

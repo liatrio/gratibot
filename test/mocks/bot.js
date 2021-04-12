@@ -59,6 +59,7 @@ const mockBot = (controller) => ({
   reply: controller.reply.bind(controller, "channel"),
   replyEphemeral: controller.reply.bind(controller, "ephemeral"),
   replyInThread: controller.reply.bind(controller, "thread"),
+  replyInteractive: controller.reply.bind(controller, "interactive"),
   replyAcknowledge: sinon.stub(),
   say: controller.reply.bind(controller, "thread", []),
   startPrivateConversation: sinon.stub(),

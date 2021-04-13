@@ -1,7 +1,7 @@
 
 # Gratibot
 
-[![Main](https://github.com/liatrio/gratibot-rewrite/actions/workflows/main.yaml/badge.svg)](https://github.com/liatrio/gratibot-rewrite/actions/workflows/main.yaml)
+[![Main](https://github.com/liatrio/gratibot-rewrite/actions/workflows/main.yaml/badge.svg)](https://github.com/liatrio/gratibot-rewrite/actions/workflows/main.yaml) [![codecov](https://codecov.io/gh/liatrio/gratibot-rewrite/branch/main/graph/badge.svg)](https://codecov.io/gh/liatrio/gratibot-rewrite)
 
 Gratibot is a Slack bot for recognizing the accomplishments of friends and
 colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatrio.com/blog/gratibot-chatbot)
@@ -65,6 +65,7 @@ functionality requires the following:
 
 If you're developing new functionality, you may need additional event
 subscriptions.
+
 4. Return to the *OAuth & Permissions* tab, as we'll need to add a few more
 scopes to the app. Slack with automatically add scopes required for the event
 subscriptions we already set. In addition to those, we'll also need to add the
@@ -74,6 +75,7 @@ following:
 
 Once again, if you're developing new functionality, you may need additional
 scopes to be granted.
+
 5. Reinstall the app by clicking the button at the top of this tab. You'll need
 to reinstall the app any time you request additional scopes.
 

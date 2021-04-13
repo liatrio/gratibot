@@ -1,4 +1,7 @@
+
 # Gratibot
+
+[![Main](https://github.com/liatrio/gratibot-rewrite/actions/workflows/main.yaml/badge.svg)](https://github.com/liatrio/gratibot-rewrite/actions/workflows/main.yaml)
 
 Gratibot is a Slack bot for recognizing the accomplishments of friends and
 colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatrio.com/blog/gratibot-chatbot)

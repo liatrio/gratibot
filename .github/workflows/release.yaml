@@ -27,6 +27,34 @@ jobs:
         run: docker push $IMAGE_NAME:${{ steps.tag.outputs.tag }}
     outputs:
       docker_tag: ${{ steps.tag.outputs.tag }}
+  plan:
+    name: "Terraform plan"
+    runs-on: ubuntu-latest
+    environment:
+      name: "prod"
+    container: "hashicorp/terraform:0.14.10"
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Plan Gratibot prod deployment
+        id: plan_gratibot_prod_deployment
+        working-directory: tf
+        run: |
+          terraform init
+          terraform plan -out plan.out
+          terraform show -no-color plan.out > plan.txt
+        continue-on-error: true
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
+          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
+          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
+          TF_VAR_environment: "prod"
+          TF_VAR_signing_secret: ${{ secrets.PROD_SIGNING_SECRET }}
+          TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}
   apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest

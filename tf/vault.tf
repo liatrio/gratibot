@@ -1,7 +1,7 @@
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "gratibot" {
-  name                       = "Gratibot"
+  name                       = "gratibot-${var.environment}"
   location                   = var.location
   resource_group_name        = var.resource_group_name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
@@ -27,11 +27,11 @@ resource "azurerm_key_vault_access_policy" "terraform_access" {
   object_id = data.azurerm_client_config.current.object_id
 
   secret_permissions = [
-    "set",
-    "get",
-    "delete",
-    "purge",
-    "recover"
+    "Set",
+    "Get",
+    "Delete",
+    "Purge",
+    "Recover"
   ]
 }
 

@@ -50,5 +50,5 @@ jobs:
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "prod"
-          TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
-          TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}
+          TF_VAR_signing_secret: ${{ secrets.PROD_SIGNING_SECRET }}
+          TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}

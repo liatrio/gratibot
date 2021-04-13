@@ -23,8 +23,6 @@ jobs:
   fmt:
     name: "Terraform fmt check"
     runs-on: ubuntu-latest
-    environment:
-      name: "nonprod"
     container: "hashicorp/terraform:0.14.10"
     steps:
       - name: Checkout
@@ -49,8 +47,8 @@ jobs:
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "nonprod"
-          TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
-          TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}
+          TF_VAR_signing_secret: ${{ secrets.NONPROD_SIGNING_SECRET }}
+          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
   plan:
     name: "Terraform plan"
     runs-on: ubuntu-latest
@@ -75,8 +73,8 @@ jobs:
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "nonprod"
-          TF_VAR_signing_secret: "*****"
-          TF_VAR_bot_user_token: "*****"
+          TF_VAR_signing_secret: ${{ secrets.NONPROD_SIGNING_SECRET }}
+          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
 
       - name: Comment on pull request
         uses: actions/github-script@v3

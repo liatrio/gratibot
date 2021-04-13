@@ -1,6 +1,7 @@
-name: "Pull Request"
+name: "pull request"
 on:
   pull_request:
+    branches: [main]
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
 
@@ -22,6 +23,8 @@ jobs:
   fmt:
     name: "Terraform fmt check"
     runs-on: ubuntu-latest
+    environment:
+      name: "nonprod"
     container: "hashicorp/terraform:0.14.10"
     steps:
       - name: Checkout
@@ -31,6 +34,8 @@ jobs:
   validate:
     name: "Terraform validate check"
     runs-on: ubuntu-latest
+    environment:
+      name: "nonprod"
     container: "hashicorp/terraform:0.14.10"
     needs: build
     steps:
@@ -51,6 +56,8 @@ jobs:
   plan:
     name: "Terraform plan"
     runs-on: ubuntu-latest
+    environment:
+      name: "nonprod"
     container: "hashicorp/terraform:0.14.10"
     needs: build
     steps:

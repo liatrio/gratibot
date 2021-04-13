@@ -40,7 +40,7 @@ jobs:
       - name: Deploy Gratibot to Prod
         working-directory: tf
         run: |
-          terraform init
+          terraform init -backend-config="storage_account_name=gratibotazuredatatfpd"
           terraform apply -auto-approve
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -48,7 +48,6 @@ jobs:
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
-          TF_VAR_tf_storage_account: "gratibotazuredatatfpd"
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "prod"
           TF_VAR_signing_secret: ${{ secrets.PROD_SIGNING_SECRET }}

@@ -1,3 +1,9 @@
+variable "tf_storage_account" {
+  description = "Azure storage container to use for TF state"
+  type        = string
+  default     = "gratibotazuredatatfnp"
+}
+
 variable "acr_subscription_id" {
   description = "Azure subscription to use for Gratibot resources"
   type        = string

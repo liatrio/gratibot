@@ -1,7 +1,7 @@
 terraform {
   backend "azurerm" {
     resource_group_name  = "gratibot-azure-data"
-    storage_account_name = "gratibotazuredatatfnp"
+    storage_account_name = var.tf_storage_account
     container_name       = "tfstate"
     key                  = "terraform.tfstate"
   }

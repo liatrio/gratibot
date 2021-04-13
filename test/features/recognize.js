@@ -123,7 +123,7 @@ describe("features/recognize", () => {
         .resolves("");
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(0);
-      sinon.stub(config, "usersExemptFromMaximum").value("Giver");
+      sinon.stub(config, "usersExemptFromMaximum").value(["Giver"]);
 
       await controller.userInput({
         text: ":fistbump: <@Receiver> Test Test Test Test Test",

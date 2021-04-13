@@ -40,7 +40,7 @@ jobs:
       - name: Deploy Gratibot to Nonprod
         working-directory: tf
         run: |
-          terraform init
+          terraform init -backend-config=backends/nonprod.tf
           terraform apply -auto-approve
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}

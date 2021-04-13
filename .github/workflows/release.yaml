@@ -40,7 +40,7 @@ jobs:
       - name: Deploy Gratibot to Prod
         working-directory: tf
         run: |
-          terraform init -backend-config="storage_account_name=gratibotazuredatatfpd"
+          terraform init -backend-config=backends/prod.tf
           terraform apply -auto-approve
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}

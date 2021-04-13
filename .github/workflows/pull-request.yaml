@@ -61,7 +61,7 @@ jobs:
         id: plan_gratibot_staging_deployment
         working-directory: tf
         run: |
-          terraform init
+          terraform init -backend-config=backends/nonprod.tf
           terraform plan -out plan.out
           terraform show -no-color plan.out > plan.txt
         continue-on-error: true

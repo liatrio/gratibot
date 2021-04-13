@@ -1,4 +1,4 @@
-name: "Main"
+name: "main"
 on:
   push:
     branches:
@@ -30,6 +30,8 @@ jobs:
   apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
+    environment:
+      name: "nonprod"
     container: "hashicorp/terraform:0.14.10"
     needs: build
     steps:
@@ -44,9 +46,9 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
+          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "nonprod"
-          TF_VAR_signing_secret: ${{ secrets.SIGNING_SECRET }}
-          TF_VAR_bot_user_token: ${{ secrets.BOT_USER_OAUTH_TOKEN }}
+          TF_VAR_signing_secret: ${{ secrets.NONPROD_SIGNING_SECRET }}
+          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}

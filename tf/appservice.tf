@@ -25,10 +25,14 @@ resource "azurerm_app_service" "gratibot_app_service" {
     linux_fx_version = "DOCKER|${var.gratibot_image}"
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   app_settings = {
-    "MONGO_URL"                   = azurerm_cosmosdb_account.db_account.connection_strings[0]
-    "SIGNING_SECRET"              = var.signing_secret
-    "BOT_USER_OAUTH_ACCESS_TOKEN" = var.bot_user_token
+    "MONGO_URL"                   = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongo_connection_string.id})"
+    "SIGNING_SECRET"              = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.signing_secret.id})"
+    "BOT_USER_OAUTH_ACCESS_TOKEN" = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.bot_user_token.id})"
     "RECOGNIZE_EMOJI"             = ":oof:"
   }
 }

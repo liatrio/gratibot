@@ -50,7 +50,7 @@ jobs:
           TF_VAR_signing_secret: ${{ secrets.NONPROD_SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
   plan:
-    name: "Terraform plan"
+    name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
     container: "hashicorp/terraform:0.14.10"
     needs: build
@@ -61,7 +61,7 @@ jobs:
         id: plan_gratibot_staging_deployment
         working-directory: tf
         run: |
-          terraform init
+          terraform init -backend-config=backends/nonprod.tf
           terraform plan -out plan.out
           terraform show -no-color plan.out > plan.txt
         continue-on-error: true
@@ -75,6 +75,7 @@ jobs:
           TF_VAR_environment: "nonprod"
           TF_VAR_signing_secret: ${{ secrets.NONPROD_SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
+          TF_VAR_gratibot_reaction_emoji: ":oof:"
 
       - name: Comment on pull request
         uses: actions/github-script@v3
@@ -82,7 +83,7 @@ jobs:
           script: |
             const fs = require('fs');
             const output = `
-            #### Terraform Plan \`${{ steps.plan_gratibot_staging_deployment.outcome }}\`
+            #### Terraform Nonprod Plan \`${{ steps.plan_gratibot_staging_deployment.outcome }}\`
             <details><summary>Show Plan</summary>
 
             \`\`\`${fs.readFileSync('tf/plan.txt')}\`\`\`

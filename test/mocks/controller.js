@@ -109,8 +109,26 @@ class MockController {
   async event(type, message) {
     const handler = this.behavior.find((b) => b.type === type);
     if (handler) {
-      await handler.cb(this.bot, message);
+      await handler.cb(
+        this.bot,
+        this.formatEvent({
+          ...message,
+        })
+      );
     }
+  }
+
+  formatEvent(message) {
+    return {
+      event_ts: this.chance.word(),
+      channel: this.botInfo().channel,
+      ...message,
+      incoming_message: {
+        recipient: {
+          id: this.botInfo().id,
+        },
+      },
+    };
   }
 
   formatMessage(message) {

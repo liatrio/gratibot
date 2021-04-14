@@ -51,7 +51,7 @@ async function respondToRecognitionMessage(bot, message) {
 
 async function respondToRecognitionReaction(bot, message) {
   if (
-    !message.reaction.includes(reactionEmoji) ||
+    !message.reaction.includes(reactionEmoji.slice(1, -1)) ||
     message.item.type !== "message"
   ) {
     return;
@@ -148,7 +148,7 @@ async function validateAndSendRecognition(
   );
 
   return Promise.all([
-    sendNotificationToReceivers(bot, recognitionInfo, userInfo),
+    sendNotificationToReceivers(bot, message, recognitionInfo, userInfo),
     bot.replyEphemeral(
       message,
       `Your ${recognizeEmoji} has been sent. You have ${gratitudeRemaining} left to give today.`
@@ -224,8 +224,15 @@ async function sendRecognition(recognitionInfo, userInfo) {
   return Promise.all(results);
 }
 
-async function sendNotificationToReceivers(bot, recognitionInfo, userInfo) {
+async function sendNotificationToReceivers(
+  bot,
+  message,
+  recognitionInfo,
+  userInfo
+) {
   let results = [];
+  const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
+    .length;
   for (let i = 0; i < userInfo.receivers.length; i++) {
     const numberRecieved = await recognition.countRecognitionsReceived(
       userInfo.receivers[i].id
@@ -236,6 +243,14 @@ async function sendNotificationToReceivers(bot, recognitionInfo, userInfo) {
         channel: userInfo.receivers[i].id,
       })
     );
+    if (emojiCount === numberRecieved) {
+      results.push(
+        bot.say({
+          text: `I noticed this is your first time receiving a ${recognizeEmoji}. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running \`<@${message.incoming_message.recipient.id}> help\` for more information about me.`,
+          channel: userInfo.receivers[i].id,
+        })
+      );
+    }
   }
   return Promise.all(results);
 }

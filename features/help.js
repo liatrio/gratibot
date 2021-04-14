@@ -1,4 +1,4 @@
-const { recognizeEmoji, maximum } = require("../config");
+const { recognizeEmoji, maximum, reactionEmoji } = require("../config");
 const winston = require("../winston");
 
 module.exports = function (controller) {
@@ -40,6 +40,18 @@ The more emojis you add, the more recognition they get!
 > @alice just pushed the cleanest code I've ever seen! ${recognizeEmoji} ${recognizeEmoji} ${recognizeEmoji}
 
 
+If someone else has given a ${recognizeEmoji} to someone, and you'd like to \
+give one of your own for the same reason, you can react to the message with \
+a ${reactionEmoji}. Gratibot will record your shout-out as though you sent \
+the same message that you reacted to.
+
+*Redeeming*
+
+For details about how to redeem ${recognizeEmoji} check out Confluence:
+
+https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps
+
+
 
 
 *View Balance*
@@ -65,6 +77,19 @@ and receiving the most recognition.
 
 Send me a direct message with 'metrics' and I'll show you how many times \
 people have given recognition over the last month.
+
+
+
+
+*Deduct (BETA)*
+
+Send me a direct message with 'deduct {value}' such as 'deduct 50' and I \
+will remove that number of ${recognizeEmoji} from your total. You can use \
+this to track when you've redeemed prizes.
+
+Note: This feature is still in beta. Deductions are difficult to undo if they \
+are done by accident. No permanent harm should be done by mistaken deductions \
+but be careful. As this is a beta feature, deductions may be wiped in the future.
 `;
 
 async function respondToHelp(bot, message) {

@@ -5,7 +5,7 @@ config.mongo_url = process.env.MONGO_URL || "mongodb://mongodb:27017/gratibot";
 config.logLevel = process.env.LOG_LEVEL || "info";
 
 config.recognizeEmoji = process.env.RECOGNIZE_EMOJI || ":fistbump:";
-config.reactionEmoji = "nail_care";
+config.reactionEmoji = ":nail_care:";
 config.maximum = 5;
 config.minimumMessageLength = 20;
 

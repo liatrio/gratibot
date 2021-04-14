@@ -75,6 +75,7 @@ jobs:
           TF_VAR_environment: "nonprod"
           TF_VAR_signing_secret: ${{ secrets.NONPROD_SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
+          TF_VAR_gratibot_reaction_emoji: ":oof:"
 
       - name: Comment on pull request
         uses: actions/github-script@v3

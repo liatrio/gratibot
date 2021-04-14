@@ -82,7 +82,7 @@ jobs:
           script: |
             const fs = require('fs');
             const output = `
-            #### Terraform Plan \`${{ steps.plan_gratibot_staging_deployment.outcome }}\`
+            #### Terraform Nonprod Plan \`${{ steps.plan_gratibot_staging_deployment.outcome }}\`
             <details><summary>Show Plan</summary>
 
             \`\`\`${fs.readFileSync('tf/plan.txt')}\`\`\`

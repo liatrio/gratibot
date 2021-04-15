@@ -5,7 +5,7 @@ const MockController = require("../mocks/controller");
 
 const balanceFeature = require("../../features/balance");
 const balance = require("../../service/balance");
-// const config = require("../../config");
+const config = require("../../config");
 
 describe("features/balance", () => {
   let controller;
@@ -78,7 +78,6 @@ describe("features/balance", () => {
       expect(response).to.include("You have `5` left to give away today.");
     });
 
-    /*
     it("should handle Slack API errors", async () => {
       sinon.stub(balance, "currentBalance").resolves(10);
       sinon.stub(balance, "lifetimeEarnings").resolves(100);
@@ -90,11 +89,11 @@ describe("features/balance", () => {
       });
       let response = controller.getReplies()[0].response;
 
-      expect(response).to.include("Something went wrong while looking up your balance. Try again later.");
+      expect(response).to.include(
+        "Something went wrong while obtaining your balance."
+      );
     });
-    */
 
-    /*
     it("should tell users if they have unlimited daily gratitude", async () => {
       sinon.stub(balance, "currentBalance").resolves(10);
       sinon.stub(balance, "lifetimeEarnings").resolves(100);
@@ -109,9 +108,8 @@ describe("features/balance", () => {
 
       expect(response).to.not.include("You have `0` left to give away today.");
       expect(response).to.include(
-        "You're exempt from Gratibot limits, you can give as much as you like."
+        "You have no daily limit, you can give as many :fistbump: as you like."
       );
     });
-    */
   });
 });

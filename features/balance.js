@@ -1,5 +1,8 @@
 const balance = require("../service/balance");
+const config = require("../config");
 const winston = require("../winston");
+
+const { recognizeEmoji } = config;
 
 module.exports = function (controller) {
   controller.hears(
@@ -9,13 +12,26 @@ module.exports = function (controller) {
   );
 };
 
-// TODO: Error Handling
 async function respondToBalance(bot, message) {
   winston.info("@gratibot balance Called", {
     callingUser: message.user,
     slackMessage: message.text,
   });
+
   const userInfo = await bot.api.users.info({ user: message.user });
+  if (!userInfo.ok) {
+    winston.error("Slack API returned error from users.info", {
+      callingUser: message.user,
+      slackMessage: message.text,
+      error: userInfo.error,
+    });
+    await bot.replyEphemeral(
+      message,
+      `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`
+    );
+    return;
+  }
+
   const currentBalance = await balance.currentBalance(message.user);
   const lifetimeTotal = await balance.lifetimeEarnings(message.user);
   const remainingToday = await balance.dailyGratitudeRemaining(
@@ -27,7 +43,9 @@ async function respondToBalance(bot, message) {
   const response = [
     `Your current balance is: \`${currentBalance}\``,
     `Your lifetime earnings are: \`${lifetimeTotal}\``,
-    `You have \`${remainingToday}\` left to give away today.`,
+    config.usersExemptFromMaximum.includes(message.user)
+      ? `You have no daily limit, you can give as many ${recognizeEmoji} as you like.`
+      : `You have \`${remainingToday}\` left to give away today.`,
   ].join("\n");
 
   await bot.replyEphemeral(message, response);

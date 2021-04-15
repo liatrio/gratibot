@@ -73,6 +73,10 @@ async function respondToRecognitionReaction(bot, message) {
     })
   ).messages[0];
 
+  if (!messageReactedTo.text.includes(recognizeEmoji)) {
+    return;
+  }
+
   let userInfo;
   try {
     userInfo = await userDetails(bot, messageReactedTo.text, message.user);

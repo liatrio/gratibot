@@ -56,8 +56,14 @@ variable "bot_user_token" {
   sensitive   = true
 }
 
+variable "gratibot_recognize_emoji" {
+  description = "Recognition emoji to use for recognitions"
+  type        = string
+  default     = ":fistbump:"
+}
+
 variable "gratibot_reaction_emoji" {
   description = "Reaction emoji to use for recognitions"
   type        = string
-  default     = ":fistbump:"
+  default     = ":shut_up_and_take_my_fistbump:"
 }

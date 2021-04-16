@@ -53,4 +53,4 @@ jobs:
           TF_VAR_environment: "prod"
           TF_VAR_signing_secret: ${{ secrets.PROD_SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}
-          TF_VAR_gratibot_recognize_emoji: ":fist:"
+          TF_VAR_gratibot_recognize_emoji: ":fistbump:"

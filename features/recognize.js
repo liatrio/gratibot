@@ -155,7 +155,7 @@ async function validateAndSendRecognition(
     sendNotificationToReceivers(bot, message, recognitionInfo, userInfo),
     bot.replyEphemeral(
       message,
-      `Your ${recognizeEmoji} has been sent. You have ${gratitudeRemaining} left to give today.`
+      `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
     ),
   ]);
 }
@@ -192,9 +192,6 @@ async function checkForRecognitionErrors(messageText, userInfo) {
 }
 
 async function isRecognitionWithinSpendingLimits(messageText, userInfo) {
-  if (config.usersExemptFromMaximum.includes(userInfo.giver.id)) {
-    return true;
-  }
   const emojiInMessage = (messageText.match(recognizeEmojiRegex) || []).length;
   const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
     userInfo.giver.id,

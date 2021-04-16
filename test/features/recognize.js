@@ -6,7 +6,6 @@ const MockController = require("../mocks/controller");
 const recognizeFeature = require("../../features/recognize");
 const recognition = require("../../service/recognition");
 const balance = require("../../service/balance");
-const config = require("../../config");
 
 describe("features/recognize", () => {
   let controller;
@@ -122,8 +121,7 @@ describe("features/recognize", () => {
         .stub(recognition, "giveRecognition")
         .resolves("");
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(0);
-      sinon.stub(config, "usersExemptFromMaximum").value(["Giver"]);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(Infinity);
 
       await controller.userInput({
         text: ":fistbump: <@Receiver> Test Test Test Test Test",

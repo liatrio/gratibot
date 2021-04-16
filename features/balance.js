@@ -1,8 +1,5 @@
 const balance = require("../service/balance");
-const config = require("../config");
 const winston = require("../winston");
-
-const { recognizeEmoji } = config;
 
 module.exports = function (controller) {
   controller.hears(
@@ -43,9 +40,7 @@ async function respondToBalance(bot, message) {
   const response = [
     `Your current balance is: \`${currentBalance}\``,
     `Your lifetime earnings are: \`${lifetimeTotal}\``,
-    config.usersExemptFromMaximum.includes(message.user)
-      ? `You have no daily limit, you can give as many ${recognizeEmoji} as you like.`
-      : `You have \`${remainingToday}\` left to give away today.`,
+    `You have \`${remainingToday}\` left to give away today.`,
   ].join("\n");
 
   await bot.replyEphemeral(message, response);

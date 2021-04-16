@@ -1,5 +1,5 @@
 const moment = require('moment-timezone');
-const { maximum } = require('../config')
+const { maximum, usersExemptFromMaximum } = require('../config')
 
 const recognitionCollection = require('../database/recognitionCollection');
 const deductionCollection = require('../database/deductionCollection');
@@ -21,6 +21,9 @@ async function lifetimeSpendings(user) {
 }
 
 async function dailyGratitudeRemaining(user, timezone) {
+    if (usersExemptFromMaximum.includes(user)) {
+        return Infinity;
+    }
     const midnight = moment(Date.now())
         .tz(timezone)
         .startOf('day')

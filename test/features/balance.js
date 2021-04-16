@@ -5,7 +5,6 @@ const MockController = require("../mocks/controller");
 
 const balanceFeature = require("../../features/balance");
 const balance = require("../../service/balance");
-const config = require("../../config");
 
 describe("features/balance", () => {
   let controller;
@@ -97,8 +96,7 @@ describe("features/balance", () => {
     it("should tell users if they have unlimited daily gratitude", async () => {
       sinon.stub(balance, "currentBalance").resolves(10);
       sinon.stub(balance, "lifetimeEarnings").resolves(100);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(0);
-      sinon.stub(config, "usersExemptFromMaximum").value(["Requester"]);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(Infinity);
 
       await controller.userInput({
         text: "balance",
@@ -106,9 +104,8 @@ describe("features/balance", () => {
       });
       let response = controller.getReplies()[0].response;
 
-      expect(response).to.not.include("You have `0` left to give away today.");
       expect(response).to.include(
-        "You have no daily limit, you can give as many :fistbump: as you like."
+        "You have `Infinity` left to give away today."
       );
     });
   });

@@ -9,6 +9,9 @@ resource "azurerm_cosmosdb_account" "db_account" {
 
   capabilities { # forces replacement
     name = "EnableMongo"
+  }
+
+  capabilities { # forces replacement
     name = "DisableRateLimitingResponses"
   }
 

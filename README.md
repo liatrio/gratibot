@@ -71,6 +71,7 @@ scopes to the app. Slack with automatically add scopes required for the event
 subscriptions we already set. In addition to those, we'll also need to add the
 following:
     - `chat:write`
+    - `im:write`
     - `users:read`
 
 Once again, if you're developing new functionality, you may need additional

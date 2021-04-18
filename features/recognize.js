@@ -231,27 +231,20 @@ async function sendNotificationToReceivers(
   recognitionInfo,
   userInfo
 ) {
-  let results = [];
   const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
     .length;
   for (let i = 0; i < userInfo.receivers.length; i++) {
     const numberRecieved = await recognition.countRecognitionsReceived(
       userInfo.receivers[i].id
     );
-    results.push(
-      bot.say({
-        text: `You just got recognized by <@${userInfo.giver.id}> in <#${recognitionInfo.channel}> and your new balance is \`${numberRecieved}\`\n>>>${recognitionInfo.text}`,
-        channel: userInfo.receivers[i].id,
-      })
-    );
+    await bot.startPrivateConversation(userInfo.receivers[i].id);
+    await bot.say({
+      text: `You just got recognized by <@${userInfo.giver.id}> in <#${recognitionInfo.channel}> and your new balance is \`${numberRecieved}\`\n>>>${recognitionInfo.text}`,
+    });
     if (emojiCount === numberRecieved) {
-      results.push(
-        bot.say({
-          text: `I noticed this is your first time receiving a ${recognizeEmoji}. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running \`<@${message.incoming_message.recipient.id}> help\` for more information about me.`,
-          channel: userInfo.receivers[i].id,
-        })
-      );
+      await bot.say({
+        text: `I noticed this is your first time receiving a ${recognizeEmoji}. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running \`<@${message.incoming_message.recipient.id}> help\` for more information about me.`,
+      });
     }
   }
-  return Promise.all(results);
 }

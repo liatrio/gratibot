@@ -335,5 +335,28 @@ describe("features/recognize", () => {
 
       expect(giveRecognition.called).to.be.false;
     });
+    it("shouldn't update database if original message didn't include emoji", async () => {
+      const giveRecognition = sinon
+        .stub(recognition, "giveRecognition")
+        .resolves("");
+      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      controller.bot.api.conversations.history.resolves({
+        messages: [{ text: "<@Receiver> Test Test Test Test Test" }],
+      });
+
+      await controller.event("reaction_added", {
+        reaction: ":nail_care:",
+        user: "Giver",
+        item: {
+          type: "message",
+          channel: "SomeChannel",
+          ts: "1",
+        },
+      });
+
+      expect(giveRecognition.called).to.be.false;
+    });
   });
 });

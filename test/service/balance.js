@@ -4,6 +4,7 @@ const expect = require("chai").expect;
 const config = require("../../config");
 const balance = require("../../service/balance");
 const recognitionCollection = require("../../database/recognitionCollection");
+const deductionCollection = require("../../database/deductionCollection");
 
 describe("service/balance", () => {
   afterEach(() => {
@@ -31,6 +32,34 @@ describe("service/balance", () => {
       );
 
       expect(result).to.equal(9);
+    });
+  });
+  describe("currentBalance", () => {
+    it("should return total earnings when users have no deductions", async () => {
+      sinon.stub(recognitionCollection, "count").resolves(100);
+      sinon.stub(deductionCollection, "find").resolves([]);
+
+      const result = await balance.currentBalance("User");
+
+      expect(result).to.equal(100);
+    });
+  });
+  describe("lifetimeSpendings", () => {
+    it("should sum the total deduction value returned from the db", async () => {
+      sinon.stub(deductionCollection, "find").resolves([
+        {
+          user: "User",
+          value: 10,
+        },
+        {
+          user: "User",
+          value: 10,
+        },
+      ]);
+
+      const result = await balance.lifetimeSpendings("User");
+
+      expect(result).to.equal(20);
     });
   });
 });

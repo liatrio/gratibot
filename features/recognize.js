@@ -194,10 +194,9 @@ async function checkForRecognitionErrors(messageText, userInfo) {
 
 async function isRecognitionWithinSpendingLimits(messageText, userInfo) {
   const emojiInMessage = (messageText.match(recognizeEmojiRegex) || []).length;
-  const multiplier =
-    (messageText.match(multiplierRegex) || []).length > 0
-      ? messageText.match(multiplierRegex)[1]
-      : 1;
+  const multiplier = messageText.match(multiplierRegex)
+    ? messageText.match(multiplierRegex)[1]
+    : 1;
   const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
     userInfo.giver.id,
     userInfo.giver.tz
@@ -215,10 +214,9 @@ async function sendRecognition(recognitionInfo, userInfo) {
   );
   const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
     .length;
-  const multiplier =
-    (recognitionInfo.text.match(multiplierRegex) || []).length > 0
-      ? recognitionInfo.text.match(multiplierRegex)[1]
-      : 1;
+  const multiplier = recognitionInfo.text.match(multiplierRegex)
+    ? recognitionInfo.text.match(multiplierRegex)[1]
+    : 1;
 
   let results = [];
   for (let i = 0; i < userInfo.receivers.length; i++) {

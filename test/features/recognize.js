@@ -100,6 +100,22 @@ describe("features/recognize", () => {
       expect(giveRecognition.args[0][4]).to.deep.equal(["Test"]);
     });
 
+    it("should parse out multipliers in message", async () => {
+      const giveRecognition = sinon
+        .stub(recognition, "giveRecognition")
+        .resolves("");
+      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      await controller.userInput({
+        text: "x2 :fistbump: <@Receiver> Test Test Test Test #Test",
+        user: "Giver",
+        channel: "SomeChannel",
+      });
+
+      expect(giveRecognition.calledTwice).to.be.true;
+    });
+
     it("should handle Slack API errors", async () => {
       const giveRecognition = sinon
         .stub(recognition, "giveRecognition")

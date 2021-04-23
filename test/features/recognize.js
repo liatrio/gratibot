@@ -269,7 +269,7 @@ describe("features/recognize", () => {
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
-      controller.bot.api.conversations.history.resolves({
+      controller.bot.api.conversations.replies.resolves({
         messages: [{ text: ":fistbump: <@Receiver> Test Test Test Test Test" }],
       });
 
@@ -293,7 +293,7 @@ describe("features/recognize", () => {
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
-      controller.bot.api.conversations.history.resolves({
+      controller.bot.api.conversations.replies.resolves({
         messages: [
           { text: ":fistbump: <@NotARealUser> Test Test Test Test Test" },
         ],
@@ -319,7 +319,7 @@ describe("features/recognize", () => {
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
-      controller.bot.api.conversations.history.resolves({
+      controller.bot.api.conversations.replies.resolves({
         messages: [{ text: ":fistbump: <@Receiver> Test Test Test Test Test" }],
       });
 
@@ -342,7 +342,7 @@ describe("features/recognize", () => {
       sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
-      controller.bot.api.conversations.history.resolves({
+      controller.bot.api.conversations.replies.resolves({
         messages: [{ text: "<@Receiver> Test Test Test Test Test" }],
       });
 

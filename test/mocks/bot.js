@@ -21,6 +21,7 @@ const mockBot = (controller) => ({
     },
     conversations: {
       history: sinon.stub(),
+      replies: sinon.stub(),
     },
     reactions: {
       add: function (reaction) {

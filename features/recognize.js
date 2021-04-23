@@ -65,11 +65,10 @@ async function respondToRecognitionReaction(bot, message) {
   // TODO: Error handle this API call
   // Consider refactoring API calls for standardized error handling
   const messageReactedTo = (
-    await bot.api.conversations.history({
+    await bot.api.conversations.replies({
       channel: message.item.channel,
-      latest: message.item.ts,
+      ts: message.item.ts,
       limit: 1,
-      inclusive: true,
     })
   ).messages[0];
 

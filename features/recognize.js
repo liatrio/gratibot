@@ -4,10 +4,6 @@ const balance = require("../service/balance");
 const winston = require("../winston");
 
 const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji } = config;
-const userRegex = /<@([a-zA-Z0-9]+)>/g;
-const tagRegex = /#(\S+)/g;
-const generalEmojiRegex = /:([a-z-_']+):/g;
-const recognizeEmojiRegex = new RegExp(recognizeEmoji, "g");
 
 module.exports = function (controller) {
   controller.hears(
@@ -40,13 +36,16 @@ async function respondToRecognitionMessage(bot, message) {
     );
     return;
   }
-
-  const recognitionInfo = {
-    text: message.text,
+  const gratitude = {
+    ...userInfo,
+    count: recognition.gratitudeCountIn(message.text),
+    message: message.text,
+    trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
     channel: message.channel,
-  };
+    tags: recognition.gratitudeTagsIn(message.text),
+  }
 
-  await validateAndSendRecognition(bot, message, recognitionInfo, userInfo);
+  await validateAndSendRecognition(bot, message, gratitude);
 }
 
 async function respondToRecognitionReaction(bot, message) {
@@ -91,17 +90,21 @@ async function respondToRecognitionReaction(bot, message) {
     );
     return;
   }
-  const recognitionInfo = {
-    text: messageReactedTo.text,
-    channel: message.channel,
-  };
 
-  await validateAndSendRecognition(bot, message, recognitionInfo, userInfo);
+  const gratitude = {
+    ...userInfo,
+    count: recognition.gratitudeCountIn(messageReactedTo.text),
+    message: messageReactedTo.text,
+    trimmedMessage: recognition.trimmedGratitudeMessage(messageReactedTo.text),
+    channel: messageReactedTo.channel,
+    tags: recognition.gratitudeTagsIn(messageReactedTo.text),
+  }
+
+  await validateAndSendRecognition(bot, message, gratitude);
 }
 
 async function userDetails(bot, messageText, giver) {
-  const userStrings = messageText.match(userRegex) || [];
-  const userIds = userStrings.map((user) => user.slice(2, -1));
+  const userIds = recognition.gratitudeReceiverIdsIn(messageText);
 
   const userInfo = {
     giver: await singleUserDetails(bot, giver),
@@ -125,13 +128,9 @@ async function singleUserDetails(bot, userId) {
 async function validateAndSendRecognition(
   bot,
   message,
-  recognitionInfo,
-  userInfo
+  gratitude
 ) {
-  const errors = await checkForRecognitionErrors(
-    recognitionInfo.text,
-    userInfo
-  );
+  const errors = await recognition.gratitudeErrors(gratitude);
   if (errors) {
     await bot.replyEphemeral(
       message,
@@ -143,15 +142,15 @@ async function validateAndSendRecognition(
     return;
   }
 
-  await sendRecognition(recognitionInfo, userInfo);
+  await recognition.giveGratitude(gratitude);
 
   const gratitudeRemaining = await balance.dailyGratitudeRemaining(
-    userInfo.giver.id,
-    userInfo.giver.tz
+    gratitude.giver.id,
+    gratitude.giver.tz
   );
 
   return Promise.all([
-    sendNotificationToReceivers(bot, message, recognitionInfo, userInfo),
+    sendNotificationToReceivers(bot, message, gratitude),
     bot.replyEphemeral(
       message,
       `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
@@ -159,86 +158,19 @@ async function validateAndSendRecognition(
   ]);
 }
 
-async function checkForRecognitionErrors(messageText, userInfo) {
-  const trimmedMessage = messageText
-    .replace(userRegex, "")
-    .replace(generalEmojiRegex, "");
-
-  return [
-    userInfo.receivers.length === 0
-      ? "- Mention who you want to recognize with @user"
-      : "",
-    userInfo.receivers.find((x) => x.id == userInfo.giver.id)
-      ? "- You can't recognize yourself"
-      : "",
-    userInfo.giver.is_bot ? "- Bots can't give recognition" : "",
-    userInfo.giver.is_restricted ? "- Guest users can't give recognition" : "",
-    userInfo.receivers.find((x) => x.is_bot)
-      ? "- You can't give recognition to bots"
-      : "",
-    userInfo.receivers.find((x) => x.is_restricted)
-      ? "- You can' give recognition to guest users"
-      : "",
-    trimmedMessage.length < minimumMessageLength
-      ? `- Your message must be at least ${minimumMessageLength} characters`
-      : "",
-    !(await isRecognitionWithinSpendingLimits(messageText, userInfo))
-      ? `- A maximum of ${maximum} ${recognizeEmoji} can be sent per day`
-      : "",
-  ]
-    .filter((x) => x !== "")
-    .join("\n");
-}
-
-async function isRecognitionWithinSpendingLimits(messageText, userInfo) {
-  const emojiInMessage = (messageText.match(recognizeEmojiRegex) || []).length;
-  const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
-    userInfo.giver.id,
-    userInfo.giver.tz
-  );
-  const recognitionInMessage = userInfo.receivers.length * emojiInMessage;
-  return dailyGratitudeRemaining >= recognitionInMessage;
-}
-
-// TODO Can we add a 'count' field to the recognition?
-async function sendRecognition(recognitionInfo, userInfo) {
-  const tags = (recognitionInfo.text.match(tagRegex) || []).map((tag) =>
-    tag.slice(1)
-  );
-  const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
-    .length;
-  let results = [];
-  for (let i = 0; i < userInfo.receivers.length; i++) {
-    for (let j = 0; j < emojiCount; j++) {
-      results.push(
-        recognition.giveRecognition(
-          userInfo.giver.id,
-          userInfo.receivers[i].id,
-          recognitionInfo.text,
-          recognitionInfo.channel,
-          tags
-        )
-      );
-    }
-  }
-  return Promise.all(results);
-}
-
 async function sendNotificationToReceivers(
   bot,
   message,
-  recognitionInfo,
-  userInfo
+  gratitude
 ) {
-  const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
-    .length;
-  for (let i = 0; i < userInfo.receivers.length; i++) {
+  const emojiCount = recognition.gratitudeCountIn(gratitude.message);
+  for (let i = 0; i < gratitude.receivers.length; i++) {
     const numberRecieved = await recognition.countRecognitionsReceived(
-      userInfo.receivers[i].id
+      gratitude.receivers[i].id
     );
-    await bot.startPrivateConversation(userInfo.receivers[i].id);
+    await bot.startPrivateConversation(gratitude.receivers[i].id);
     await bot.say({
-      text: `You just got recognized by <@${userInfo.giver.id}> in <#${recognitionInfo.channel}> and your new balance is \`${numberRecieved}\`\n>>>${recognitionInfo.text}`,
+      text: `You just got recognized by <@${gratitude.giver.id}> in <#${gratitude.channel}> and your new balance is \`${numberRecieved}\`\n>>>${gratitude.message}`,
     });
     if (emojiCount === numberRecieved) {
       await bot.say({

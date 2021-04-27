@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: gratibot
+  description: Slack bot used to recognize one another’s accomplishments and give shoutouts
+  tags:
+    - node
+    - javascript
+    - azure
+    - botkit
+spec:
+  type: service
+  lifecycle: production
+  owner: liatrio
+  system: gratibot

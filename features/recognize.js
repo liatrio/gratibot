@@ -2,6 +2,7 @@ const config = require("../config");
 const recognition = require("../service/recognition");
 const balance = require("../service/balance");
 const winston = require("../winston");
+const { SlackError, GratitudeError } = require("../service/errors");
 
 const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji } = config;
 
@@ -20,32 +21,44 @@ async function respondToRecognitionMessage(bot, message) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-
-  let userInfo;
+  let gratitude;
   try {
-    userInfo = await userDetails(bot, message.text, message.user);
-  } catch (err) {
-    winston.error("Slack API returned error from users.info", {
-      callingUser: message.user,
-      slackMessage: message.text,
-      error: err.message,
-    });
-    await bot.replyEphemeral(
-      message,
-      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${err.message} \n Recognition has not been sent.`
-    );
-    return;
-  }
-  const gratitude = {
-    ...userInfo,
-    count: recognition.gratitudeCountIn(message.text),
-    message: message.text,
-    trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
-    channel: message.channel,
-    tags: recognition.gratitudeTagsIn(message.text),
-  }
+    gratitude = {
+      giver: await userInfo(bot, message.user),
+      receivers: await Promise.all(
+        recognition.gratitudeReceiverIdsIn(
+          message.text
+        )
+        .map(async (receiver) => userInfo(bot, receiver))
+      ),
+      count: recognition.gratitudeCountIn(message.text),
+      message: message.text,
+      trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
+      channel: message.channel,
+      tags: recognition.gratitudeTagsIn(message.text),
+    }
 
-  await validateAndSendRecognition(bot, message, gratitude);
+    await recognition.validateAndSendGratitude(gratitude);
+  } catch (e) {
+    if (e instanceof SlackError) {
+      return handleSlackError(bot, message, e);
+    } else if (e instanceof GratitudeError) {
+      return handleGratitudeError(bot, message, e);
+    }
+    throw(e);
+  }
+  const gratitudeRemaining = await balance.dailyGratitudeRemaining(
+    gratitude.giver.id,
+    gratitude.giver.tz
+  );
+
+  return Promise.all([
+    sendNotificationToReceivers(bot, message, gratitude),
+    bot.replyEphemeral(
+      message,
+      `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
+    ),
+  ]);
 }
 
 async function respondToRecognitionReaction(bot, message) {
@@ -61,88 +74,37 @@ async function respondToRecognitionReaction(bot, message) {
     reactionEmoji: message.reaction,
   });
 
-  // TODO: Error handle this API call
-  // Consider refactoring API calls for standardized error handling
-  const messageReactedTo = (
-    await bot.api.conversations.replies({
-      channel: message.item.channel,
-      ts: message.item.ts,
-      limit: 1,
-    })
-  ).messages[0];
-
-  if (!messageReactedTo.text.includes(recognizeEmoji)) {
-    return;
-  }
-
-  let userInfo;
   try {
-    userInfo = await userDetails(bot, messageReactedTo.text, message.user);
-  } catch (err) {
-    winston.error("Slack API returned error from users.info", {
-      callingUser: message.user,
-      slackMessage: message.text,
-      APIResponse: err.message,
-    });
-    await bot.replyEphemeral(
-      message,
-      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${err.message} \n Recognition has not been sent.`
-    );
-    return;
+    const originalMessage = await originalMessage(bot, message);
+
+    if (!originalMessage.text.includes(recognizeEmoji)) {
+      return;
+    }
+
+    const gratitude = {
+      giver: await userInfo(bot, message.user),
+      receivers: await Promise.all(
+        recognition.gratitudeReceiverIdsIn(
+          originalMessage.text
+        )
+        .map(async (receiver) => userInfo(bot, receiver))
+      ),
+      count: recognition.gratitudeCountIn(originalMessage.text),
+      message: originalMessage.text,
+      trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
+      channel: originalMessage.channel,
+      tags: recognition.gratitudeTagsIn(originalMessage.text),
+    }
+    await recognition.validateAndSendGratitude(gratitude);
+  } catch (e) {
+    if (e instanceof SlackError) {
+      return handleSlackError(bot, message, e);
+    } else if (e instanceof GratitudeError) {
+      return handleGratitudeError(bot, message, e);
+    }
+    throw(e);
   }
 
-  const gratitude = {
-    ...userInfo,
-    count: recognition.gratitudeCountIn(messageReactedTo.text),
-    message: messageReactedTo.text,
-    trimmedMessage: recognition.trimmedGratitudeMessage(messageReactedTo.text),
-    channel: messageReactedTo.channel,
-    tags: recognition.gratitudeTagsIn(messageReactedTo.text),
-  }
-
-  await validateAndSendRecognition(bot, message, gratitude);
-}
-
-async function userDetails(bot, messageText, giver) {
-  const userIds = recognition.gratitudeReceiverIdsIn(messageText);
-
-  const userInfo = {
-    giver: await singleUserDetails(bot, giver),
-    receivers: await Promise.all(
-      userIds.map(async (receiver) => singleUserDetails(bot, receiver))
-    ),
-  };
-
-  return userInfo;
-}
-
-// TODO: Consider refactoring API calls for standardized error handling
-async function singleUserDetails(bot, userId) {
-  const singleUserInfo = await bot.api.users.info({ user: userId });
-  if (singleUserInfo.ok) {
-    return singleUserInfo.user;
-  }
-  throw new Error(singleUserInfo.error);
-}
-
-async function validateAndSendRecognition(
-  bot,
-  message,
-  gratitude
-) {
-  const errors = await recognition.gratitudeErrors(gratitude);
-  if (errors) {
-    await bot.replyEphemeral(
-      message,
-      [
-        `Sending ${recognizeEmoji} failed with the following error(s):`,
-        errors,
-      ].join("\n")
-    );
-    return;
-  }
-
-  await recognition.giveGratitude(gratitude);
 
   const gratitudeRemaining = await balance.dailyGratitudeRemaining(
     gratitude.giver.id,
@@ -156,6 +118,57 @@ async function validateAndSendRecognition(
       `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
     ),
   ]);
+}
+
+// API Wrappers
+
+async function userInfo(bot, userId) {
+  response = await bot.api.users.info({ user: userId });
+  if (response.ok) {
+    return response.user;
+  }
+  throw new SlackError(
+    "users.info",
+    response.error,
+    `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+  );
+}
+
+async function originalMessage(bot, message) {
+  const response = await bot.api.conversations.replies({
+    channel: message.item.channel,
+    ts: message.item.ts,
+    limit: 1,
+  });
+  if (response.ok) {
+    return response.message[0];
+  }
+  throw new SlackError(
+    "conversations.replies",
+    response.error,
+    `Something went wrong while sending recognition. When retreiving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+  );
+}
+
+// Response Message Utils
+
+async function handleSlackError(bot, message, error) {
+  winston.error("Slack API returned an error response", {
+    apiMethod: error.apiMethod,
+    apiError: error.apiError,
+  });
+  return bot.replyEphemeral(message, error.userMessage); 
+}
+
+async function handleGratitudeError(bot, message, error) {
+  winston.info("Rejected gratitude request as invalid", {
+    gratitudeErrors: error.gratitudeErrors,
+  });
+  const errorString = error.gratitudeErrors.join("\n");
+  return bot.replyEphemeral(
+    message,
+    `Sending gratitude failed with the following error(s):\n${errorString}`
+  );
 }
 
 async function sendNotificationToReceivers(

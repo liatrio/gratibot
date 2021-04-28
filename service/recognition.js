@@ -2,6 +2,7 @@ const config = require("../config")
 const moment = require('moment-timezone');
 const recognitionCollection = require('../database/recognitionCollection');
 const balance = require("./balance");
+const { GratitudeError } = require("./errors")
 
 const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji } = config;
 
@@ -122,8 +123,7 @@ async function gratitudeErrors(gratitude) {
       ? `- A maximum of ${maximum} ${recognizeEmoji} can be sent per day`
       : "",
   ]
-    .filter((x) => x !== "")
-    .join("\n");
+    .filter((x) => x !== "");
 }
 
 async function giveGratitude(gratitude) {
@@ -144,6 +144,13 @@ async function giveGratitude(gratitude) {
   return Promise.all(results);
 }
 
+async function validateAndSendGratitude(gratitude) {
+  const errors = await gratitudeErrors(gratitude);
+  if (errors) {
+    throw new GratitudeError(errors)
+  }
+  return giveGratitude(gratitude);
+}
 
 
 /*
@@ -178,5 +185,6 @@ module.exports = {
     gratitudeErrors,
     trimmedGratitudeMessage,
     gratitudeTagsIn,
-    giveGratitude
+    giveGratitude,
+    validateAndSendGratitude
 }

@@ -36,7 +36,7 @@ Create a Slack app for running a development version of Gratibot:
 ##### Create Your App
 
 1. Goto [api.slack.com/apps.](https://api.slack.com/apps)
-2. Click 'Create New App' and pick an name for your app.
+2. Click 'Create New App' and pick a name for your app.
     - If you're developing in a shared workspace, consider a name like `${your_name}-bot`.
     This will help others to identify who owns the bot.
 3. Select the Slack workspace you'll run the bot in for development.

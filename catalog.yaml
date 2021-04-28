@@ -8,6 +8,13 @@ metadata:
     - javascript
     - azure
     - botkit
+  links:
+    - url: https://portal.azure.com/#@liatrio.com/resource/subscriptions/761bf739-12c3-43cb-bec9-d87c1d7fa459/resourceGroups/gratibot-azure-data/overview
+      title: Non-Prod Azure Resources
+      icon: dashboard
+    - url: https://portal.azure.com/#@liatrio.com/resource/subscriptions/06c2c5d0-9228-446c-83e2-ead8d530914e/resourceGroups/gratibot-azure-data/overview
+      title: Prod Azure Resources
+      icon: dashboard
 spec:
   type: service
   lifecycle: production

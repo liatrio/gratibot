@@ -60,7 +60,7 @@ jobs:
     environment:
       name: "prod"
     container: "hashicorp/terraform:0.14.10"
-    needs: plan
+    needs: [build, plan]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

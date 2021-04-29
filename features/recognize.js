@@ -8,6 +8,7 @@ const userRegex = /<@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
 const recognizeEmojiRegex = new RegExp(recognizeEmoji, "g");
+const multiplierRegex = /x([0-9]+)/;
 
 module.exports = function (controller) {
   controller.hears(
@@ -192,11 +193,16 @@ async function checkForRecognitionErrors(messageText, userInfo) {
 
 async function isRecognitionWithinSpendingLimits(messageText, userInfo) {
   const emojiInMessage = (messageText.match(recognizeEmojiRegex) || []).length;
+  const multiplier = messageText.match(multiplierRegex)
+    ? messageText.match(multiplierRegex)[1]
+    : 1;
   const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
     userInfo.giver.id,
     userInfo.giver.tz
   );
-  const recognitionInMessage = userInfo.receivers.length * emojiInMessage;
+  const recognitionInMessage =
+    userInfo.receivers.length * emojiInMessage * multiplier;
+
   return dailyGratitudeRemaining >= recognitionInMessage;
 }
 
@@ -207,9 +213,13 @@ async function sendRecognition(recognitionInfo, userInfo) {
   );
   const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
     .length;
+  const multiplier = recognitionInfo.text.match(multiplierRegex)
+    ? recognitionInfo.text.match(multiplierRegex)[1]
+    : 1;
+
   let results = [];
   for (let i = 0; i < userInfo.receivers.length; i++) {
-    for (let j = 0; j < emojiCount; j++) {
+    for (let j = 0; j < emojiCount * multiplier; j++) {
       results.push(
         recognition.giveRecognition(
           userInfo.giver.id,

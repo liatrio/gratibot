@@ -3,6 +3,8 @@ kind: Component
 metadata:
   name: gratibot
   description: Slack bot used to recognize one another’s accomplishments and give shoutouts
+  annotations:
+    github.com/project-slug: 'liatrio/gratibot'
   tags:
     - node
     - javascript

@@ -41,7 +41,7 @@ jobs:
         working-directory: tf
         run: |
           terraform init -backend-config=backends/prod.tf
-          terraform plan
+          terraform plan -out=plan.txt
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -54,6 +54,12 @@ jobs:
           TF_VAR_signing_secret: ${{ secrets.PROD_PLAN_SIGNING_SECRET }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_PLAN_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":fistbump:"
+      - name: Upload Terraform Plan results
+        uses: actions/upload-artifact@v2
+        working-directory: tf
+        with:
+          name: plan_output
+          path: plan.txt
   apply:
     name: "Terraform Prod Apply"
     runs-on: ubuntu-latest
@@ -64,20 +70,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Download Terrform Plan output
+        working-directory: tf
+        uses: actions/download-artifact@v2
+        with:
+          name: plan_output
       - name: Deploy Gratibot to Prod
         working-directory: tf
         run: |
           terraform init -backend-config=backends/prod.tf
-          terraform apply -auto-approve
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
-          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
-          TF_VAR_instance_capacity: "2"
-          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_environment: "prod"
-          TF_VAR_signing_secret: ${{ secrets.PROD_SIGNING_SECRET }}
-          TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}
-          TF_VAR_gratibot_recognize_emoji: ":fistbump:"
+          terraform apply -auto-approve plan.txt

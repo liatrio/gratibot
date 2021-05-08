@@ -1,5 +1,3 @@
-const sinon = require("sinon");
-const suppressLogs = require("mocha-suppress-logs");
 const expect = require("chai").expect;
 
 const MockController = require("../mocks/controller");

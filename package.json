@@ -14,7 +14,7 @@
   "dependencies": {
     "botbuilder-adapter-slack": "^1.0.12",
     "botkit": "^4.9.0",
-    "dotenv": "^9.0.0",
+    "dotenv": "^9.0.1",
     "moment-timezone": "^0.5.31",
     "monk": "^7.3.1",
     "winston": "^3.3.3"

@@ -6,6 +6,7 @@ const MockController = require("../mocks/controller");
 const recognizeFeature = require("../../features/recognize");
 const recognition = require("../../service/recognition");
 const balance = require("../../service/balance");
+const { GratitudeError } = require("../../service/errors");
 
 describe("features/recognize", () => {
   let controller;
@@ -34,26 +35,6 @@ describe("features/recognize", () => {
           is_restricted: false,
         },
       })
-      .withArgs({ user: "BotUser" })
-      .resolves({
-        ok: true,
-        user: {
-          id: "BotUser",
-          tz: "America/Los_Angeles",
-          is_bot: true,
-          is_restricted: false,
-        },
-      })
-      .withArgs({ user: "GuestUser" })
-      .resolves({
-        ok: true,
-        user: {
-          id: "GuestUser",
-          tz: "America/Los_Angeles",
-          is_bot: false,
-          is_restricted: true,
-        },
-      })
       .withArgs({ user: "NotARealUser" })
       .resolves({
         ok: false,
@@ -68,225 +49,129 @@ describe("features/recognize", () => {
   });
 
   describe("a recognition message", () => {
-    it("should update database on valid recognition", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+    it("should respond when recognition is okay", async () => {
+      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
       await controller.userInput({
-        text: ":fistbump: <@Receiver> Test Test Test Test Test",
+        text: ":fistbump: <@Receiver> Test Message",
         user: "Giver",
-        channel: "SomeChannel",
       });
 
-      expect(giveRecognition.called).to.be.true;
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Your :fistbump: has been sent.");
     });
 
-    it("should parse out supplied message tags", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+    it("should send addition response to first time receivers", async () => {
+      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(recognition, "countRecognitionsReceived").returns(1);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
       await controller.userInput({
-        text: ":fistbump: <@Receiver> Test Test Test Test #Test",
+        text: ":fistbump: <@Receiver> Test Message",
         user: "Giver",
-        channel: "SomeChannel",
       });
 
-      expect(giveRecognition.args[0][4]).to.deep.equal(["Test"]);
+      const replies = controller.getReplies();
+      expect(replies[0].response).to.include("Your :fistbump: has been sent.");
+      expect(replies[2].response.text).to.include("first time receiving");
     });
 
-    it("should parse out multipliers in message", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+    it("should respond with error when user info can't be found", async () => {
+      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
+      sinon
+        .stub(recognition, "gratitudeReceiverIdsIn")
+        .returns(["NotARealUser"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
       await controller.userInput({
-        text: "x2 :fistbump: <@Receiver> Test Test Test Test #Test",
+        text: ":fistbump: <@NotARealUser> Test Message",
         user: "Giver",
-        channel: "SomeChannel",
       });
 
-      expect(giveRecognition.calledTwice).to.be.true;
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Recognition has not been sent.");
     });
 
-    it("should handle Slack API errors", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+    it("should respond with error when gratitude is invalid", async () => {
+      sinon
+        .stub(recognition, "validateAndSendGratitude")
+        .throws(new GratitudeError(["Test Gratitude Error"]));
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
       await controller.userInput({
-        text: ":fistbump: <@NotARealUser> Test Test Test Test Test",
+        text: ":fistbump: <@Receiver> Test Message",
         user: "Giver",
-        channel: "SomeChannel",
       });
 
-      expect(giveRecognition.called).to.be.false;
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Test Gratitude Error");
     });
 
-    it("should allow exempt users to give recognition over the maximum", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(Infinity);
-
-      await controller.userInput({
-        text: ":fistbump: <@Receiver> Test Test Test Test Test",
-        user: "Giver",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.true;
-    });
-
-    it("shouldn't update database when there are no receivers", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+    it("should respond with error unknown errors occur", async () => {
+      sinon
+        .stub(recognition, "validateAndSendGratitude")
+        .throws(new Error("Test Unknown Error"));
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
 
       await controller.userInput({
-        text: ":fistbump: Test Test Test Test Test",
+        text: ":fistbump: <@Receiver> Test Message",
         user: "Giver",
-        channel: "SomeChannel",
       });
 
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when giver matches a receiver", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      await controller.userInput({
-        text: ":fistbump: <@Giver> Test Test Test Test Test",
-        user: "Giver",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when giver is a bot user", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      await controller.userInput({
-        text: ":fistbump: <@Receiver> Test Test Test Test Test",
-        user: "BotUser",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when giver is a guest user", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      await controller.userInput({
-        text: ":fistbump: <@Receiver> Test Test Test Test Test",
-        user: "GuestUser",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when receiver is a bot user", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      await controller.userInput({
-        text: ":fistbump: <@BotUser> Test Test Test Test Test",
-        user: "Giver",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when receiver is a guest user", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      await controller.userInput({
-        text: ":fistbump: <@GuestUser> Test Test Test Test Test",
-        user: "Giver",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when message is too short", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      await controller.userInput({
-        text: ":fistbump: <@Receiver> Test",
-        user: "Giver",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when giver has no recognition to spend", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(0);
-
-      await controller.userInput({
-        text: ":fistbump: <@Receiver> Test",
-        user: "Giver",
-        channel: "SomeChannel",
-      });
-
-      expect(giveRecognition.called).to.be.false;
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Test Unknown Error");
     });
   });
 
   describe("a recognition reaction", () => {
-    it("should update database on valid recognition", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+    it("should respond when recognition is okay", async () => {
+      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
 
       controller.bot.api.conversations.replies.resolves({
-        messages: [{ text: ":fistbump: <@Receiver> Test Test Test Test Test" }],
+        ok: true,
+        messages: [{ text: ":fistbump: <@Receiver> Test Message" }],
       });
 
       await controller.event("reaction_added", {
@@ -299,19 +184,148 @@ describe("features/recognize", () => {
         },
       });
 
-      expect(giveRecognition.called).to.be.true;
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Your :fistbump: has been sent.");
     });
 
-    it("should handle Slack API errors", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
+    it("should respond with error when original message can't be found", async () => {
+      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
 
       controller.bot.api.conversations.replies.resolves({
+        ok: false,
+        error: "thread_not_found",
+      });
+
+      await controller.event("reaction_added", {
+        reaction: ":nail_care:",
+        user: "Giver",
+        item: {
+          type: "message",
+          channel: "SomeChannel",
+          ts: "1",
+        },
+      });
+
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Recognition has not been sent.");
+    });
+
+    it("should respond with error when gratitude is invalid", async () => {
+      sinon
+        .stub(recognition, "validateAndSendGratitude")
+        .throws(new GratitudeError(["Test Gratitude Error"]));
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+
+      controller.bot.api.conversations.replies.resolves({
+        ok: true,
+        messages: [{ text: ":fistbump: <@Receiver> Test Message" }],
+      });
+
+      await controller.event("reaction_added", {
+        reaction: ":nail_care:",
+        user: "Giver",
+        item: {
+          type: "message",
+          channel: "SomeChannel",
+          ts: "1",
+        },
+      });
+
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Test Gratitude Error");
+    });
+
+    it("should respond with error unknown errors occur", async () => {
+      sinon
+        .stub(recognition, "validateAndSendGratitude")
+        .throws(new Error("Test Unknown Error"));
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+
+      controller.bot.api.conversations.replies.resolves({
+        ok: true,
+        messages: [{ text: ":fistbump: <@Receiver> Test Message" }],
+      });
+
+      await controller.event("reaction_added", {
+        reaction: ":nail_care:",
+        user: "Giver",
+        item: {
+          type: "message",
+          channel: "SomeChannel",
+          ts: "1",
+        },
+      });
+
+      const reply = controller.getReplies()[0].response;
+      expect(reply).to.include("Test Unknown Error");
+    });
+
+    it("should ignore reactions that aren't the reaction emoji", async () => {
+      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+
+      controller.bot.api.conversations.replies.resolves({
+        ok: true,
+        messages: [{ text: ":fistbump: <@Receiver> Test Test Test Test Test" }],
+      });
+
+      await controller.event("reaction_added", {
+        reaction: ":some_other_emoji:",
+        user: "Giver",
+        item: {
+          type: "message",
+          channel: "SomeChannel",
+          ts: "1",
+        },
+      });
+
+      expect(controller.getReplies()).to.have.length.of(0);
+    });
+
+    it("should ignore reactions to messages that were not gratitude", async () => {
+      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
+      sinon.stub(recognition, "gratitudeCountIn").returns(1);
+      sinon
+        .stub(recognition, "trimmedGratitudeMessage")
+        .returns("Test Message");
+      sinon.stub(recognition, "gratitudeTagsIn").returns("");
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+
+      controller.bot.api.conversations.replies.resolves({
+        ok: true,
         messages: [
-          { text: ":fistbump: <@NotARealUser> Test Test Test Test Test" },
+          { text: ":some_other_emoji: <@Receiver> Test Test Test Test Test" },
         ],
       });
 
@@ -325,54 +339,7 @@ describe("features/recognize", () => {
         },
       });
 
-      expect(giveRecognition.called).to.be.false;
-    });
-
-    it("shouldn't update database when the wrong reaction emoji is used", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      controller.bot.api.conversations.replies.resolves({
-        messages: [{ text: ":fistbump: <@Receiver> Test Test Test Test Test" }],
-      });
-
-      await controller.event("reaction_added", {
-        reaction: ":any_wrong_emoji:",
-        user: "Giver",
-        item: {
-          type: "message",
-          channel: "SomeChannel",
-          ts: "1",
-        },
-      });
-
-      expect(giveRecognition.called).to.be.false;
-    });
-    it("shouldn't update database if original message didn't include emoji", async () => {
-      const giveRecognition = sinon
-        .stub(recognition, "giveRecognition")
-        .resolves("");
-      sinon.stub(recognition, "countRecognitionsReceived").resolves(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      controller.bot.api.conversations.replies.resolves({
-        messages: [{ text: "<@Receiver> Test Test Test Test Test" }],
-      });
-
-      await controller.event("reaction_added", {
-        reaction: ":nail_care:",
-        user: "Giver",
-        item: {
-          type: "message",
-          channel: "SomeChannel",
-          ts: "1",
-        },
-      });
-
-      expect(giveRecognition.called).to.be.false;
+      expect(controller.getReplies()).to.have.length.of(0);
     });
   });
 });

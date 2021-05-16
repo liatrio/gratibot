@@ -15,6 +15,10 @@ resource "azurerm_cosmosdb_account" "db_account" {
     name = "DisableRateLimitingResponses"
   }
 
+  capabilities { # forces replacement
+    name = "EnableServerless"
+  }
+
   consistency_policy {
     consistency_level       = "BoundedStaleness"
     max_interval_in_seconds = 5
@@ -31,5 +35,4 @@ resource "azurerm_cosmosdb_mongo_database" "mongo_db" {
   name                = "gratibot-cosmos-${var.environment}-mongo-db"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.db_account.name
-  throughput          = 400
 }

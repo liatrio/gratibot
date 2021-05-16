@@ -1,5 +1,5 @@
 class SlackError extends Error {
-  
+
   constructor (apiMethod, apiError, userMessage, message) {
     super(message);
 

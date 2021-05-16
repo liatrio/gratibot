@@ -14,7 +14,6 @@ const multiplierRegex = /x([0-9]+)/;
 
 // TODO Can we add a 'count' field to the recognition?
 async function giveRecognition(recognizer, recognizee, message, channel, values) {
-  console.debug('Sending a recognition given to database');
   let timestamp = new Date();
   return await recognitionCollection.insert(
   {
@@ -28,7 +27,6 @@ async function giveRecognition(recognizer, recognizee, message, channel, values)
 }
 
 async function countRecognitionsReceived(user, timezone = null, days = null) {
-  console.debug('Getting the recognitions a user received');
   let filter = {recognizee:user}
   if(days && timezone) {
     let userDate = moment(Date.now()).tz(timezone);
@@ -43,7 +41,6 @@ async function countRecognitionsReceived(user, timezone = null, days = null) {
 }
 
 async function countRecognitionsGiven (user, timezone = null, days = null) {
-  console.debug('Getting the recognitions a user gave');
   let filter = {recognizer:user}
   if(days && timezone) {
     let userDate = moment(Date.now()).tz(timezone);
@@ -87,7 +84,7 @@ function gratitudeCountIn(text) {
 
 function gratitudeTagsIn(text) {
   return (text.match(tagRegex) || [])
-    .map((tag) => tag.slice(1)); 
+    .map((tag) => tag.slice(1));
 }
 
 function trimmedGratitudeMessage(text) {
@@ -119,7 +116,7 @@ async function gratitudeErrors(gratitude) {
       ? "- You can't give recognition to bots"
       : "",
     gratitude.receivers.find((x) => x.is_restricted)
-      ? "- You can' give recognition to guest users"
+      ? "- You can't give recognition to guest users"
       : "",
     gratitude.trimmedMessage.length < minimumMessageLength
       ? `- Your message must be at least ${minimumMessageLength} characters`
@@ -151,7 +148,7 @@ async function giveGratitude(gratitude) {
 
 async function validateAndSendGratitude(gratitude) {
   const errors = await gratitudeErrors(gratitude);
-  if (errors) {
+  if (errors.length > 0) {
     throw new GratitudeError(errors)
   }
   return giveGratitude(gratitude);

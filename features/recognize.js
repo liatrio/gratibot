@@ -4,7 +4,7 @@ const balance = require("../service/balance");
 const winston = require("../winston");
 const { SlackError, GratitudeError } = require("../service/errors");
 
-const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji } = config;
+const { recognizeEmoji, reactionEmoji } = config;
 
 module.exports = function (controller) {
   controller.hears(
@@ -26,17 +26,16 @@ async function respondToRecognitionMessage(bot, message) {
     gratitude = {
       giver: await userInfo(bot, message.user),
       receivers: await Promise.all(
-        recognition.gratitudeReceiverIdsIn(
-          message.text
-        )
-        .map(async (receiver) => userInfo(bot, receiver))
+        recognition
+          .gratitudeReceiverIdsIn(message.text)
+          .map(async (receiver) => userInfo(bot, receiver))
       ),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
       channel: message.channel,
       tags: recognition.gratitudeTagsIn(message.text),
-    }
+    };
 
     await recognition.validateAndSendGratitude(gratitude);
   } catch (e) {
@@ -44,8 +43,9 @@ async function respondToRecognitionMessage(bot, message) {
       return handleSlackError(bot, message, e);
     } else if (e instanceof GratitudeError) {
       return handleGratitudeError(bot, message, e);
+    } else {
+      return handleGenericError(bot, message, e);
     }
-    throw(e);
   }
   const gratitudeRemaining = await balance.dailyGratitudeRemaining(
     gratitude.giver.id,
@@ -74,37 +74,38 @@ async function respondToRecognitionReaction(bot, message) {
     reactionEmoji: message.reaction,
   });
 
+  let originalMessage;
+  let gratitude;
   try {
-    const originalMessage = await originalMessage(bot, message);
+    originalMessage = await messageReactedTo(bot, message);
 
     if (!originalMessage.text.includes(recognizeEmoji)) {
       return;
     }
 
-    const gratitude = {
+    gratitude = {
       giver: await userInfo(bot, message.user),
       receivers: await Promise.all(
-        recognition.gratitudeReceiverIdsIn(
-          originalMessage.text
-        )
-        .map(async (receiver) => userInfo(bot, receiver))
+        recognition
+          .gratitudeReceiverIdsIn(originalMessage.text)
+          .map(async (receiver) => userInfo(bot, receiver))
       ),
       count: recognition.gratitudeCountIn(originalMessage.text),
       message: originalMessage.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
       channel: originalMessage.channel,
       tags: recognition.gratitudeTagsIn(originalMessage.text),
-    }
+    };
     await recognition.validateAndSendGratitude(gratitude);
   } catch (e) {
     if (e instanceof SlackError) {
       return handleSlackError(bot, message, e);
     } else if (e instanceof GratitudeError) {
       return handleGratitudeError(bot, message, e);
+    } else {
+      return handleGenericError(bot, message, e);
     }
-    throw(e);
   }
-
 
   const gratitudeRemaining = await balance.dailyGratitudeRemaining(
     gratitude.giver.id,
@@ -123,7 +124,7 @@ async function respondToRecognitionReaction(bot, message) {
 // API Wrappers
 
 async function userInfo(bot, userId) {
-  response = await bot.api.users.info({ user: userId });
+  const response = await bot.api.users.info({ user: userId });
   if (response.ok) {
     return response.user;
   }
@@ -134,14 +135,14 @@ async function userInfo(bot, userId) {
   );
 }
 
-async function originalMessage(bot, message) {
+async function messageReactedTo(bot, message) {
   const response = await bot.api.conversations.replies({
     channel: message.item.channel,
     ts: message.item.ts,
     limit: 1,
   });
   if (response.ok) {
-    return response.message[0];
+    return response.messages[0];
   }
   throw new SlackError(
     "conversations.replies",
@@ -157,7 +158,7 @@ async function handleSlackError(bot, message, error) {
     apiMethod: error.apiMethod,
     apiError: error.apiError,
   });
-  return bot.replyEphemeral(message, error.userMessage); 
+  return bot.replyEphemeral(message, error.userMessage);
 }
 
 async function handleGratitudeError(bot, message, error) {
@@ -171,11 +172,15 @@ async function handleGratitudeError(bot, message, error) {
   );
 }
 
-async function sendNotificationToReceivers(
-  bot,
-  message,
-  gratitude
-) {
+async function handleGenericError(bot, message, error) {
+  winston.error("Slack API returned an error response", {
+    error,
+  });
+  const userMessage = `An unknown error occured in Gratibot: ${error.message}`;
+  return bot.replyEphemeral(message, userMessage);
+}
+
+async function sendNotificationToReceivers(bot, message, gratitude) {
   const emojiCount = recognition.gratitudeCountIn(gratitude.message);
   for (let i = 0; i < gratitude.receivers.length; i++) {
     const numberRecieved = await recognition.countRecognitionsReceived(

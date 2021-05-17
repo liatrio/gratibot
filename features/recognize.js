@@ -2,13 +2,9 @@ const config = require("../config");
 const recognition = require("../service/recognition");
 const balance = require("../service/balance");
 const winston = require("../winston");
+const { SlackError, GratitudeError } = require("../service/errors");
 
-const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji } = config;
-const userRegex = /<@([a-zA-Z0-9]+)>/g;
-const tagRegex = /#(\S+)/g;
-const generalEmojiRegex = /:([a-z-_']+):/g;
-const recognizeEmojiRegex = new RegExp(recognizeEmoji, "g");
-const multiplierRegex = /x([0-9]+)/;
+const { recognizeEmoji, reactionEmoji } = config;
 
 module.exports = function (controller) {
   controller.hears(
@@ -25,29 +21,44 @@ async function respondToRecognitionMessage(bot, message) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-
-  let userInfo;
+  let gratitude;
   try {
-    userInfo = await userDetails(bot, message.text, message.user);
-  } catch (err) {
-    winston.error("Slack API returned error from users.info", {
-      callingUser: message.user,
-      slackMessage: message.text,
-      error: err.message,
-    });
-    await bot.replyEphemeral(
-      message,
-      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${err.message} \n Recognition has not been sent.`
-    );
-    return;
+    gratitude = {
+      giver: await userInfo(bot, message.user),
+      receivers: await Promise.all(
+        recognition
+          .gratitudeReceiverIdsIn(message.text)
+          .map(async (receiver) => userInfo(bot, receiver))
+      ),
+      count: recognition.gratitudeCountIn(message.text),
+      message: message.text,
+      trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
+      channel: message.channel,
+      tags: recognition.gratitudeTagsIn(message.text),
+    };
+
+    await recognition.validateAndSendGratitude(gratitude);
+  } catch (e) {
+    if (e instanceof SlackError) {
+      return handleSlackError(bot, message, e);
+    } else if (e instanceof GratitudeError) {
+      return handleGratitudeError(bot, message, e);
+    } else {
+      return handleGenericError(bot, message, e);
+    }
   }
+  const gratitudeRemaining = await balance.dailyGratitudeRemaining(
+    gratitude.giver.id,
+    gratitude.giver.tz
+  );
 
-  const recognitionInfo = {
-    text: message.text,
-    channel: message.channel,
-  };
-
-  await validateAndSendRecognition(bot, message, recognitionInfo, userInfo);
+  return Promise.all([
+    sendNotificationToReceivers(bot, message, gratitude),
+    bot.replyEphemeral(
+      message,
+      `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
+    ),
+  ]);
 }
 
 async function respondToRecognitionReaction(bot, message) {
@@ -63,96 +74,46 @@ async function respondToRecognitionReaction(bot, message) {
     reactionEmoji: message.reaction,
   });
 
-  // TODO: Error handle this API call
-  // Consider refactoring API calls for standardized error handling
-  const messageReactedTo = (
-    await bot.api.conversations.replies({
-      channel: message.item.channel,
-      ts: message.item.ts,
-      limit: 1,
-    })
-  ).messages[0];
-
-  if (!messageReactedTo.text.includes(recognizeEmoji)) {
-    return;
-  }
-
-  let userInfo;
+  let originalMessage;
+  let gratitude;
   try {
-    userInfo = await userDetails(bot, messageReactedTo.text, message.user);
-  } catch (err) {
-    winston.error("Slack API returned error from users.info", {
-      callingUser: message.user,
-      slackMessage: message.text,
-      APIResponse: err.message,
-    });
-    await bot.replyEphemeral(
-      message,
-      `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${err.message} \n Recognition has not been sent.`
-    );
-    return;
+    originalMessage = await messageReactedTo(bot, message);
+
+    if (!originalMessage.text.includes(recognizeEmoji)) {
+      return;
+    }
+
+    gratitude = {
+      giver: await userInfo(bot, message.user),
+      receivers: await Promise.all(
+        recognition
+          .gratitudeReceiverIdsIn(originalMessage.text)
+          .map(async (receiver) => userInfo(bot, receiver))
+      ),
+      count: recognition.gratitudeCountIn(originalMessage.text),
+      message: originalMessage.text,
+      trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
+      channel: originalMessage.channel,
+      tags: recognition.gratitudeTagsIn(originalMessage.text),
+    };
+    await recognition.validateAndSendGratitude(gratitude);
+  } catch (e) {
+    if (e instanceof SlackError) {
+      return handleSlackError(bot, message, e);
+    } else if (e instanceof GratitudeError) {
+      return handleGratitudeError(bot, message, e);
+    } else {
+      return handleGenericError(bot, message, e);
+    }
   }
-  const recognitionInfo = {
-    text: messageReactedTo.text,
-    channel: message.channel,
-  };
-
-  await validateAndSendRecognition(bot, message, recognitionInfo, userInfo);
-}
-
-async function userDetails(bot, messageText, giver) {
-  const userStrings = messageText.match(userRegex) || [];
-  const userIds = userStrings.map((user) => user.slice(2, -1));
-
-  const userInfo = {
-    giver: await singleUserDetails(bot, giver),
-    receivers: await Promise.all(
-      userIds.map(async (receiver) => singleUserDetails(bot, receiver))
-    ),
-  };
-
-  return userInfo;
-}
-
-// TODO: Consider refactoring API calls for standardized error handling
-async function singleUserDetails(bot, userId) {
-  const singleUserInfo = await bot.api.users.info({ user: userId });
-  if (singleUserInfo.ok) {
-    return singleUserInfo.user;
-  }
-  throw new Error(singleUserInfo.error);
-}
-
-async function validateAndSendRecognition(
-  bot,
-  message,
-  recognitionInfo,
-  userInfo
-) {
-  const errors = await checkForRecognitionErrors(
-    recognitionInfo.text,
-    userInfo
-  );
-  if (errors) {
-    await bot.replyEphemeral(
-      message,
-      [
-        `Sending ${recognizeEmoji} failed with the following error(s):`,
-        errors,
-      ].join("\n")
-    );
-    return;
-  }
-
-  await sendRecognition(recognitionInfo, userInfo);
 
   const gratitudeRemaining = await balance.dailyGratitudeRemaining(
-    userInfo.giver.id,
-    userInfo.giver.tz
+    gratitude.giver.id,
+    gratitude.giver.tz
   );
 
   return Promise.all([
-    sendNotificationToReceivers(bot, message, recognitionInfo, userInfo),
+    sendNotificationToReceivers(bot, message, gratitude),
     bot.replyEphemeral(
       message,
       `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
@@ -160,95 +121,74 @@ async function validateAndSendRecognition(
   ]);
 }
 
-async function checkForRecognitionErrors(messageText, userInfo) {
-  const trimmedMessage = messageText
-    .replace(userRegex, "")
-    .replace(generalEmojiRegex, "");
+// API Wrappers
 
-  return [
-    userInfo.receivers.length === 0
-      ? "- Mention who you want to recognize with @user"
-      : "",
-    userInfo.receivers.find((x) => x.id == userInfo.giver.id)
-      ? "- You can't recognize yourself"
-      : "",
-    userInfo.giver.is_bot ? "- Bots can't give recognition" : "",
-    userInfo.giver.is_restricted ? "- Guest users can't give recognition" : "",
-    userInfo.receivers.find((x) => x.is_bot)
-      ? "- You can't give recognition to bots"
-      : "",
-    userInfo.receivers.find((x) => x.is_restricted)
-      ? "- You can' give recognition to guest users"
-      : "",
-    trimmedMessage.length < minimumMessageLength
-      ? `- Your message must be at least ${minimumMessageLength} characters`
-      : "",
-    !(await isRecognitionWithinSpendingLimits(messageText, userInfo))
-      ? `- A maximum of ${maximum} ${recognizeEmoji} can be sent per day`
-      : "",
-  ]
-    .filter((x) => x !== "")
-    .join("\n");
-}
-
-async function isRecognitionWithinSpendingLimits(messageText, userInfo) {
-  const emojiInMessage = (messageText.match(recognizeEmojiRegex) || []).length;
-  const multiplier = messageText.match(multiplierRegex)
-    ? messageText.match(multiplierRegex)[1]
-    : 1;
-  const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
-    userInfo.giver.id,
-    userInfo.giver.tz
-  );
-  const recognitionInMessage =
-    userInfo.receivers.length * emojiInMessage * multiplier;
-
-  return dailyGratitudeRemaining >= recognitionInMessage;
-}
-
-// TODO Can we add a 'count' field to the recognition?
-async function sendRecognition(recognitionInfo, userInfo) {
-  const tags = (recognitionInfo.text.match(tagRegex) || []).map((tag) =>
-    tag.slice(1)
-  );
-  const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
-    .length;
-  const multiplier = recognitionInfo.text.match(multiplierRegex)
-    ? recognitionInfo.text.match(multiplierRegex)[1]
-    : 1;
-
-  let results = [];
-  for (let i = 0; i < userInfo.receivers.length; i++) {
-    for (let j = 0; j < emojiCount * multiplier; j++) {
-      results.push(
-        recognition.giveRecognition(
-          userInfo.giver.id,
-          userInfo.receivers[i].id,
-          recognitionInfo.text,
-          recognitionInfo.channel,
-          tags
-        )
-      );
-    }
+async function userInfo(bot, userId) {
+  const response = await bot.api.users.info({ user: userId });
+  if (response.ok) {
+    return response.user;
   }
-  return Promise.all(results);
+  throw new SlackError(
+    "users.info",
+    response.error,
+    `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+  );
 }
 
-async function sendNotificationToReceivers(
-  bot,
-  message,
-  recognitionInfo,
-  userInfo
-) {
-  const emojiCount = (recognitionInfo.text.match(recognizeEmojiRegex) || [])
-    .length;
-  for (let i = 0; i < userInfo.receivers.length; i++) {
+async function messageReactedTo(bot, message) {
+  const response = await bot.api.conversations.replies({
+    channel: message.item.channel,
+    ts: message.item.ts,
+    limit: 1,
+  });
+  if (response.ok) {
+    return response.messages[0];
+  }
+  throw new SlackError(
+    "conversations.replies",
+    response.error,
+    `Something went wrong while sending recognition. When retreiving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+  );
+}
+
+// Response Message Utils
+
+async function handleSlackError(bot, message, error) {
+  winston.error("Slack API returned an error response", {
+    apiMethod: error.apiMethod,
+    apiError: error.apiError,
+  });
+  return bot.replyEphemeral(message, error.userMessage);
+}
+
+async function handleGratitudeError(bot, message, error) {
+  winston.info("Rejected gratitude request as invalid", {
+    gratitudeErrors: error.gratitudeErrors,
+  });
+  const errorString = error.gratitudeErrors.join("\n");
+  return bot.replyEphemeral(
+    message,
+    `Sending gratitude failed with the following error(s):\n${errorString}`
+  );
+}
+
+async function handleGenericError(bot, message, error) {
+  winston.error("Slack API returned an error response", {
+    error,
+  });
+  const userMessage = `An unknown error occured in Gratibot: ${error.message}`;
+  return bot.replyEphemeral(message, userMessage);
+}
+
+async function sendNotificationToReceivers(bot, message, gratitude) {
+  const emojiCount = recognition.gratitudeCountIn(gratitude.message);
+  for (let i = 0; i < gratitude.receivers.length; i++) {
     const numberRecieved = await recognition.countRecognitionsReceived(
-      userInfo.receivers[i].id
+      gratitude.receivers[i].id
     );
-    await bot.startPrivateConversation(userInfo.receivers[i].id);
+    await bot.startPrivateConversation(gratitude.receivers[i].id);
     await bot.say({
-      text: `You just got recognized by <@${userInfo.giver.id}> in <#${recognitionInfo.channel}> and your new balance is \`${numberRecieved}\`\n>>>${recognitionInfo.text}`,
+      text: `You just got recognized by <@${gratitude.giver.id}> in <#${gratitude.channel}> and your new balance is \`${numberRecieved}\`\n>>>${gratitude.message}`,
     });
     if (emojiCount === numberRecieved) {
       await bot.say({

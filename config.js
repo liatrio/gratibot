@@ -8,6 +8,7 @@ config.recognizeEmoji = process.env.RECOGNIZE_EMOJI || ":fistbump:";
 config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
 config.maximum = 5;
 config.minimumMessageLength = 20;
+config.botName = process.env.BOT_NAME || "gratibot";
 
 config.usersExemptFromMaximum = ["U037FL37G"];
 

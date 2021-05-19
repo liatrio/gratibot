@@ -1,6 +1,5 @@
 const config = require("../config");
 const recognition = require("../service/recognition");
-const balance = require("../service/balance");
 const winston = require("../winston");
 const { SlackError, GratitudeError } = require("../service/errors");
 
@@ -47,16 +46,12 @@ async function respondToRecognitionMessage(bot, message) {
       return handleGenericError(bot, message, e);
     }
   }
-  const gratitudeRemaining = await balance.dailyGratitudeRemaining(
-    gratitude.giver.id,
-    gratitude.giver.tz
-  );
 
   return Promise.all([
     sendNotificationToReceivers(bot, message, gratitude),
     bot.replyEphemeral(
       message,
-      `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
+      await recognition.giverSlackNotification(gratitude)
     ),
   ]);
 }
@@ -107,16 +102,11 @@ async function respondToRecognitionReaction(bot, message) {
     }
   }
 
-  const gratitudeRemaining = await balance.dailyGratitudeRemaining(
-    gratitude.giver.id,
-    gratitude.giver.tz
-  );
-
   return Promise.all([
     sendNotificationToReceivers(bot, message, gratitude),
     bot.replyEphemeral(
       message,
-      `Your ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
+      await recognition.giverSlackNotification(gratitude)
     ),
   ]);
 }
@@ -181,19 +171,13 @@ async function handleGenericError(bot, message, error) {
 }
 
 async function sendNotificationToReceivers(bot, message, gratitude) {
-  const emojiCount = recognition.gratitudeCountIn(gratitude.message);
   for (let i = 0; i < gratitude.receivers.length; i++) {
-    const numberRecieved = await recognition.countRecognitionsReceived(
-      gratitude.receivers[i].id
+    await bot.startPrivateConversation(gratitude.giver.id);
+    await bot.say(
+      await recognition.receiverSlackNotification(
+        gratitude,
+        gratitude.receivers[i].id
+      )
     );
-    await bot.startPrivateConversation(gratitude.receivers[i].id);
-    await bot.say({
-      text: `You just got recognized by <@${gratitude.giver.id}> in <#${gratitude.channel}> and your new balance is \`${numberRecieved}\`\n>>>${gratitude.message}`,
-    });
-    if (emojiCount === numberRecieved) {
-      await bot.say({
-        text: `I noticed this is your first time receiving a ${recognizeEmoji}. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running \`<@${message.incoming_message.recipient.id}> help\` for more information about me.`,
-      });
-    }
   }
 }

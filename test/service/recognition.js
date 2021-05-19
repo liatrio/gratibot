@@ -595,4 +595,152 @@ describe("service/recognition", () => {
       expect(recognition.validateAndSendGratitude(gratitude)).to.be.rejected;
     });
   });
+  describe("giverSlackNotification", () => {
+    it("should generate a markdown response for recognition", async () => {
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+        },
+        receivers: [
+          {
+            id: "Receiver",
+          },
+        ],
+        count: 1,
+      };
+      const expectedResponse = {
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "Your `1` :fistbump: has been sent. You have `5` left to give today.",
+            },
+          },
+        ],
+      };
+
+      const response = await recognition.giverSlackNotification(gratitude);
+
+      expect(response).to.deep.equal(expectedResponse);
+    });
+
+    it("should use appropriate grammar for multiple fistbumps", async () => {
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+        },
+        receivers: [
+          {
+            id: "Receiver",
+          },
+        ],
+        count: 2,
+      };
+      const expectedResponse = {
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "Your `2` :fistbump: have been sent. You have `5` left to give today.",
+            },
+          },
+        ],
+      };
+
+      const response = await recognition.giverSlackNotification(gratitude);
+
+      expect(response).to.deep.equal(expectedResponse);
+    });
+  });
+  describe("receiverSlackNotification", () => {
+    it("should generate a markdown response for recognition", async () => {
+      sinon.stub(balance, "lifetimeEarnings").resolves(5);
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+        },
+        receivers: [
+          {
+            id: "Receiver",
+          },
+        ],
+        count: 1,
+        channel: "TestChannel",
+        message: "Test Message",
+      };
+      const expectedResponse = {
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
+            },
+          },
+        ],
+      };
+
+      const response = await recognition.receiverSlackNotification(
+        gratitude,
+        "Receiver"
+      );
+
+      expect(response).to.deep.equal(expectedResponse);
+    });
+
+    it("should include additional message for first time earners", async () => {
+      sinon.stub(balance, "lifetimeEarnings").resolves(1);
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+        },
+        receivers: [
+          {
+            id: "Receiver",
+          },
+        ],
+        count: 1,
+        channel: "TestChannel",
+        message: "Test Message",
+      };
+      const expectedResponse = {
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
+            },
+          },
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "I noticed this is your first time receiving a :fistbump:. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running `<@gratibot> help` for more information about me.",
+            },
+          },
+        ],
+      };
+
+      const response = await recognition.receiverSlackNotification(
+        gratitude,
+        "Receiver"
+      );
+
+      expect(response).to.deep.equal(expectedResponse);
+    });
+  });
 });

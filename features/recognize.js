@@ -172,7 +172,7 @@ async function handleGenericError(bot, message, error) {
 
 async function sendNotificationToReceivers(bot, message, gratitude) {
   for (let i = 0; i < gratitude.receivers.length; i++) {
-    await bot.startPrivateConversation(gratitude.giver.id);
+    await bot.startPrivateConversation(gratitude.receivers[i].id);
     await bot.say(
       await recognition.receiverSlackNotification(
         gratitude,

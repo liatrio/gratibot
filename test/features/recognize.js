@@ -5,7 +5,6 @@ const MockController = require("../mocks/controller");
 
 const recognizeFeature = require("../../features/recognize");
 const recognition = require("../../service/recognition");
-const balance = require("../../service/balance");
 const { GratitudeError } = require("../../service/errors");
 
 describe("features/recognize", () => {
@@ -57,8 +56,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       await controller.userInput({
         text: ":fistbump: <@Receiver> Test Message",
@@ -66,28 +69,7 @@ describe("features/recognize", () => {
       });
 
       const reply = controller.getReplies()[0].response;
-      expect(reply).to.include("Your :fistbump: has been sent.");
-    });
-
-    it("should send addition response to first time receivers", async () => {
-      sinon.stub(recognition, "validateAndSendGratitude").resolves("");
-      sinon.stub(recognition, "gratitudeReceiverIdsIn").returns(["Receiver"]);
-      sinon.stub(recognition, "gratitudeCountIn").returns(1);
-      sinon
-        .stub(recognition, "trimmedGratitudeMessage")
-        .returns("Test Message");
-      sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(recognition, "countRecognitionsReceived").returns(1);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-
-      await controller.userInput({
-        text: ":fistbump: <@Receiver> Test Message",
-        user: "Giver",
-      });
-
-      const replies = controller.getReplies();
-      expect(replies[0].response).to.include("Your :fistbump: has been sent.");
-      expect(replies[2].response.text).to.include("first time receiving");
+      expect(reply).to.include("Test Giver Notification");
     });
 
     it("should respond with error when user info can't be found", async () => {
@@ -100,8 +82,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       await controller.userInput({
         text: ":fistbump: <@NotARealUser> Test Message",
@@ -122,8 +108,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       await controller.userInput({
         text: ":fistbump: <@Receiver> Test Message",
@@ -144,8 +134,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       await controller.userInput({
         text: ":fistbump: <@Receiver> Test Message",
@@ -166,8 +160,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       controller.bot.api.conversations.replies.resolves({
         ok: true,
@@ -185,7 +183,7 @@ describe("features/recognize", () => {
       });
 
       const reply = controller.getReplies()[0].response;
-      expect(reply).to.include("Your :fistbump: has been sent.");
+      expect(reply).to.include("Test Giver Notification");
     });
 
     it("should respond with error when original message can't be found", async () => {
@@ -196,8 +194,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       controller.bot.api.conversations.replies.resolves({
         ok: false,
@@ -228,8 +230,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       controller.bot.api.conversations.replies.resolves({
         ok: true,
@@ -260,8 +266,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       controller.bot.api.conversations.replies.resolves({
         ok: true,
@@ -290,8 +300,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       controller.bot.api.conversations.replies.resolves({
         ok: true,
@@ -319,8 +333,12 @@ describe("features/recognize", () => {
         .stub(recognition, "trimmedGratitudeMessage")
         .returns("Test Message");
       sinon.stub(recognition, "gratitudeTagsIn").returns("");
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
-      sinon.stub(recognition, "countRecognitionsReceived").returns(10);
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves("Test Giver Notification");
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves("Test Receiver Notification");
 
       controller.bot.api.conversations.replies.resolves({
         ok: true,

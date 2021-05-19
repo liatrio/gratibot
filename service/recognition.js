@@ -4,7 +4,7 @@ const recognitionCollection = require('../database/recognitionCollection');
 const balance = require("./balance");
 const { GratitudeError } = require("./errors")
 
-const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji } = config;
+const { recognizeEmoji, maximum, minimumMessageLength, reactionEmoji, botName } = config;
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
@@ -154,6 +154,49 @@ async function validateAndSendGratitude(gratitude) {
   return giveGratitude(gratitude);
 }
 
+// Slack Messages
+
+async function giverSlackNotification(gratitude) {
+  const gratitudeRemaining = await balance.dailyGratitudeRemaining(
+    gratitude.giver.id,
+    gratitude.giver.tz
+  );
+  const totalGratitudeValue = gratitude.count * gratitude.receivers.length
+  let blocks = [];
+  blocks.push({
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: totalGratitudeValue > 1
+        ? `Your \`${totalGratitudeValue}\` ${recognizeEmoji} have been sent. You have \`${gratitudeRemaining}\` left to give today.`
+        : `Your \`${totalGratitudeValue}\` ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`
+    },
+  });
+  return { blocks }
+}
+
+async function receiverSlackNotification(gratitude, receiver) {
+  const receiverBalance = await balance.lifetimeEarnings(receiver);
+  let blocks = [];
+  blocks.push({
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `You just got recognized by <@${gratitude.giver.id}> in <#${gratitude.channel}>. You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`\n>>>${gratitude.message}`,
+    },
+  });
+
+  if (gratitude.count == receiverBalance) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text:`I noticed this is your first time receiving a ${recognizeEmoji}. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running \`<@${botName}> help\` for more information about me.`,
+      }
+    });
+  }
+  return { blocks };
+}
 
 /*
  * Gratitude Object
@@ -166,7 +209,7 @@ async function validateAndSendGratitude(gratitude) {
  *     is_restricted: bool,
  *   },
  *   receivers: [{
- *     id: string, 
+ *     id: string,
  *     is_bot: bool,
  *     is_restricted: bool,
  *   }]
@@ -188,5 +231,7 @@ module.exports = {
     trimmedGratitudeMessage,
     gratitudeTagsIn,
     giveGratitude,
-    validateAndSendGratitude
+    validateAndSendGratitude,
+    giverSlackNotification,
+    receiverSlackNotification
 }

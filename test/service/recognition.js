@@ -616,8 +616,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text:
-                "Your `1` :fistbump: has been sent. You have `5` left to give today.",
+              text: "Your `1` :fistbump: has been sent. You have `5` left to give today.",
             },
           },
         ],
@@ -648,8 +647,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text:
-                "Your `2` :fistbump: have been sent. You have `5` left to give today.",
+              text: "Your `2` :fistbump: have been sent. You have `5` left to give today.",
             },
           },
         ],
@@ -683,8 +681,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text:
-                "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
+              text: "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
             },
           },
         ],
@@ -720,16 +717,14 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text:
-                "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
+              text: "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
             },
           },
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text:
-                "I noticed this is your first time receiving a :fistbump:. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running `<@gratibot> help` for more information about me.",
+              text: "I noticed this is your first time receiving a :fistbump:. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running `<@gratibot> help` for more information about me.",
             },
           },
         ],

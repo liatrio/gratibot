@@ -76,7 +76,7 @@ and receiving the most recognition.
 *View Metrics*
 
 Send me a direct message with 'metrics' and I'll show you how many times \
-people have given recognition over the last month.
+people have given recognitions over the last month.
 
 
 

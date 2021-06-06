@@ -4,7 +4,7 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "start": "node bot.js",
+    "start": "node app.js",
     "test": "nyc --all --include '*/**' mocha test/* --recursive --require test/setup.js",
     "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "lint": "eslint '*.js' 'features/**' 'test/**'",
@@ -12,8 +12,7 @@
     "lint-fix": "eslint '*.js' 'features/**' 'test/**' --fix"
   },
   "dependencies": {
-    "botbuilder-adapter-slack": "^1.0.12",
-    "botkit": "^4.9.0",
+    "@slack/bolt": "^3.4.0",
     "dotenv": "^10.0.0",
     "moment-timezone": "^0.5.31",
     "monk": "^7.3.1",

@@ -1,5 +1,7 @@
 const recognition = require("../service/recognition");
 const winston = require("../winston");
+const { directMention } = require("@slack/bolt")
+const { directMessage, anyOf } = require("../middleware")
 
 const rank = [
   "1st",
@@ -14,14 +16,10 @@ const rank = [
   "10th",
 ];
 
-module.exports = function (controller) {
-  controller.hears(
-    "leaderboard",
-    ["direct_message", "direct_mention"],
-    respondToLeaderboard
-  );
+module.exports = function (app) {
+  app.message("leaderboard", anyOf(directMessage(), directMention()), respondToLeaderboard);
+  app.action(/leaderboard-\d+/, updateLeaderboardResponse);
 
-  controller.on("block_actions", updateLeaderboardResponse);
 };
 
 /*
@@ -30,12 +28,17 @@ module.exports = function (controller) {
  * @param {object} message A botkit message object, denoting the message triggering.
  *     this call.
  */
-async function respondToLeaderboard(bot, message) {
+async function respondToLeaderboard({ message, client }) {
   winston.info("@gratibot leaderboard Called", {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await bot.replyEphemeral(message, await createLeaderboardBlocks(30));
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: "Gratibot Leaderboard",
+    blocks: await createLeaderboardBlocks(30)
+  });
 }
 
 /*
@@ -44,19 +47,15 @@ async function respondToLeaderboard(bot, message) {
  * @param {object} message A botkit message object, denoting the message triggering
  *     this call.
  */
-async function updateLeaderboardResponse(bot, message) {
-  if (message.actions[0].block_id !== "leaderboardButtons") {
-    return;
-  }
-
+async function updateLeaderboardResponse({ ack, body, action, respond }) {
+  await ack();
   winston.info("Gratibot interactive leaderboard button clicked", {
-    callingUser: message.user,
+    callingUser: body.user.id,
   });
 
-  await bot.replyInteractive(
-    message,
-    await createLeaderboardBlocks(message.actions[0].value)
-  );
+  await respond({
+    blocks: await createLeaderboardBlocks(action.value)
+  });
 }
 
 /*
@@ -76,7 +75,7 @@ async function createLeaderboardBlocks(timeRange) {
   blocks.push(timeRangeInfo(timeRange));
   blocks.push(timeRangeButtons());
 
-  return { blocks };
+  return blocks;
 }
 
 /* Block Kit Content */
@@ -171,7 +170,6 @@ function timeRangeInfo(timeRange) {
 function timeRangeButtons() {
   return {
     type: "actions",
-    block_id: "leaderboardButtons",
     elements: [
       {
         type: "button",
@@ -181,6 +179,7 @@ function timeRangeButtons() {
           text: "Today",
         },
         value: "1",
+        action_id: "leaderboard-1",
       },
       {
         type: "button",
@@ -190,6 +189,7 @@ function timeRangeButtons() {
           text: "Week",
         },
         value: "7",
+        action_id: "leaderboard-7",
       },
       {
         type: "button",
@@ -199,6 +199,7 @@ function timeRangeButtons() {
           text: "Month",
         },
         value: "30",
+        action_id: "leaderboard-30",
       },
       {
         type: "button",
@@ -208,6 +209,7 @@ function timeRangeButtons() {
           text: "Year",
         },
         value: "365",
+        action_id: "leaderboard-365",
       },
     ],
   };

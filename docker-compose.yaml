@@ -12,6 +12,8 @@ services:
       - SIGNING_SECRET
       - BOT_USER_OAUTH_ACCESS_TOKEN
       - RECOGNIZE_EMOJI
+      - REACTION_EMOJI
+      - EXEMPT_USERS
       - MONGO_URL=mongodb://mongodb:27017/gratibot
   mongodb:
     ports:

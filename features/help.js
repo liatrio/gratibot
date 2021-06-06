@@ -1,14 +1,11 @@
 const { recognizeEmoji, maximum, reactionEmoji } = require("../config");
 const winston = require("../winston");
+const { directMention } = require("@slack/bolt");
+const { anyOf, directMessage } = require("../middleware");
 
-module.exports = function (controller) {
-  controller.hears("help", ["direct_message", "direct_mention"], respondToHelp);
-
-  controller.hears(
-    ["thunderfury", "Thunderfury"],
-    ["direct_message", "direct_mention", "mention", "message"],
-    respondToEasterEgg
-  );
+module.exports = function (app) {
+  app.message("help", anyOf(directMention(), directMessage()), respondToHelp);
+  app.message(/(thunderfury|Thunderfury)/, respondToEasterEgg);
 };
 
 const helpMarkdown = `
@@ -92,12 +89,16 @@ are done by accident. No permanent harm should be done by mistaken deductions \
 but be careful. As this is a beta feature, deductions may be wiped in the future.
 `;
 
-async function respondToHelp(bot, message) {
+async function respondToHelp({ message, client }) {
   winston.info("@gratibot help Called", {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await bot.replyEphemeral(message, helpMarkdown);
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: helpMarkdown
+  });
 }
 
 const thunderfuryResponse = [
@@ -107,10 +108,10 @@ const thunderfuryResponse = [
   ":thunderfury_blessed_blade_of_the_windseeker:?",
 ].join(" ");
 
-async function respondToEasterEgg(bot, message) {
+async function respondToEasterEgg({ message, say }) {
   winston.info("heard reference to thunderfury", {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await bot.reply(message, thunderfuryResponse);
+  await say(thunderfuryResponse);
 }

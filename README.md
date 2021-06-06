@@ -16,7 +16,7 @@ colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatr
 - [ ] Implement Functional Testing
 - [ ] Refactor Logic to Service Module
 - [ ] Redeem Fistbumps Through Gratibot
-- [ ] Replace Botkit with Bolt
+- [x] Replace Botkit with Bolt
 
 ---
 
@@ -86,9 +86,9 @@ be sure to note the hostname that ngrok generates as we'll need it later.
 1. Now that the bot is running, we can configure Slack to send specific
 events to it, which will then trigger bot actions. In the
 **Interactivity & Shortcuts** tab under *Features* enable 'Interactivity'
-and set the 'Request URL' to `https://${NGROK_HOSTNAME}/api/messages`
+and set the 'Request URL' to `https://${NGROK_HOSTNAME}/slack/events`
 2. On the **Event Subscriptions** tab under *Features* enable 'Events', and set
-the 'Request URL' to `https://${NGROK_HOSTNAME}/api/messages`
+the 'Request URL' to `https://${NGROK_HOSTNAME}/slack/events`
 3. On the same tab, we'll need to 'Subscribe to Bot Events'. Existing Gratibot
 functionality requires the following:
     - `app_mention`

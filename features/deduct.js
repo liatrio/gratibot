@@ -2,32 +2,22 @@ const deduction = require("../service/deduction");
 const balance = require("../service/balance");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
-const { directMessage, anyOf } = require("../middleware")
+const { directMessage, anyOf } = require("../middleware");
 
 module.exports = function (app) {
-  app.message("deduct", anyOf(directMention(), directMessage()), attemptDeduction);
+  app.message(
+    "deduct",
+    anyOf(directMention(), directMessage()),
+    attemptDeduction
+  );
 };
-
-async function failedToParseInput(bot, message) {
-  winston.info("Heard 'deduct' but failed to parse input", {
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
-
-  const response = [
-    "Please specify an amount to deduct,",
-    `Ex: \`<@${message.incoming_message.recipient.id}> deduct 100 Optional Message\``,
-  ].join(" ");
-
-  await bot.replyEphemeral(message, response);
-}
 
 async function attemptDeduction({ message, context, client }) {
   winston.info("@gratibot deduct Called", {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  const matches = message.text.match(/deduct\s+([0-9]+)(\s+.*)?$/)
+  const matches = message.text.match(/deduct\s+([0-9]+)(\s+.*)?$/);
   if (!matches) {
     winston.info("Failed to parse deduct input");
     const response = [
@@ -54,7 +44,7 @@ async function attemptDeduction({ message, context, client }) {
     return client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
-      text: "Your current balance isn't high enough to deduct that much"
+      text: "Your current balance isn't high enough to deduct that much",
     });
   }
   await deduction.createDeduction(
@@ -65,7 +55,7 @@ async function attemptDeduction({ message, context, client }) {
   return client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
-    text: `Deducted ${deductionValue} from your current balance.`
+    text: `Deducted ${deductionValue} from your current balance.`,
   });
 }
 

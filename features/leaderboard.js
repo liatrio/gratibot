@@ -1,7 +1,7 @@
 const recognition = require("../service/recognition");
 const winston = require("../winston");
-const { directMention } = require("@slack/bolt")
-const { directMessage, anyOf } = require("../middleware")
+const { directMention } = require("@slack/bolt");
+const { directMessage, anyOf } = require("../middleware");
 
 const rank = [
   "1st",
@@ -17,9 +17,12 @@ const rank = [
 ];
 
 module.exports = function (app) {
-  app.message("leaderboard", anyOf(directMessage(), directMention()), respondToLeaderboard);
+  app.message(
+    "leaderboard",
+    anyOf(directMessage(), directMention()),
+    respondToLeaderboard
+  );
   app.action(/leaderboard-\d+/, updateLeaderboardResponse);
-
 };
 
 /*
@@ -37,7 +40,7 @@ async function respondToLeaderboard({ message, client }) {
     channel: message.channel,
     user: message.user,
     text: "Gratibot Leaderboard",
-    blocks: await createLeaderboardBlocks(30)
+    blocks: await createLeaderboardBlocks(30),
   });
 }
 
@@ -54,7 +57,7 @@ async function updateLeaderboardResponse({ ack, body, action, respond }) {
   });
 
   await respond({
-    blocks: await createLeaderboardBlocks(action.value)
+    blocks: await createLeaderboardBlocks(action.value),
   });
 }
 

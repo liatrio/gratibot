@@ -97,7 +97,7 @@ async function respondToHelp({ message, client }) {
   await client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
-    text: helpMarkdown
+    text: helpMarkdown,
   });
 }
 

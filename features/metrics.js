@@ -2,11 +2,15 @@ const moment = require("moment-timezone");
 
 const recognition = require("../service/recognition");
 const winston = require("../winston");
-const { directMention } = require("@slack/bolt")
-const { directMessage, anyOf } = require("../middleware")
+const { directMention } = require("@slack/bolt");
+const { directMessage, anyOf } = require("../middleware");
 
 module.exports = function (app) {
-  app.message("metrics", anyOf(directMessage(), directMention()), respondToMetrics);
+  app.message(
+    "metrics",
+    anyOf(directMessage(), directMention()),
+    respondToMetrics
+  );
   app.action(/metrics-\d+/, updateMetricsResponse);
 };
 
@@ -19,18 +23,18 @@ async function respondToMetrics({ message, client }) {
     channel: message.channel,
     user: message.user,
     text: "Gratibot Metrics",
-    blocks: await createMetricsBlocks(30)
+    blocks: await createMetricsBlocks(30),
   });
 }
 
 async function updateMetricsResponse({ ack, body, action, respond }) {
-  await ack()
+  await ack();
   winston.info("Gratibot interactive metrics button clicked", {
     callingUser: body.user.id,
   });
 
   await respond({
-    blocks: await createMetricsBlocks(action.value)
+    blocks: await createMetricsBlocks(action.value),
   });
 }
 

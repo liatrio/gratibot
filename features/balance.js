@@ -4,7 +4,11 @@ const { directMention } = require("@slack/bolt");
 const { directMessage, anyOf } = require("../middleware");
 
 module.exports = function (app) {
-  app.message("balance", anyOf(directMention(), directMessage()), respondToBalance);
+  app.message(
+    "balance",
+    anyOf(directMention(), directMessage()),
+    respondToBalance
+  );
 };
 
 async function respondToBalance({ message, client }) {
@@ -23,7 +27,7 @@ async function respondToBalance({ message, client }) {
     await client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
-      text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`
+      text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
     });
     return;
   }
@@ -45,6 +49,6 @@ async function respondToBalance({ message, client }) {
   await client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
-    text: response
+    text: response,
   });
 }

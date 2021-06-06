@@ -8,7 +8,11 @@ const { recognizeEmoji, reactionEmoji } = config;
 
 module.exports = function (app) {
   app.message(recognizeEmoji, respondToRecognitionMessage);
-  app.event("reaction_added", reactionMatches(reactionEmoji), respondToRecognitionReaction);
+  app.event(
+    "reaction_added",
+    reactionMatches(reactionEmoji),
+    respondToRecognitionReaction
+  );
 };
 
 async function respondToRecognitionMessage({ message, client }) {
@@ -49,7 +53,7 @@ async function respondToRecognitionMessage({ message, client }) {
       channel: message.channel,
       user: message.user,
       text: `${recognizeEmoji} has been sent.`,
-      ...await recognition.giverSlackNotification(gratitude),
+      ...(await recognition.giverSlackNotification(gratitude)),
     }),
   ]);
 }
@@ -99,7 +103,7 @@ async function respondToRecognitionReaction({ event, client }) {
       channel: event.channel,
       user: event.user,
       text: `${recognizeEmoji} has been sent.`,
-      ...await recognition.giverSlackNotification(gratitude),
+      ...(await recognition.giverSlackNotification(gratitude)),
     }),
   ]);
 }
@@ -177,10 +181,10 @@ async function sendNotificationToReceivers(client, gratitude) {
     await client.chat.postMessage({
       channel: gratitude.receivers[i].id,
       text: `You earned a ${recognizeEmoji}.`,
-      ...await recognition.receiverSlackNotification(
+      ...(await recognition.receiverSlackNotification(
         gratitude,
         gratitude.receivers[i].id
-      )
+      )),
     });
   }
 }

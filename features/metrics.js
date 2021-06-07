@@ -2,38 +2,40 @@ const moment = require("moment-timezone");
 
 const recognition = require("../service/recognition");
 const winston = require("../winston");
+const { directMention } = require("@slack/bolt");
+const { directMessage, anyOf } = require("../middleware");
 
-module.exports = function (controller) {
-  controller.hears(
+module.exports = function (app) {
+  app.message(
     "metrics",
-    ["direct_message", "direct_mention"],
+    anyOf(directMessage(), directMention()),
     respondToMetrics
   );
-
-  controller.on("block_actions", updateMetricsResponse);
+  app.action(/metrics-\d+/, updateMetricsResponse);
 };
 
-async function respondToMetrics(bot, message) {
+async function respondToMetrics({ message, client }) {
   winston.info("@gratibot metrics Called", {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await bot.replyEphemeral(message, await createMetricsBlocks(30));
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: "Gratibot Metrics",
+    blocks: await createMetricsBlocks(30),
+  });
 }
 
-async function updateMetricsResponse(bot, message) {
-  if (message.actions[0].block_id !== "metricsButtons") {
-    return;
-  }
-
+async function updateMetricsResponse({ ack, body, action, respond }) {
+  await ack();
   winston.info("Gratibot interactive metrics button clicked", {
-    callingUser: message.user,
+    callingUser: body.user.id,
   });
 
-  await bot.replyInteractive(
-    message,
-    await createMetricsBlocks(message.actions[0].value)
-  );
+  await respond({
+    blocks: await createMetricsBlocks(action.value),
+  });
 }
 
 async function createMetricsBlocks(timeRange) {
@@ -49,7 +51,7 @@ async function createMetricsBlocks(timeRange) {
   blocks.push(timeRangeInfo(timeRange));
   blocks.push(timeRangeButtons());
 
-  return { blocks };
+  return blocks;
 }
 
 /* Block Kit Content */
@@ -95,7 +97,6 @@ function timeRangeInfo(timeRange) {
 function timeRangeButtons() {
   return {
     type: "actions",
-    block_id: "metricsButtons",
     elements: [
       {
         type: "button",
@@ -105,6 +106,7 @@ function timeRangeButtons() {
           text: "Today",
         },
         value: "1",
+        action_id: "metrics-1",
       },
       {
         type: "button",
@@ -114,6 +116,7 @@ function timeRangeButtons() {
           text: "Week",
         },
         value: "7",
+        action_id: "metrics-7",
       },
       {
         type: "button",
@@ -123,6 +126,7 @@ function timeRangeButtons() {
           text: "Month",
         },
         value: "30",
+        action_id: "metrics-30",
       },
       /*
              * Currently non-functional due to too much header data being sent to
@@ -136,6 +140,7 @@ function timeRangeButtons() {
                     text: 'Year',
                 },
                 value: '365',
+                action_id: "metrics-365",
             },
             */
     ],

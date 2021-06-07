@@ -10,6 +10,8 @@ config.maximum = 5;
 config.minimumMessageLength = 20;
 config.botName = process.env.BOT_NAME || "gratibot";
 
-config.usersExemptFromMaximum = ["U037FL37G"];
+config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
+  "U037FL37G",
+];
 
 module.exports = config;

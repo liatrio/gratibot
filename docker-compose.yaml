@@ -9,8 +9,8 @@ services:
       - 3000:3000
     build: .
     environment:
-      - SIGNING_SECRET
       - BOT_USER_OAUTH_ACCESS_TOKEN
+      - APP_TOKEN
       - RECOGNIZE_EMOJI
       - REACTION_EMOJI
       - EXEMPT_USERS

@@ -3,7 +3,8 @@ const { App } = require("@slack/bolt");
 // Initializes your app with your bot token and signing secret
 const app = new App({
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-  signingSecret: process.env.SIGNING_SECRET,
+  socketMode: true,
+  appToken: process.env.APP_TOKEN,
 });
 
 var normalizedPath = require("path").join(__dirname, "features");

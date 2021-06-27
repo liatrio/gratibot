@@ -59,10 +59,11 @@ Create a Slack app for running a development version of Gratibot:
 1. On the **Basic Information** tab under *Settings*, scroll down to
 'App-Level Tokens' and click the button to 'Generate Token and Scopes'.
 Name your token 'websocket-token', and add the
-scope 'connections:write'. Generate the token, and save the value for later.
+scope 'connections:write'. Generate the token. Copy the ***Token*** that is
+generated, we'll use it later for the bot's APP_TOKEN.
 2. Go to the **Install App** tab under *Settings*. Click the button to
 install the app to your workspace, and follow the provided prompts. After
-installing,Copy the ***Bot User OAuth Token*** value, and save it for later.
+installing, copy the ***Bot User OAuth Token*** value, and save it for later.
 4. In your cloned copy of the repo, create a file called `.env`, it should look
 something like:
     ```

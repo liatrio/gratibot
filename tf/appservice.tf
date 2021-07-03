@@ -31,7 +31,7 @@ resource "azurerm_app_service" "gratibot_app_service" {
 
   app_settings = {
     "MONGO_URL"                   = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongo_connection_string.id})"
-    "SIGNING_SECRET"              = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.signing_secret.id})"
+    "APP_TOKEN"                   = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.app_token.id})"
     "BOT_USER_OAUTH_ACCESS_TOKEN" = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.bot_user_token.id})"
     "RECOGNIZE_EMOJI"             = var.gratibot_recognize_emoji
     "REACTION_EMOJI"              = var.gratibot_reaction_emoji

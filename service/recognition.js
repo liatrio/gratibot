@@ -121,6 +121,9 @@ async function gratitudeErrors(gratitude) {
     gratitude.trimmedMessage.length < minimumMessageLength
       ? `- Your message must be at least ${minimumMessageLength} characters`
       : "",
+    gratitude.count < 1
+      ? `- You can't send less than one ${recognizeEmoji}`
+      : "",
     !(await isGratitudeAffordable(gratitude))
       ? `- A maximum of ${maximum} ${recognizeEmoji} can be sent per day`
       : "",

@@ -438,7 +438,7 @@ describe("service/recognition", () => {
           },
         ],
         count: 1,
-        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        message: ":fistbump: <@Receiver> Test Message",
         trimmedMessage: "  Test Message",
         channel: "TestChannel",
         tags: [],
@@ -447,6 +447,66 @@ describe("service/recognition", () => {
       const result = await recognition.gratitudeErrors(gratitude);
       expect(result).to.deep.equal([
         "- Your message must be at least 20 characters",
+      ]);
+    });
+
+    it("should return error if gratitude count is 0", async () => {
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 0,
+        message: ":fistbump: x0 <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+
+      const result = await recognition.gratitudeErrors(gratitude);
+      expect(result).to.deep.equal([
+        "- You can't send less than one :fistbump:",
+      ]);
+    });
+
+    it("should return error if gratitude count is negative", async () => {
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: -10,
+        message: ":fistbump: x-10 <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+
+      const result = await recognition.gratitudeErrors(gratitude);
+      expect(result).to.deep.equal([
+        "- You can't send less than one :fistbump:",
       ]);
     });
 

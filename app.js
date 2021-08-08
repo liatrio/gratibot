@@ -3,14 +3,14 @@ const express = require("express");
 const db = require('./database/db');
 const webserver = express();
 
-webserver.get("/", (req, res) => {
-  res.send("Gratibot is running!");
-});
-
 const app = new App({
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
   socketMode: true,
   appToken: process.env.APP_TOKEN,
+});
+
+webserver.get("/", (req, res) => {
+  res.send("Gratibot is running!");
 });
 
 webserver.get("/health", async (req, res) => {
@@ -35,6 +35,7 @@ webserver.get("/health", async (req, res) => {
   } catch (e) {
     status_checks.slack_auth = e.message;
   }
+
   // Check Database Connection
   //
   // TODO
@@ -46,7 +47,6 @@ webserver.get("/health", async (req, res) => {
     }
   }
   res.send(status_checks);
-
 });
 
 var normalizedPath = require("path").join(__dirname, "features");
@@ -57,10 +57,9 @@ require("fs")
   });
 
 (async () => {
-  // Start your app
   await app.start();
+  webserver.listen(process.env.PORT || 3000);
 
   console.log("⚡️ Bolt app is running!");
 })();
 
-webserver.listen(process.env.PORT || 3000);

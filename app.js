@@ -1,6 +1,5 @@
 const { App } = require("@slack/bolt");
 const express = require("express");
-const db = require('./database/db');
 const webserver = express();
 
 const app = new App({
@@ -40,7 +39,7 @@ webserver.get("/health", async (req, res) => {
   //
   // TODO
 
-  for (i in status_checks) {
+  for (const i in status_checks) {
     if (status_checks[i] !== "OK") {
       res.status(500).send(status_checks);
       return;
@@ -62,4 +61,3 @@ require("fs")
 
   console.log("⚡️ Bolt app is running!");
 })();
-

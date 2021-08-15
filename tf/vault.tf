@@ -35,9 +35,9 @@ resource "azurerm_key_vault_access_policy" "terraform_access" {
   ]
 }
 
-resource "azurerm_key_vault_secret" "signing_secret" {
-  name         = "signing-secret"
-  value        = var.signing_secret
+resource "azurerm_key_vault_secret" "app_token" {
+  name         = "app-token"
+  value        = var.app_token
   key_vault_id = azurerm_key_vault.gratibot.id
 
   depends_on = [

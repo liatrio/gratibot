@@ -51,7 +51,7 @@ jobs:
           TF_VAR_instance_capacity: "2"
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "prod"
-          TF_VAR_signing_secret: ${{ secrets.PROD_PLAN_SIGNING_SECRET }}
+          TF_VAR_app_token: ${{ secrets.PROD_PLAN_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_PLAN_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":fistbump:"
   apply:
@@ -78,6 +78,6 @@ jobs:
           TF_VAR_instance_capacity: "2"
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_environment: "prod"
-          TF_VAR_signing_secret: ${{ secrets.PROD_SIGNING_SECRET }}
+          TF_VAR_app_token: ${{ secrets.PROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":fistbump:"

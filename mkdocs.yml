@@ -1,0 +1,11 @@
+site_name: 'gratibot'
+
+plugins:
+  - techdocs-core
+
+nav:
+  - Introduction: index.md
+  - Local Development: 
+    - Create Slack App: 'local_dev/create_slack_app.md' 
+    - Running Bot: 'local_dev/running_bot.md'
+  - Deployment: 'deployment.md'

@@ -21,8 +21,9 @@ resource "azurerm_app_service" "gratibot_app_service" {
   client_affinity_enabled = true
 
   site_config {
-    always_on        = "true"
-    linux_fx_version = "DOCKER|${var.gratibot_image}"
+    always_on         = "true"
+    linux_fx_version  = "DOCKER|${var.gratibot_image}"
+    health_check_path = "/health"
   }
 
   identity {

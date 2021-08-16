@@ -182,7 +182,7 @@ async function receiverSlackNotification(gratitude, receiver) {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `You just got recognized by <@${gratitude.giver.id}> in <#${gratitude.channel}>. You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`\n>>>${gratitude.message}`,
+      text: `You just got a ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>. You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`\n>>>${gratitude.message}`,
     },
   });
 
@@ -217,7 +217,8 @@ async function receiverSlackNotification(gratitude, receiver) {
  *   message: string,
  *   trimmedMessage: string,
  *   channel: string,
- *   tags [string],
+ *   tags: [string],
+ *   type: string,
  * }
  */
 module.exports = {

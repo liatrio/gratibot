@@ -31,7 +31,7 @@ async function lifetimeSpendings(user) {
 
 async function dailyGratitudeRemaining(user, timezone) {
   if (config.usersExemptFromMaximum.includes(user)) {
-    winston.info("current user is expempt from limits!", {
+    winston.info("current user is exempt from limits!", {
       func: "service.balance.dailyGratitudeRemaining",
       callingUser: user,
     });

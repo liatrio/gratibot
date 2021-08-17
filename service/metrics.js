@@ -1,3 +1,4 @@
+const winston = require("../winston");
 const moment = require("moment-timezone");
 
 const recognition = require("./recognition");
@@ -14,6 +15,11 @@ async function createMetricsBlocks(timeRange) {
   blocks.push(metricsGraph(imageURL));
   blocks.push(timeRangeInfo(timeRange));
   blocks.push(timeRangeButtons());
+
+  winston.debug("metrics block created", {
+    func: "service.metrics.createMetricsBlocks",
+    time_range: timeRange,
+  });
 
   return blocks;
 }
@@ -165,6 +171,12 @@ function aggregateData(response, timeRange) {
     index = currentTime.diff(recognitionDate, "days");
     data[timeRange - 1 - index].y++;
   }
+
+  winston.debug("recognition chart data aggregated", {
+    func: "service.metrics.aggregateData",
+    time_range: timeRange,
+  });
+
   return data;
 }
 

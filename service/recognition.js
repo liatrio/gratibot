@@ -3,6 +3,7 @@ const moment = require("moment-timezone");
 const recognitionCollection = require("../database/recognitionCollection");
 const balance = require("./balance");
 const { GratitudeError } = require("./errors");
+const winston = require("winston/lib/winston/config");
 
 const { recognizeEmoji, maximum, minimumMessageLength, botName } = config;
 
@@ -21,6 +22,11 @@ async function giveRecognition(
   values
 ) {
   let timestamp = new Date();
+
+  winston.debug(`${recognizer} is giving recognition to ${recognizee}`, {
+    func: "service.recognition.giveRecognition",
+  });
+
   return await recognitionCollection.insert({
     recognizer: recognizer,
     recognizee: recognizee,
@@ -41,6 +47,15 @@ async function countRecognitionsReceived(user, timezone = null, days = null) {
       $gte: new Date(midnight),
     };
   }
+
+  winston.debug(`retrieving recognitions received for ${user}`, {
+    func: "service.recognition.countRecognitionsReceived",
+    callingUser: user,
+    timezone: timezone,
+    days: days,
+    filter: filter,
+  });
+
   return await recognitionCollection.count(filter);
 }
 
@@ -54,6 +69,15 @@ async function countRecognitionsGiven(user, timezone = null, days = null) {
       $gte: new Date(midnight),
     };
   }
+
+  winston.debug(`retrieving recognitions given ${user}`, {
+    func: "service.recognition.countRecognitionsGiven",
+    callingUser: user,
+    timezone: timezone,
+    days: days,
+    filter: filter,
+  });
+
   return await recognitionCollection.count(filter);
 }
 
@@ -68,6 +92,14 @@ async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
       $gte: new Date(midnight),
     };
   }
+
+  winston.debug("retrieving total recognitions given", {
+    func: "service.recognition.getPreviousXDaysOfRecognition",
+    timezone: timezone,
+    days: days,
+    filter: filter,
+  });
+
   return await recognitionCollection.find(filter);
 }
 

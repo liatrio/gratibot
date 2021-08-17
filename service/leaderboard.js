@@ -1,4 +1,4 @@
-const recognition = require("./recognition")
+const recognition = require("./recognition");
 
 const rank = [
   "1st",
@@ -258,4 +258,4 @@ function convertToScores(leaderboardData) {
 
 module.exports = {
   createLeaderboardBlocks,
-}
+};

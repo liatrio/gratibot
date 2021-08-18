@@ -67,3 +67,9 @@ variable "gratibot_reaction_emoji" {
   type        = string
   default     = ":shut_up_and_take_my_fistbump:"
 }
+
+variable "gratibot_log_level" {
+  description = "Logging level to use for Gratibot service"
+  type        = string
+  default     = "info"
+}

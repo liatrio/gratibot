@@ -4,8 +4,8 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'README.md'
-      - 'catalog.yaml'
+      - "README.md"
+      - "catalog.yaml"
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
 
@@ -56,3 +56,4 @@ jobs:
           TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":oof:"
+          TF_VAR_gratibot_log_level: "debug"

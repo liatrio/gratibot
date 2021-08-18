@@ -1,4 +1,4 @@
-const winston = require("winston/lib/winston/config");
+const winston = require("../winston");
 const recognition = require("./recognition");
 
 const rank = [

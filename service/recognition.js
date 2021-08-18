@@ -3,7 +3,7 @@ const moment = require("moment-timezone");
 const recognitionCollection = require("../database/recognitionCollection");
 const balance = require("./balance");
 const { GratitudeError } = require("./errors");
-const winston = require("winston/lib/winston/config");
+const winston = require("../winston");
 
 const { recognizeEmoji, maximum, minimumMessageLength, botName } = config;
 

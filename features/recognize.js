@@ -34,6 +34,7 @@ async function respondToRecognitionMessage({ message, client }) {
       trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
       channel: message.channel,
       tags: recognition.gratitudeTagsIn(message.text),
+      type: recognizeEmoji,
     };
 
     await recognition.validateAndSendGratitude(gratitude);
@@ -83,8 +84,9 @@ async function respondToRecognitionReaction({ event, client }) {
       count: 1,
       message: originalMessage.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
-      channel: originalMessage.channel,
+      channel: event.channel,
       tags: recognition.gratitudeTagsIn(originalMessage.text),
+      type: reactionEmoji,
     };
     await recognition.validateAndSendGratitude(gratitude);
   } catch (e) {

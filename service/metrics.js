@@ -170,4 +170,4 @@ function aggregateData(response, timeRange) {
 
 module.exports = {
   createMetricsBlocks,
-}
+};

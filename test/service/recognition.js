@@ -734,6 +734,7 @@ describe("service/recognition", () => {
         count: 1,
         channel: "TestChannel",
         message: "Test Message",
+        type: ":fistbump:",
       };
       const expectedResponse = {
         blocks: [
@@ -741,7 +742,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
+              text: "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
             },
           },
         ],
@@ -770,6 +771,7 @@ describe("service/recognition", () => {
         count: 1,
         channel: "TestChannel",
         message: "Test Message",
+        type: ":fistbump:",
       };
       const expectedResponse = {
         blocks: [
@@ -777,7 +779,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "You just got recognized by <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
+              text: "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
             },
           },
           {

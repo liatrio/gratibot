@@ -1,6 +1,5 @@
 class SlackError extends Error {
-
-  constructor (apiMethod, apiError, userMessage, message) {
+  constructor(apiMethod, apiError, userMessage, message) {
     super(message);
 
     this.apiMethod = apiMethod;
@@ -10,8 +9,7 @@ class SlackError extends Error {
 }
 
 class GratitudeError extends Error {
-
-  constructor (gratitudeErrors, message) {
+  constructor(gratitudeErrors, message) {
     super(message);
 
     this.gratitudeErrors = gratitudeErrors;
@@ -20,5 +18,5 @@ class GratitudeError extends Error {
 
 module.exports = {
   SlackError,
-  GratitudeError
-}
+  GratitudeError,
+};

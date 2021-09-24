@@ -6,7 +6,7 @@ config.logLevel = process.env.LOG_LEVEL || "info";
 
 config.recognizeEmoji = process.env.RECOGNIZE_EMOJI || ":fistbump:";
 config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
-config.maximum = 5;
+config.maximum = 100;
 config.minimumMessageLength = 20;
 config.botName = process.env.BOT_NAME || "gratibot";
 

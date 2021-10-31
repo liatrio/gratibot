@@ -176,7 +176,8 @@ async function giverSlackNotification(gratitude) {
 }
 
 async function receiverSlackNotification(gratitude, receiver) {
-  const receiverBalance = await balance.lifetimeEarnings(receiver);
+  const lifetimeTotal = await balance.lifetimeEarnings(receiver);
+  const receiverBalance = await balance.currentBalance(receiver);
   let blocks = [];
   blocks.push({
     type: "section",
@@ -186,7 +187,7 @@ async function receiverSlackNotification(gratitude, receiver) {
     },
   });
 
-  if (gratitude.count == receiverBalance) {
+  if (gratitude.count == lifetimeTotal) {
     blocks.push({
       type: "section",
       text: {

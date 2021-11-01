@@ -12,6 +12,7 @@ config.botName = process.env.BOT_NAME || "gratibot";
 
 config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U037FL37G",
+  "U8T585Y8J",
 ];
 
 module.exports = config;

@@ -660,7 +660,8 @@ describe("service/recognition", () => {
   });
   describe("receiverSlackNotification", () => {
     it("should generate a markdown response for recognition", async () => {
-      sinon.stub(balance, "lifetimeEarnings").resolves(5);
+      sinon.stub(balance, "lifetimeEarnings").resolves(100);
+      sinon.stub(balance, "currentBalance").resolves(5);
       const gratitude = {
         giver: {
           id: "Giver",
@@ -698,6 +699,7 @@ describe("service/recognition", () => {
 
     it("should include additional message for first time earners", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(1);
+      sinon.stub(balance, "currentBalance").resolves(1);
       const gratitude = {
         giver: {
           id: "Giver",

@@ -107,9 +107,11 @@ async function gratitudeErrors(gratitude) {
     gratitude.receivers.length === 0
       ? "- Mention who you want to recognize with @user"
       : "",
+    /*
     gratitude.receivers.find((x) => x.id == gratitude.giver.id)
       ? "- You can't recognize yourself"
-      : "",
+      recognizeEmoji: "",
+    */
     gratitude.giver.is_bot ? "- Bots can't give recognition" : "",
     gratitude.giver.is_restricted ? "- Guest users can't give recognition" : "",
     gratitude.receivers.find((x) => x.is_bot)
@@ -118,15 +120,19 @@ async function gratitudeErrors(gratitude) {
     gratitude.receivers.find((x) => x.is_restricted)
       ? "- You can't give recognition to guest users"
       : "",
+    /*
     gratitude.trimmedMessage.length < minimumMessageLength
       ? `- Your message must be at least ${minimumMessageLength} characters`
       : "",
+    */
     gratitude.count < 1
       ? `- You can't send less than one ${recognizeEmoji}`
       : "",
+    /*
     !(await isGratitudeAffordable(gratitude))
       ? `- A maximum of ${maximum} ${recognizeEmoji} can be sent per day`
       : "",
+    */
   ].filter((x) => x !== "");
 }
 
@@ -149,6 +155,7 @@ async function giveGratitude(gratitude) {
 }
 
 async function validateAndSendGratitude(gratitude) {
+  console.log(gratitude.count)
   const errors = await gratitudeErrors(gratitude);
   if (errors.length > 0) {
     throw new GratitudeError(errors);

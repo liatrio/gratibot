@@ -3,16 +3,21 @@ const recognition = require("../service/recognition");
 const winston = require("../winston");
 const { SlackError, GratitudeError } = require("../service/errors");
 const { userInfo } = require("../service/apiwrappers");
-const { handleSlackError, handleGratitudeError, handleGenericError, sendNotificationToReceivers } = require("../service/messageutils");
+const {
+  handleSlackError,
+  handleGratitudeError,
+  handleGenericError,
+  sendNotificationToReceivers,
+} = require("../service/messageutils");
 
-const { superRecognizeEmoji } = config;
+const { goldenRecognizeEmoji } = config;
 
 module.exports = function (app) {
-  app.message(superRecognizeEmoji, respondToRecognitionMessage);
+  app.message(goldenRecognizeEmoji, respondToRecognitionMessage);
 };
 
 async function respondToRecognitionMessage({ message, client }) {
-  winston.info(`Heard reference to ${superRecognizeEmoji}`, {
+  winston.info(`Heard reference to ${goldenRecognizeEmoji}`, {
     callingUser: message.user,
     slackMessage: message.text,
   });
@@ -30,7 +35,7 @@ async function respondToRecognitionMessage({ message, client }) {
       trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
       channel: message.channel,
       tags: recognition.gratitudeTagsIn(message.text),
-      type: superRecognizeEmoji,
+      type: goldenRecognizeEmoji,
     };
 
     await recognition.validateAndSendGratitude(gratitude);
@@ -49,7 +54,7 @@ async function respondToRecognitionMessage({ message, client }) {
     client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
-      text: `${superRecognizeEmoji} has been sent.`,
+      text: `${goldenRecognizeEmoji} has been sent.`,
       ...(await recognition.giverSlackNotification(gratitude)),
     }),
   ]);

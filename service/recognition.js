@@ -1,10 +1,19 @@
 const config = require("../config");
+const winston = require("../winston");
 const moment = require("moment-timezone");
 const recognitionCollection = require("../database/recognitionCollection");
+const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
 const balance = require("./balance");
 const { GratitudeError } = require("./errors");
 
-const { recognizeEmoji, maximum, minimumMessageLength, botName } = config;
+const {
+  recognizeEmoji,
+  goldenRecognizeEmoji,
+  maximum,
+  minimumMessageLength,
+  botName,
+  initialGoldenRecognitionHolder,
+} = config;
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
@@ -18,17 +27,22 @@ async function giveRecognition(
   recognizee,
   message,
   channel,
-  values
+  values,
+  type = recognizeEmoji
 ) {
   let timestamp = new Date();
-  return await recognitionCollection.insert({
+  const collectionValues = {
     recognizer: recognizer,
     recognizee: recognizee,
     timestamp: timestamp,
     message: message,
     channel: channel,
     values: values,
-  });
+  };
+  if (type === goldenRecognizeEmoji) {
+    return await goldenRecognitionCollection.insert(collectionValues);
+  }
+  return await recognitionCollection.insert(collectionValues);
 }
 
 async function countRecognitionsReceived(user, timezone = null, days = null) {
@@ -55,6 +69,47 @@ async function countRecognitionsGiven(user, timezone = null, days = null) {
     };
   }
   return await recognitionCollection.count(filter);
+}
+
+async function getGoldenFistbumpHolder() {
+  const goldenRecognition = await goldenRecognitionCollection.findOne(
+    {},
+    { sort: { timestamp: -1 } }
+  );
+  console.log(goldenRecognition);
+  return {
+    goldenFistbumpHolder: goldenRecognition.recognizee,
+    message: goldenRecognition.message,
+  };
+}
+
+async function doesUserHoldGoldenRecognition(userId) {
+  const goldenRecognition = await goldenRecognitionCollection.findOne(
+    {},
+    { sort: { timestamp: -1 } }
+  );
+  if (!goldenRecognition) {
+    await createInitialGoldenCollection();
+    winston.info("Creating initial golden recognition holder");
+    return false;
+  }
+
+  if (goldenRecognition.recognizee === userId) {
+    return true;
+  }
+
+  return false;
+}
+
+async function createInitialGoldenCollection() {
+  await giveRecognition(
+    initialGoldenRecognitionHolder,
+    initialGoldenRecognitionHolder,
+    "initial golden recognition",
+    "",
+    [],
+    goldenRecognizeEmoji
+  );
 }
 
 async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
@@ -136,17 +191,56 @@ async function gratitudeErrors(gratitude) {
   ].filter((x) => x !== "");
 }
 
+async function goldenGratitudeErrors(gratitude) {
+  return [
+    // validate that sender is current holder of SF
+    !(await doesUserHoldGoldenRecognition(gratitude.giver.id))
+      ? "- Only the current holder of the golden recognition can give the golden recognition"
+      : "",
+
+    gratitude.receivers.length === 0
+      ? "- Mention who you want to recognize with @user"
+      : "",
+    /*
+    gratitude.receivers.find((x) => x.id == gratitude.giver.id)
+      ? "- You can't recognize yourself"
+      recognizeEmoji: "",
+    */
+    gratitude.giver.is_bot ? "- Bots can't give recognition" : "",
+    gratitude.giver.is_restricted ? "- Guest users can't give recognition" : "",
+    gratitude.receivers.find((x) => x.is_bot)
+      ? "- You can't give recognition to bots"
+      : "",
+    gratitude.receivers.find((x) => x.is_restricted)
+      ? "- You can't give recognition to guest users"
+      : "",
+    /*
+    gratitude.trimmedMessage.length < minimumMessageLength
+      ? `- Your message must be at least ${minimumMessageLength} characters`
+      : "",
+    */
+    gratitude.count < 1
+      ? `- You can't send less than one ${recognizeEmoji}`
+      : "",
+  ].filter((x) => x !== "");
+}
+
 async function giveGratitude(gratitude) {
   let results = [];
   for (let i = 0; i < gratitude.receivers.length; i++) {
-    for (let j = 0; j < gratitude.count; j++) {
+    let count = gratitude.count;
+    if (doesUserHoldGoldenRecognition(gratitude.receivers[i].id)) {
+      count = gratitude.count * 2;
+    }
+    for (let j = 0; j < count; j++) {
       results.push(
         giveRecognition(
           gratitude.giver.id,
           gratitude.receivers[i].id,
-          gratitude.text,
+          gratitude.trimmedMessage,
           gratitude.channel,
-          gratitude.tags
+          gratitude.tags,
+          gratitude.type
         )
       );
     }
@@ -155,11 +249,20 @@ async function giveGratitude(gratitude) {
 }
 
 async function validateAndSendGratitude(gratitude) {
-  console.log(gratitude.count)
   const errors = await gratitudeErrors(gratitude);
+  let goldenRecognizeErrors = [];
+  if (gratitude.type === goldenRecognizeEmoji) {
+    goldenRecognizeErrors = await goldenGratitudeErrors(gratitude);
+  }
+
   if (errors.length > 0) {
     throw new GratitudeError(errors);
   }
+
+  if (goldenRecognizeErrors.length > 0) {
+    throw new GratitudeError(goldenRecognizeErrors);
+  }
+
   return giveGratitude(gratitude);
 }
 
@@ -193,7 +296,11 @@ async function receiverSlackNotification(gratitude, receiver) {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `You just got a ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>. You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`\n>>>${gratitude.message}`,
+      text: composeReceiverNotificationText(
+        gratitude,
+        receiver,
+        receiverBalance
+      ),
     },
   });
 
@@ -207,6 +314,24 @@ async function receiverSlackNotification(gratitude, receiver) {
     });
   }
   return { blocks };
+}
+
+function composeReceiverNotificationText(gratitude, receiver, receiverBalance) {
+  if (gratitude.type === goldenRecognizeEmoji) {
+    return `Congratulations, You just got the ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>, and are now the holder of the Golden Fistbump! You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>${gratitude.message}`;
+  } else if (doesUserHoldGoldenRecognition(receiver)) {
+    return `You just got a ${gratitude.type} from <@${
+      gratitude.giver.id
+    }> in <#${
+      gratitude.channel
+    }>. With ${goldenRecognizeEmoji} multiplier you earned \`${
+      gratitude.count * 2
+    }\` and your new balance is \`${receiverBalance}\`\n>>>${
+      gratitude.message
+    }`;
+  }
+
+  return `You just got a ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>. You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`\n>>>${gratitude.message}`;
 }
 
 /*
@@ -236,6 +361,7 @@ module.exports = {
   giveRecognition,
   countRecognitionsReceived,
   countRecognitionsGiven,
+  getGoldenFistbumpHolder,
   getPreviousXDaysOfRecognition,
   gratitudeReceiverIdsIn,
   gratitudeCountIn,

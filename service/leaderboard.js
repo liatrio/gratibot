@@ -25,12 +25,29 @@ async function createLeaderboardBlocks(timeRange) {
   const { giverScores, receiverScores } = await leaderboardScoreData(timeRange);
 
   blocks.push(leaderboardHeader());
+  blocks.push(await goldenFistbumpHolder());
   blocks.push(topGivers(giverScores));
   blocks.push(topReceivers(receiverScores));
   blocks.push(timeRangeInfo(timeRange));
   blocks.push(timeRangeButtons());
 
   return blocks;
+}
+
+async function goldenFistbumpHolder() {
+  let markdown = "*Current Golden Fistbump Holder*\n\n";
+  let { goldenFistbumpHolder, message } =
+    await recognition.getGoldenFistbumpHolder();
+  markdown += `<@${goldenFistbumpHolder}> - *${message}*`;
+
+  return {
+    type: "section",
+    block_id: "goldenFistbumpHolder",
+    text: {
+      type: "mrkdwn",
+      text: markdown,
+    },
+  };
 }
 
 /* Block Kit Content */

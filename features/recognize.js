@@ -4,7 +4,12 @@ const winston = require("../winston");
 const { SlackError, GratitudeError } = require("../service/errors");
 const { reactionMatches } = require("../middleware");
 const { userInfo } = require("../service/apiwrappers");
-const { handleSlackError, handleGratitudeError, handleGenericError, sendNotificationToReceivers } = require("../service/messageutils");
+const {
+  handleSlackError,
+  handleGratitudeError,
+  handleGenericError,
+  sendNotificationToReceivers,
+} = require("../service/messageutils");
 
 const { recognizeEmoji, reactionEmoji } = config;
 

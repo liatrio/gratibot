@@ -35,9 +35,12 @@ async function createLeaderboardBlocks(timeRange) {
 }
 
 async function goldenFistbumpHolder() {
-  let markdown = "*Current Golden Fistbump Holder*\n\n";
-  let { goldenFistbumpHolder, message } =
+  let { goldenFistbumpHolder, message, timestamp } =
     await recognition.getGoldenFistbumpHolder();
+  let receivedDate = new Date(timestamp);
+  receivedDate.toISOString().substring(0, 10);
+
+  let markdown = `*Current Golden Fistbump Holder. Received ${receivedDate}*\n\n`;
   markdown += `<@${goldenFistbumpHolder}> - *${message}*`;
 
   return {
@@ -275,4 +278,5 @@ function convertToScores(leaderboardData) {
 
 module.exports = {
   createLeaderboardBlocks,
+  goldenFistbumpHolder,
 };

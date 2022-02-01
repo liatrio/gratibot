@@ -80,10 +80,11 @@ async function getGoldenFistbumpHolder() {
   return {
     goldenFistbumpHolder: goldenRecognition.recognizee,
     message: goldenRecognition.message,
+    timestamp: goldenRecognition.timestamp,
   };
 }
 
-async function doesUserHoldGoldenRecognition(userId) {
+async function doesUserHoldGoldenRecognition(userId, rec) {
   const goldenRecognition = await goldenRecognitionCollection.findOne(
     {},
     { sort: { timestamp: -1 } }
@@ -94,7 +95,10 @@ async function doesUserHoldGoldenRecognition(userId) {
     return false;
   }
 
-  if (goldenRecognition.recognizee === userId) {
+  console.log(goldenRecognition[rec])
+  console.log(userId)
+
+  if (goldenRecognition[rec] === userId) {
     return true;
   }
 
@@ -193,9 +197,8 @@ async function gratitudeErrors(gratitude) {
 
 async function goldenGratitudeErrors(gratitude) {
   return [
-    // validate that sender is current holder of SF
-    !(await doesUserHoldGoldenRecognition(gratitude.giver.id))
-      ? "- Only the current holder of the golden recognition can give the golden recognition"
+    !(await doesUserHoldGoldenRecognition(gratitude.giver.id, "recognizee"))
+      ? "- Only the current holder of the golden fistbump can give the golden fistbump"
       : "",
 
     gratitude.receivers.length === 0
@@ -210,6 +213,9 @@ async function goldenGratitudeErrors(gratitude) {
     gratitude.giver.is_restricted ? "- Guest users can't give recognition" : "",
     gratitude.receivers.find((x) => x.is_bot)
       ? "- You can't give recognition to bots"
+      : "",
+    gratitude.receivers.length > 1
+      ? "- You can't give the golden fistbump to multiple users"
       : "",
     gratitude.receivers.find((x) => x.is_restricted)
       ? "- You can't give recognition to guest users"
@@ -229,10 +235,12 @@ async function giveGratitude(gratitude) {
   let results = [];
   for (let i = 0; i < gratitude.receivers.length; i++) {
     let count = gratitude.count;
-    if (doesUserHoldGoldenRecognition(gratitude.receivers[i].id)) {
+    if (await doesUserHoldGoldenRecognition(gratitude.receivers[i].id, "recognizee")) {
+      console.log("RECOGNIZEE HOLDS GF")
       count = gratitude.count * 2;
     }
-    for (let j = 0; j < count; j++) {
+
+    if (gratitude.type === goldenRecognizeEmoji) {
       results.push(
         giveRecognition(
           gratitude.giver.id,
@@ -241,6 +249,18 @@ async function giveGratitude(gratitude) {
           gratitude.channel,
           gratitude.tags,
           gratitude.type
+        )
+      );
+    }
+
+    for (let j = 0; j < count; j++) {
+      results.push(
+        giveRecognition(
+          gratitude.giver.id,
+          gratitude.receivers[i].id,
+          gratitude.trimmedMessage,
+          gratitude.channel,
+          gratitude.tags
         )
       );
     }
@@ -290,13 +310,15 @@ async function giverSlackNotification(gratitude) {
 
 async function receiverSlackNotification(gratitude, receiver) {
   const lifetimeTotal = await balance.lifetimeEarnings(receiver);
+  console.log(lifetimeTotal)
   const receiverBalance = await balance.currentBalance(receiver);
+  console.log(receiverBalance)
   let blocks = [];
   blocks.push({
     type: "section",
     text: {
       type: "mrkdwn",
-      text: composeReceiverNotificationText(
+      text: await composeReceiverNotificationText(
         gratitude,
         receiver,
         receiverBalance
@@ -316,10 +338,10 @@ async function receiverSlackNotification(gratitude, receiver) {
   return { blocks };
 }
 
-function composeReceiverNotificationText(gratitude, receiver, receiverBalance) {
+async function composeReceiverNotificationText(gratitude, receiver, receiverBalance) {
   if (gratitude.type === goldenRecognizeEmoji) {
     return `Congratulations, You just got the ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>, and are now the holder of the Golden Fistbump! You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>${gratitude.message}`;
-  } else if (doesUserHoldGoldenRecognition(receiver)) {
+  } else if (await doesUserHoldGoldenRecognition(receiver, "recognizee")) {
     return `You just got a ${gratitude.type} from <@${
       gratitude.giver.id
     }> in <#${

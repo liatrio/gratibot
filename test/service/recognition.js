@@ -4,6 +4,7 @@ const expect = require("chai").expect;
 const recognition = require("../../service/recognition");
 const balance = require("../../service/balance");
 const recognitionCollection = require("../../database/recognitionCollection");
+const goldenRecognitionCollection = require("../../database/goldenRecognitionCollection");
 
 describe("service/recognition", () => {
   afterEach(() => {
@@ -544,6 +545,8 @@ describe("service/recognition", () => {
   describe("giveGratitude", () => {
     it("should add gratitude to database", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const gratitude = {
         giver: {
           id: "Giver",
@@ -572,6 +575,8 @@ describe("service/recognition", () => {
 
     it("should add multiple gratitude to database", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const gratitude = {
         giver: {
           id: "Giver",
@@ -601,6 +606,8 @@ describe("service/recognition", () => {
   describe("validateAndSendGratitude", () => {
     it("should add gratitude to database if okay", async () => {
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
       const gratitude = {
         giver: {
@@ -722,6 +729,8 @@ describe("service/recognition", () => {
     it("should generate a markdown response for recognition", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(100);
       sinon.stub(balance, "currentBalance").resolves(5);
+      sinon.stub(recognition, "composeReceiverNotificationText").resolves("You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message");
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
       const gratitude = {
         giver: {
           id: "Giver",
@@ -760,6 +769,8 @@ describe("service/recognition", () => {
     it("should include additional message for first time earners", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(1);
       sinon.stub(balance, "currentBalance").resolves(1);
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
+      sinon.stub(recognition, "composeReceiverNotificationText").resolves("You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message");
       const gratitude = {
         giver: {
           id: "Giver",

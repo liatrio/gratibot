@@ -5,6 +5,13 @@ const recognition = require("../../service/recognition");
 const leaderboard = require("../../service/leaderboard");
 
 describe("service/leaderboard", () => {
+  beforeEach(() => {
+    sinon.stub(recognition, "getGoldenFistbumpHolder").resolves({
+      goldenFistbumpHolder: "XYXA",    
+      message: "Test Message",    
+      timestamp: "2022-02-01T02:23:29.086Z",    
+    });
+  });
   afterEach(() => {
     sinon.restore();
   });
@@ -12,14 +19,16 @@ describe("service/leaderboard", () => {
   describe("createLeaderboardBlocks", () => {
     it("should respond with a well-formed leaderboard", async () => {
       sinon.stub(recognition, "getPreviousXDaysOfRecognition").resolves({});
+      // sinon.stub(leaderboard, "goldenFistbumpHolder").resolves({});
 
       const result = await leaderboard.createLeaderboardBlocks(30);
 
       expect(result[0].block_id).to.equal("leaderboardHeader");
-      expect(result[1].block_id).to.equal("topGivers");
-      expect(result[2].block_id).to.equal("topReceivers");
-      expect(result[3].block_id).to.equal("timeRange");
-      expect(result[4].block_id).to.equal("leaderboardButtons");
+      expect(result[1].block_id).to.equal("goldenFistbumpHolder");
+      expect(result[2].block_id).to.equal("topGivers");
+      expect(result[3].block_id).to.equal("topReceivers");
+      expect(result[4].block_id).to.equal("timeRange");
+      expect(result[5].block_id).to.equal("leaderboardButtons");
     });
 
     it("should generate leaderboard from stored data", async () => {
@@ -32,8 +41,8 @@ describe("service/leaderboard", () => {
 
       const result = await leaderboard.createLeaderboardBlocks(30);
 
-      expect(result[1].text.text).to.include("<@Giver>");
-      expect(result[2].text.text).to.include("<@Receiver>");
+      expect(result[2].text.text).to.include("<@Giver>");
+      expect(result[3].text.text).to.include("<@Receiver>");
     });
 
     it("should sort leaderboard members", async () => {
@@ -53,7 +62,7 @@ describe("service/leaderboard", () => {
       ]);
 
       const result = await leaderboard.createLeaderboardBlocks(30);
-      const topGivers = result[1].text.text
+      const topGivers = result[2].text.text
         .split("\n")
         .filter((item) => item != "");
 
@@ -110,10 +119,10 @@ describe("service/leaderboard", () => {
       ]);
 
       const result = await leaderboard.createLeaderboardBlocks(30);
-      const topGivers = result[1].text.text
+      const topGivers = result[2].text.text
         .split("\n")
         .filter((item) => item != "");
-      const topReceivers = result[2].text.text
+      const topReceivers = result[3].text.text
         .split("\n")
         .filter((item) => item != "");
 
@@ -127,7 +136,7 @@ describe("service/leaderboard", () => {
 
       const result = await leaderboard.createLeaderboardBlocks(365);
 
-      expect(result[3].elements[0].text).to.equal("Last 365 days");
+      expect(result[4].elements[0].text).to.equal("Last 365 days");
     });
   });
 });

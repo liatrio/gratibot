@@ -152,7 +152,9 @@ describe("service/leaderboard", () => {
 
       const result = await leaderboard.createLeaderboardBlocks(365);
 
-      expect(result[1]).to.deep.equal(goldenFistbumpBlock);
+      expect(result[1].block_id).to.equal("goldenFistbumpHolder");
+      expect(result[1].type).to.equal("section");
+      expect(result[1].text.text).to.contain("<@XYXA> - *Test Message*");
     });
   });
 });

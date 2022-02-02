@@ -138,5 +138,22 @@ describe("service/leaderboard", () => {
 
       expect(result[4].elements[0].text).to.equal("Last 365 days");
     });
+
+    it("should display the golden fistbump holder", async () => {
+      sinon.stub(recognition, "getPreviousXDaysOfRecognition").resolves({});
+
+      const goldenFistbumpBlock = {
+        block_id: "goldenFistbumpHolder",
+        text: {
+          text: "*Current Golden Fistbump Holder. Received Mon Jan 31 2022 18:23:29 GMT-0800 (Pacific Standard Time)*\n\n<@XYXA> - *Test Message*",
+          type: "mrkdwn"
+        },
+        type: "section"
+      }
+
+      const result = await leaderboard.createLeaderboardBlocks(365);
+
+      expect(result[1]).to.deep.equal(goldenFistbumpBlock)
+    });
   });
 });

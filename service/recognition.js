@@ -196,11 +196,9 @@ async function goldenGratitudeErrors(gratitude) {
     gratitude.receivers.length === 0
       ? "- Mention who you want to recognize with @user"
       : "",
-    /*
     gratitude.receivers.find((x) => x.id == gratitude.giver.id)
       ? "- You can't recognize yourself"
-      recognizeEmoji: "",
-    */
+      : "",
     gratitude.giver.is_bot ? "- Bots can't give recognition" : "",
     gratitude.giver.is_restricted ? "- Guest users can't give recognition" : "",
     gratitude.receivers.find((x) => x.is_bot)
@@ -212,11 +210,9 @@ async function goldenGratitudeErrors(gratitude) {
     gratitude.receivers.find((x) => x.is_restricted)
       ? "- You can't give recognition to guest users"
       : "",
-    /*
     gratitude.trimmedMessage.length < minimumMessageLength
       ? `- Your message must be at least ${minimumMessageLength} characters`
       : "",
-    */
     gratitude.count < 1
       ? `- You can't send less than one ${recognizeEmoji}`
       : "",
@@ -227,7 +223,8 @@ async function giveGratitude(gratitude) {
   let results = [];
   for (let i = 0; i < gratitude.receivers.length; i++) {
     let count = gratitude.count;
-    if (await doesUserHoldGoldenRecognition(gratitude.receivers[i].id, "recognizee")) {
+    const userHoldsGoldenFistbump = await doesUserHoldGoldenRecognition(gratitude.receivers[i].id, "recognizee");
+    if (userHoldsGoldenFistbump) {
       count = gratitude.count * 2;
     }
 
@@ -304,8 +301,7 @@ async function receiverSlackNotification(gratitude, receiver) {
   const receiverBalance = await balance.currentBalance(receiver);
   let blocks = [];
 
-  // "this" is here allow composeReceiverNotificationText to be stubbed
-  const receiverNotificationText = await this.composeReceiverNotificationText(
+  const receiverNotificationText = await composeReceiverNotificationText(
         gratitude,
         receiver,
         receiverBalance
@@ -383,6 +379,7 @@ module.exports = {
   gratitudeReceiverIdsIn,
   gratitudeCountIn,
   gratitudeErrors,
+  goldenGratitudeErrors,
   trimmedGratitudeMessage,
   gratitudeTagsIn,
   giveGratitude,
@@ -391,4 +388,5 @@ module.exports = {
   doesUserHoldGoldenRecognition,
   composeReceiverNotificationText,
   receiverSlackNotification,
-};
+  createInitialGoldenCollection,
+}

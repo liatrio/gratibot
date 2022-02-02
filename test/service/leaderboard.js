@@ -9,7 +9,7 @@ describe("service/leaderboard", () => {
     sinon.stub(recognition, "getGoldenFistbumpHolder").resolves({
       goldenFistbumpHolder: "XYXA",
       message: "Test Message",
-      timestamp: "2022-02-01T02:23:29.086Z",
+      timestamp: "2022-02-01",
     });
   });
   afterEach(() => {
@@ -19,7 +19,6 @@ describe("service/leaderboard", () => {
   describe("createLeaderboardBlocks", () => {
     it("should respond with a well-formed leaderboard", async () => {
       sinon.stub(recognition, "getPreviousXDaysOfRecognition").resolves({});
-      // sinon.stub(leaderboard, "goldenFistbumpHolder").resolves({});
 
       const result = await leaderboard.createLeaderboardBlocks(30);
 
@@ -145,7 +144,7 @@ describe("service/leaderboard", () => {
       const goldenFistbumpBlock = {
         block_id: "goldenFistbumpHolder",
         text: {
-          text: "*Current Golden Fistbump Holder. Received Mon Jan 31 2022 18:23:29 GMT-0800 (Pacific Standard Time)*\n\n<@XYXA> - *Test Message*",
+          text: "*Current Golden Fistbump Holder. Received 1/31/2022*\n\n<@XYXA> - *Test Message*",
           type: "mrkdwn",
         },
         type: "section",

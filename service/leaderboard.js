@@ -38,7 +38,7 @@ async function goldenFistbumpHolder() {
   let { goldenFistbumpHolder, message, timestamp } =
     await recognition.getGoldenFistbumpHolder();
   let receivedDate = new Date(timestamp);
-  receivedDate.toISOString().substring(0, 10);
+  receivedDate = receivedDate.toLocaleDateString().substring(0, 10);
 
   let markdown = `*Current Golden Fistbump Holder. Received ${receivedDate}*\n\n`;
   markdown += `<@${goldenFistbumpHolder}> - *${message}*`;

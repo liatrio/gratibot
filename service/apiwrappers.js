@@ -5,6 +5,7 @@ async function userInfo(client, userId) {
   if (response.ok) {
     return response.user;
   }
+
   throw new SlackError(
     "users.info",
     response.error,

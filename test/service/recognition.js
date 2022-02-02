@@ -193,7 +193,7 @@ describe("service/recognition", () => {
         10
       );
       expect(message).to.equal(
-        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :goldenfistbump: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :goldenfistbump::goldenfistbump::goldenfistbump::goldenfistbump: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
       );
     });
   });

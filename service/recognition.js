@@ -347,7 +347,7 @@ async function composeReceiverNotificationText(
       gratitude.giver.id
     }> in <#${
       gratitude.channel
-    }>. With ${goldenRecognizeEmoji} multiplier you earned \`${
+    }>. With ${goldenRecognizeEmoji}${goldenRecognizeEmoji}${goldenRecognizeEmoji}${goldenRecognizeEmoji} multiplier you earned \`${
       gratitude.count * 2
     }\` and your new balance is \`${receiverBalance}\`\n>>>${
       gratitude.message

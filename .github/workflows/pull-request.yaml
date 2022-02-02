@@ -24,7 +24,7 @@ jobs:
   build:
     name: Docker
     needs: setup
-    uses: liatrio/github-workflows/.github/workflows/docker-build.yaml@45eaeee02cced8738255b8741047907018838dde
+    uses: liatrio/github-workflows/.github/workflows/docker-build.yaml@main
     with:
       repository: ghcr.io/liatrio
       image-name: gratibot

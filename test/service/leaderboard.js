@@ -7,9 +7,9 @@ const leaderboard = require("../../service/leaderboard");
 describe("service/leaderboard", () => {
   beforeEach(() => {
     sinon.stub(recognition, "getGoldenFistbumpHolder").resolves({
-      goldenFistbumpHolder: "XYXA",    
-      message: "Test Message",    
-      timestamp: "2022-02-01T02:23:29.086Z",    
+      goldenFistbumpHolder: "XYXA",
+      message: "Test Message",
+      timestamp: "2022-02-01T02:23:29.086Z",
     });
   });
   afterEach(() => {
@@ -146,14 +146,14 @@ describe("service/leaderboard", () => {
         block_id: "goldenFistbumpHolder",
         text: {
           text: "*Current Golden Fistbump Holder. Received Mon Jan 31 2022 18:23:29 GMT-0800 (Pacific Standard Time)*\n\n<@XYXA> - *Test Message*",
-          type: "mrkdwn"
+          type: "mrkdwn",
         },
-        type: "section"
-      }
+        type: "section",
+      };
 
       const result = await leaderboard.createLeaderboardBlocks(365);
 
-      expect(result[1]).to.deep.equal(goldenFistbumpBlock)
+      expect(result[1]).to.deep.equal(goldenFistbumpBlock);
     });
   });
 });

@@ -15,61 +15,73 @@ describe("service/recognition", () => {
     it("should return relevant info about the golden fistbump holder", async () => {
       sinon.useFakeTimers(new Date(2020, 1, 1));
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "Receiver",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
 
-      goldenFistbumpInfo = await recognition.getGoldenFistbumpHolder()
+      const goldenFistbumpInfo = await recognition.getGoldenFistbumpHolder();
 
       const object = {
         goldenFistbumpHolder: "Receiver",
         message: "Test Message",
         timestamp: new Date(2020, 1, 1),
-      }
+      };
 
       expect(goldenFistbumpInfo).to.deep.equal(object);
     });
   });
-  
+
   describe("doesUserHoldGoldenRecognition", () => {
     it("should return true if user holds the golden fistbump ", async () => {
       sinon.useFakeTimers(new Date(2020, 1, 1));
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "Receiver",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
-      userHoldsGoldenRecognition = await recognition.doesUserHoldGoldenRecognition("Receiver", "recognizee")
+      const userHoldsGoldenRecognition =
+        await recognition.doesUserHoldGoldenRecognition(
+          "Receiver",
+          "recognizee"
+        );
       expect(userHoldsGoldenRecognition).to.be.true;
-    })
+    });
 
     it("should return false if user doesn't hold the golden fistbump ", async () => {
       sinon.useFakeTimers(new Date(2020, 1, 1));
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "Receiver",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
-      userHoldsGoldenRecognition = await recognition.doesUserHoldGoldenRecognition("Receiver2", "recognizee")
+      const userHoldsGoldenRecognition =
+        await recognition.doesUserHoldGoldenRecognition(
+          "Receiver2",
+          "recognizee"
+        );
       expect(userHoldsGoldenRecognition).to.be.false;
-    })
+    });
 
     it("should return false if golden recognition doesn't exist", async () => {
       sinon.stub(goldenRecognitionCollection, "findOne").resolves(null);
       sinon.stub(goldenRecognitionCollection, "insert").resolves({});
-      userHoldsGoldenRecognition = await recognition.doesUserHoldGoldenRecognition("Receiver", "recognizee")
+      const userHoldsGoldenRecognition =
+        await recognition.doesUserHoldGoldenRecognition(
+          "Receiver",
+          "recognizee"
+        );
       expect(userHoldsGoldenRecognition).to.be.false;
-    })
+    });
   });
 
   describe("giveRecognition", () => {
@@ -602,17 +614,17 @@ describe("service/recognition", () => {
       ]);
     });
   });
-  
+
   describe("goldenGratitudeErrors", () => {
     it("should return empty if gratitude is okay", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -643,12 +655,12 @@ describe("service/recognition", () => {
     it("should return error if giver does not have golden fistbump", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -674,19 +686,19 @@ describe("service/recognition", () => {
 
       const result = await recognition.goldenGratitudeErrors(gratitude);
       expect(result).to.deep.equal([
-        "- Only the current holder of the golden fistbump can give the golden fistbump"
+        "- Only the current holder of the golden fistbump can give the golden fistbump",
       ]);
     });
 
     it("should return error if no receivers", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -712,12 +724,12 @@ describe("service/recognition", () => {
     it("should return error on self-recognition", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -731,7 +743,8 @@ describe("service/recognition", () => {
             id: "test",
             tz: "America/Los_Angeles",
             is_bot: false,
-            is_restricted: false, },
+            is_restricted: false,
+          },
         ],
         count: 1,
         message: ":fistbump: <@Receiver> Test Message 1234567890",
@@ -747,12 +760,12 @@ describe("service/recognition", () => {
     it("should return error if giver is a bot", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -783,12 +796,12 @@ describe("service/recognition", () => {
     it("should return error if giver is a guest user", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -819,12 +832,12 @@ describe("service/recognition", () => {
     it("should return error if receiver is a bot", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -855,12 +868,12 @@ describe("service/recognition", () => {
     it("should return error if receiver is a guest user", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -893,12 +906,12 @@ describe("service/recognition", () => {
     it("should return error if message is too short", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -931,12 +944,12 @@ describe("service/recognition", () => {
     it("should return error if gratitude count is negative", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "test",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -965,7 +978,6 @@ describe("service/recognition", () => {
         "- You can't send less than one :fistbump:",
       ]);
     });
-
   });
 
   describe("giveGratitude", () => {
@@ -1030,12 +1042,12 @@ describe("service/recognition", () => {
     it("should give 2 fistbumps to the golden fistbump user if they receive one fistbump", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "Receiver",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -1065,14 +1077,16 @@ describe("service/recognition", () => {
 
     it("should create a golden recognition if a golden fistbump was given & give 25 fistbumps", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
-      const insertGoldenRecognition = sinon.stub(goldenRecognitionCollection, "insert").resolves({});
+      const insertGoldenRecognition = sinon
+        .stub(goldenRecognitionCollection, "insert")
+        .resolves({});
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "ReceiverX",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "ReceiverX",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
 
       const gratitude = {
@@ -1102,10 +1116,9 @@ describe("service/recognition", () => {
 
       expect(insertGoldenRecognition.called).to.be.true;
       expect(insert.callCount).to.equal(25);
-      
     });
   });
-  
+
   describe("validateAndSendGratitude", () => {
     it("should add gratitude to database if okay", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
@@ -1232,14 +1245,18 @@ describe("service/recognition", () => {
     it("should generate a markdown response for recognition", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(100);
       sinon.stub(balance, "currentBalance").resolves(5);
-      sinon.stub(recognition, "composeReceiverNotificationText").resolves("You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message");
+      sinon
+        .stub(recognition, "composeReceiverNotificationText")
+        .resolves(
+          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message"
+        );
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "Receiver",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {
@@ -1280,14 +1297,18 @@ describe("service/recognition", () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(1);
       sinon.stub(balance, "currentBalance").resolves(1);
       //sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
-      sinon.stub(recognition, "composeReceiverNotificationText").resolves("You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message");
+      sinon
+        .stub(recognition, "composeReceiverNotificationText")
+        .resolves(
+          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message"
+        );
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
-          recognizer: "Giver",
-          recognizee: "Receiver",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
       });
       const gratitude = {
         giver: {

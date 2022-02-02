@@ -223,7 +223,10 @@ async function giveGratitude(gratitude) {
   let results = [];
   for (let i = 0; i < gratitude.receivers.length; i++) {
     let count = gratitude.count;
-    const userHoldsGoldenFistbump = await doesUserHoldGoldenRecognition(gratitude.receivers[i].id, "recognizee");
+    const userHoldsGoldenFistbump = await doesUserHoldGoldenRecognition(
+      gratitude.receivers[i].id,
+      "recognizee"
+    );
     if (userHoldsGoldenFistbump) {
       count = gratitude.count * 2;
     }
@@ -302,10 +305,10 @@ async function receiverSlackNotification(gratitude, receiver) {
   let blocks = [];
 
   const receiverNotificationText = await composeReceiverNotificationText(
-        gratitude,
-        receiver,
-        receiverBalance
-  )
+    gratitude,
+    receiver,
+    receiverBalance
+  );
   blocks.push({
     type: "section",
     text: {
@@ -326,12 +329,19 @@ async function receiverSlackNotification(gratitude, receiver) {
   return { blocks };
 }
 
-async function composeReceiverNotificationText(gratitude, receiver, receiverBalance) {
+async function composeReceiverNotificationText(
+  gratitude,
+  receiver,
+  receiverBalance
+) {
   if (gratitude.type === goldenRecognizeEmoji) {
     return `Congratulations, You just got the ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>, and are now the holder of the Golden Fistbump! You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>${gratitude.message}`;
-  } 
+  }
 
-  const goldenRecognitionReceiver = await doesUserHoldGoldenRecognition(receiver, "recognizee");
+  const goldenRecognitionReceiver = await doesUserHoldGoldenRecognition(
+    receiver,
+    "recognizee"
+  );
   if (goldenRecognitionReceiver) {
     return `You just got a ${gratitude.type} from <@${
       gratitude.giver.id
@@ -389,4 +399,4 @@ module.exports = {
   composeReceiverNotificationText,
   receiverSlackNotification,
   createInitialGoldenCollection,
-}
+};

@@ -142,7 +142,7 @@ describe("service/recognition", () => {
         trimmedMessage: "  Test Message 1234567890",
         channel: "TestChannel",
         tags: [],
-        type: ":booom:",
+        type: ":goldenfistbump:",
       };
 
       const message = await recognition.composeReceiverNotificationText(
@@ -151,7 +151,7 @@ describe("service/recognition", () => {
         10
       );
       expect(message).to.equal(
-        "Congratulations, You just got the :booom: from <@Giver> in <#TestChannel>, and are now the holder of the Golden Fistbump! You earned `1` and your new balance is `10`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+        "Congratulations, You just got the :goldenfistbump: from <@Giver> in <#TestChannel>, and are now the holder of the Golden Fistbump! You earned `1` and your new balance is `10`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>:fistbump: <@Receiver> Test Message 1234567890"
       );
     });
 
@@ -193,7 +193,7 @@ describe("service/recognition", () => {
         10
       );
       expect(message).to.equal(
-        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :booom: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :goldenfistbump: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
       );
     });
   });
@@ -1223,7 +1223,7 @@ describe("service/recognition", () => {
         trimmedMessage: "  Test Message 1234567890",
         channel: "TestChannel",
         tags: [],
-        type: ":booom:",
+        type: ":goldenfistbump:",
       };
 
       await recognition.giveGratitude(gratitude);

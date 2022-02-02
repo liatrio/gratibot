@@ -53,7 +53,7 @@ async function sendNotificationToReceivers(client, gratitude) {
 }
 
 function getRecieverMessage(gratitude) {
-  if (gratitude.type === ":booom:") {
+  if (gratitude.type === goldenRecognizeEmoji) {
     return `You earned a ${goldenRecognizeEmoji}!!!`;
   }
   return `You earned a ${recognizeEmoji}.`;

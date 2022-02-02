@@ -141,15 +141,6 @@ describe("service/leaderboard", () => {
     it("should display the golden fistbump holder", async () => {
       sinon.stub(recognition, "getPreviousXDaysOfRecognition").resolves({});
 
-      const goldenFistbumpBlock = {
-        block_id: "goldenFistbumpHolder",
-        text: {
-          text: "*Current Golden Fistbump Holder. Received 1/31/2022*\n\n<@XYXA> - *Test Message*",
-          type: "mrkdwn",
-        },
-        type: "section",
-      };
-
       const result = await leaderboard.createLeaderboardBlocks(365);
 
       expect(result[1].block_id).to.equal("goldenFistbumpHolder");

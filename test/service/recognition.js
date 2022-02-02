@@ -84,6 +84,120 @@ describe("service/recognition", () => {
     });
   });
 
+  describe("composeReceiverNotificationText", () => {
+    it("normal fistbump message", async () => {
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":fistbump:",
+      };
+
+      const message = await recognition.composeReceiverNotificationText(
+        gratitude,
+        "TestUser",
+        10
+      );
+      expect(message).to.equal(
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+      );
+    });
+
+    it("golden fistbump given", async () => {
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":booom:",
+      };
+
+      const message = await recognition.composeReceiverNotificationText(
+        gratitude,
+        "TestUser",
+        10
+      );
+      expect(message).to.equal(
+        "Congratulations, You just got the :booom: from <@Giver> in <#TestChannel>, and are now the holder of the Golden Fistbump! You earned `1` and your new balance is `10`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+      );
+    });
+
+    it("fistbump given to golden fistbump holder", async () => {
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "test",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":fistbump:",
+      };
+
+      const message = await recognition.composeReceiverNotificationText(
+        gratitude,
+        "test",
+        10
+      );
+      expect(message).to.equal(
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :booom: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+      );
+    });
+  });
+
   describe("giveRecognition", () => {
     it("should insert data into db", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
@@ -1296,7 +1410,6 @@ describe("service/recognition", () => {
     it("should include additional message for first time earners", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(1);
       sinon.stub(balance, "currentBalance").resolves(1);
-      //sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
       sinon
         .stub(recognition, "composeReceiverNotificationText")
         .resolves(

@@ -278,5 +278,4 @@ function convertToScores(leaderboardData) {
 
 module.exports = {
   createLeaderboardBlocks,
-  goldenFistbumpHolder,
 };

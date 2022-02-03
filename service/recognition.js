@@ -76,6 +76,13 @@ async function getGoldenFistbumpHolder() {
     {},
     { sort: { timestamp: -1 } }
   );
+  if (!goldenRecognition) {
+    return {
+      goldenFistbumpHolder: "none",
+      message: "",
+      timestamp: "",
+    };
+  }
   return {
     goldenFistbumpHolder: goldenRecognition.recognizee,
     message: goldenRecognition.message,
@@ -222,15 +229,6 @@ async function goldenGratitudeErrors(gratitude) {
 async function giveGratitude(gratitude) {
   let results = [];
   for (let i = 0; i < gratitude.receivers.length; i++) {
-    let count = gratitude.count;
-    const userHoldsGoldenFistbump = await doesUserHoldGoldenRecognition(
-      gratitude.receivers[i].id,
-      "recognizee"
-    );
-    if (userHoldsGoldenFistbump) {
-      count = gratitude.count * 2;
-    }
-
     if (gratitude.type === goldenRecognizeEmoji) {
       results.push(
         giveRecognition(
@@ -242,18 +240,40 @@ async function giveGratitude(gratitude) {
           gratitude.type
         )
       );
-    }
-
-    for (let j = 0; j < count; j++) {
-      results.push(
-        giveRecognition(
-          gratitude.giver.id,
+    } else {
+      let extraRecognitions = 0;
+      if (
+        await doesUserHoldGoldenRecognition(
           gratitude.receivers[i].id,
-          gratitude.trimmedMessage,
-          gratitude.channel,
-          gratitude.tags
+          "recognizee"
         )
-      );
+      ) {
+        extraRecognitions = gratitude.count;
+      }
+
+      for (let j = 0; j < gratitude.count; j++) {
+        results.push(
+          giveRecognition(
+            gratitude.giver.id,
+            gratitude.receivers[i].id,
+            gratitude.trimmedMessage,
+            gratitude.channel,
+            gratitude.tags
+          )
+        );
+      }
+
+      for (let j = 0; j < extraRecognitions; j++) {
+        results.push(
+          giveRecognition(
+            "goldenFistbumpMultiplier",
+            gratitude.receivers[i].id,
+            gratitude.trimmedMessage,
+            gratitude.channel,
+            gratitude.tags
+          )
+        );
+      }
     }
   }
   return Promise.all(results);
@@ -286,14 +306,16 @@ async function giverSlackNotification(gratitude) {
   );
   const totalGratitudeValue = gratitude.count * gratitude.receivers.length;
   let blocks = [];
+  const recognitionType = gratitude.type;
+
   blocks.push({
     type: "section",
     text: {
       type: "mrkdwn",
       text:
         totalGratitudeValue > 1
-          ? `Your \`${totalGratitudeValue}\` ${recognizeEmoji} have been sent. You have \`${gratitudeRemaining}\` left to give today.`
-          : `Your \`${totalGratitudeValue}\` ${recognizeEmoji} has been sent. You have \`${gratitudeRemaining}\` left to give today.`,
+          ? `Your \`${totalGratitudeValue}\` ${recognitionType} have been sent. You have \`${gratitudeRemaining}\` left to give today.`
+          : `Your \`${totalGratitudeValue}\` ${recognitionType} has been sent. You have \`${gratitudeRemaining}\` left to give today.`,
     },
   });
   return { blocks };

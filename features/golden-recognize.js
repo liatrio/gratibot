@@ -30,7 +30,7 @@ async function respondToRecognitionMessage({ message, client }) {
           .gratitudeReceiverIdsIn(message.text)
           .map(async (receiver) => userInfo(client, receiver))
       ),
-      count: 25,
+      count: 1,
       message: message.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
       channel: message.channel,

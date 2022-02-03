@@ -4,6 +4,7 @@ const expect = require("chai").expect;
 const config = require("../../config");
 const balance = require("../../service/balance");
 const recognitionCollection = require("../../database/recognitionCollection");
+const goldenRecognitionCollection = require("../../database/goldenRecognitionCollection");
 const deductionCollection = require("../../database/deductionCollection");
 
 describe("service/balance", () => {
@@ -37,11 +38,22 @@ describe("service/balance", () => {
   describe("currentBalance", () => {
     it("should return total earnings when users have no deductions", async () => {
       sinon.stub(recognitionCollection, "count").resolves(100);
+      sinon.stub(goldenRecognitionCollection, "count").resolves(0);
       sinon.stub(deductionCollection, "find").resolves([]);
 
       const result = await balance.currentBalance("User");
 
       expect(result).to.equal(100);
+    });
+
+    it("should return total earnings when users have no deductions and has received golden fistbumps", async () => {
+      sinon.stub(recognitionCollection, "count").resolves(100);
+      sinon.stub(goldenRecognitionCollection, "count").resolves(4);
+      sinon.stub(deductionCollection, "find").resolves([]);
+
+      const result = await balance.currentBalance("User");
+
+      expect(result).to.equal(200);
     });
   });
   describe("lifetimeSpendings", () => {

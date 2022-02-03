@@ -1189,8 +1189,7 @@ describe("service/recognition", () => {
       expect(insert.calledTwice).to.be.true;
     });
 
-    it("should create a golden recognition if a golden fistbump was given & give 25 fistbumps", async () => {
-      const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+    it("should create a golden recognition if a golden fistbump was given", async () => {
       const insertGoldenRecognition = sinon
         .stub(goldenRecognitionCollection, "insert")
         .resolves({});
@@ -1218,7 +1217,7 @@ describe("service/recognition", () => {
             is_restricted: false,
           },
         ],
-        count: 25,
+        count: 1,
         message: ":fistbump: <@Receiver> Test Message 1234567890",
         trimmedMessage: "  Test Message 1234567890",
         channel: "TestChannel",
@@ -1229,7 +1228,6 @@ describe("service/recognition", () => {
       await recognition.giveGratitude(gratitude);
 
       expect(insertGoldenRecognition.called).to.be.true;
-      expect(insert.callCount).to.equal(25);
     });
   });
 
@@ -1306,6 +1304,7 @@ describe("service/recognition", () => {
           },
         ],
         count: 1,
+        type: ":fistbump:",
       };
       const expectedResponse = {
         blocks: [
@@ -1337,6 +1336,7 @@ describe("service/recognition", () => {
           },
         ],
         count: 2,
+        type: ":fistbump:",
       };
       const expectedResponse = {
         blocks: [

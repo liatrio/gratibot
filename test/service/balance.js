@@ -53,7 +53,7 @@ describe("service/balance", () => {
 
       const result = await balance.currentBalance("User");
 
-      expect(result).to.equal(200);
+      expect(result).to.equal(180);
     });
   });
   describe("lifetimeSpendings", () => {

@@ -1,5 +1,4 @@
 const config = require("../config");
-const winston = require("../winston");
 const moment = require("moment-timezone");
 const recognitionCollection = require("../database/recognitionCollection");
 const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
@@ -12,7 +11,6 @@ const {
   maximum,
   minimumMessageLength,
   botName,
-  initialGoldenRecognitionHolder,
 } = config;
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
@@ -95,28 +93,15 @@ async function doesUserHoldGoldenRecognition(userId, rec) {
     {},
     { sort: { timestamp: -1 } }
   );
+
   if (!goldenRecognition) {
-    await createInitialGoldenCollection();
-    winston.info("Creating initial golden recognition holder");
     return false;
   }
-
   if (goldenRecognition[rec] === userId) {
     return true;
   }
 
   return false;
-}
-
-async function createInitialGoldenCollection() {
-  await giveRecognition(
-    initialGoldenRecognitionHolder,
-    initialGoldenRecognitionHolder,
-    "initial golden recognition",
-    "",
-    [],
-    goldenRecognizeEmoji
-  );
 }
 
 async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
@@ -156,6 +141,9 @@ function trimmedGratitudeMessage(text) {
 }
 
 async function isGratitudeAffordable(gratitude) {
+  if (gratitude.type === goldenRecognizeEmoji) {
+    return true;
+  }
   const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
     gratitude.giver.id,
     gratitude.giver.tz
@@ -200,28 +188,8 @@ async function goldenGratitudeErrors(gratitude) {
       ? "- Only the current holder of the golden fistbump can give the golden fistbump"
       : "",
 
-    gratitude.receivers.length === 0
-      ? "- Mention who you want to recognize with @user"
-      : "",
-    gratitude.receivers.find((x) => x.id == gratitude.giver.id)
-      ? "- You can't recognize yourself"
-      : "",
-    gratitude.giver.is_bot ? "- Bots can't give recognition" : "",
-    gratitude.giver.is_restricted ? "- Guest users can't give recognition" : "",
-    gratitude.receivers.find((x) => x.is_bot)
-      ? "- You can't give recognition to bots"
-      : "",
     gratitude.receivers.length > 1
       ? "- You can't give the golden fistbump to multiple users"
-      : "",
-    gratitude.receivers.find((x) => x.is_restricted)
-      ? "- You can't give recognition to guest users"
-      : "",
-    gratitude.trimmedMessage.length < minimumMessageLength
-      ? `- Your message must be at least ${minimumMessageLength} characters`
-      : "",
-    gratitude.count < 1
-      ? `- You can't send less than one ${recognizeEmoji}`
       : "",
   ].filter((x) => x !== "");
 }
@@ -286,12 +254,10 @@ async function validateAndSendGratitude(gratitude) {
     goldenRecognizeErrors = await goldenGratitudeErrors(gratitude);
   }
 
-  if (errors.length > 0) {
-    throw new GratitudeError(errors);
-  }
+  const combinedErrors = [...errors, ...goldenRecognizeErrors];
 
-  if (goldenRecognizeErrors.length > 0) {
-    throw new GratitudeError(goldenRecognizeErrors);
+  if (combinedErrors.length > 0) {
+    throw new GratitudeError(combinedErrors);
   }
 
   return giveGratitude(gratitude);
@@ -420,5 +386,4 @@ module.exports = {
   doesUserHoldGoldenRecognition,
   composeReceiverNotificationText,
   receiverSlackNotification,
-  createInitialGoldenCollection,
 };

@@ -14,7 +14,7 @@ async function currentBalance(user) {
 async function lifetimeEarnings(user) {
   const earnings =
     (await recognitionCollection.count({ recognizee: user })) +
-    (await goldenRecognitionCollection.count({ recognizee: user })) * 25;
+    (await goldenRecognitionCollection.count({ recognizee: user })) * 20;
   return earnings;
 }
 

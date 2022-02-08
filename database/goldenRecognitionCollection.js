@@ -17,7 +17,7 @@ async function initializeGoldenRecognitionCollection () {
     const collectionValues = {
       recognizer: initialGoldenRecognitionHolder,
       recognizee: initialGoldenRecognitionHolder,
-      timestamp: "",
+      timestamp: new Date(),
       message: "initial golden recognition",
       channel: "",
       values: [],

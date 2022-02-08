@@ -4,10 +4,198 @@ const expect = require("chai").expect;
 const recognition = require("../../service/recognition");
 const balance = require("../../service/balance");
 const recognitionCollection = require("../../database/recognitionCollection");
+const goldenRecognitionCollection = require("../../database/goldenRecognitionCollection");
 
 describe("service/recognition", () => {
   afterEach(() => {
     sinon.restore();
+  });
+
+  describe("getGoldenFistbumpHolder", () => {
+    it("should return relevant info about the golden fistbump holder", async () => {
+      sinon.useFakeTimers(new Date(2020, 1, 1));
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+
+      const goldenFistbumpInfo = await recognition.getGoldenFistbumpHolder();
+
+      const object = {
+        goldenFistbumpHolder: "Receiver",
+        message: "Test Message",
+        timestamp: new Date(2020, 1, 1),
+      };
+
+      expect(goldenFistbumpInfo).to.deep.equal(object);
+    });
+  });
+
+  describe("doesUserHoldGoldenRecognition", () => {
+    it("should return true if user holds the golden fistbump ", async () => {
+      sinon.useFakeTimers(new Date(2020, 1, 1));
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+      const userHoldsGoldenRecognition =
+        await recognition.doesUserHoldGoldenRecognition(
+          "Receiver",
+          "recognizee"
+        );
+      expect(userHoldsGoldenRecognition).to.be.true;
+    });
+
+    it("should return false if user doesn't hold the golden fistbump ", async () => {
+      sinon.useFakeTimers(new Date(2020, 1, 1));
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+      const userHoldsGoldenRecognition =
+        await recognition.doesUserHoldGoldenRecognition(
+          "Receiver2",
+          "recognizee"
+        );
+      expect(userHoldsGoldenRecognition).to.be.false;
+    });
+
+    it("should return false if golden recognition doesn't exist", async () => {
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves(null);
+      sinon.stub(goldenRecognitionCollection, "insert").resolves({});
+      const userHoldsGoldenRecognition =
+        await recognition.doesUserHoldGoldenRecognition(
+          "Receiver",
+          "recognizee"
+        );
+      expect(userHoldsGoldenRecognition).to.be.false;
+    });
+  });
+
+  describe("composeReceiverNotificationText", () => {
+    it("normal fistbump message", async () => {
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":fistbump:",
+      };
+
+      const message = await recognition.composeReceiverNotificationText(
+        gratitude,
+        "TestUser",
+        10
+      );
+      expect(message).to.equal(
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+      );
+    });
+
+    it("golden fistbump given", async () => {
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":goldenfistbump:",
+      };
+
+      const message = await recognition.composeReceiverNotificationText(
+        gratitude,
+        "TestUser",
+        10
+      );
+      expect(message).to.equal(
+        "Congratulations, You just got the :goldenfistbump: from <@Giver> in <#TestChannel>, and are now the holder of the Golden Fistbump! You earned `1` and your new balance is `10`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+      );
+    });
+
+    it("fistbump given to golden fistbump holder", async () => {
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "test",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":fistbump:",
+      };
+
+      const message = await recognition.composeReceiverNotificationText(
+        gratitude,
+        "test",
+        10
+      );
+      expect(message).to.equal(
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :goldenfistbump::goldenfistbump::goldenfistbump::goldenfistbump: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+      );
+    });
   });
 
   describe("giveRecognition", () => {
@@ -541,9 +729,86 @@ describe("service/recognition", () => {
     });
   });
 
+  describe("goldenGratitudeErrors", () => {
+    it("should return empty if gratitude is okay", async () => {
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+      const gratitude = {
+        giver: {
+          id: "test",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+
+      const result = await recognition.goldenGratitudeErrors(gratitude);
+      expect(result).to.deep.equal([]);
+    });
+
+    it("should return error if giver does not have golden fistbump", async () => {
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "test",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+      const gratitude = {
+        giver: {
+          id: "test2",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+
+      const result = await recognition.goldenGratitudeErrors(gratitude);
+      expect(result).to.deep.equal([
+        "- Only the current holder of the golden fistbump can give the golden fistbump",
+      ]);
+    });
+  });
+
   describe("giveGratitude", () => {
     it("should add gratitude to database", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const gratitude = {
         giver: {
           id: "Giver",
@@ -572,6 +837,7 @@ describe("service/recognition", () => {
 
     it("should add multiple gratitude to database", async () => {
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const gratitude = {
         giver: {
           id: "Giver",
@@ -597,11 +863,91 @@ describe("service/recognition", () => {
 
       expect(insert.calledTwice).to.be.true;
     });
+
+    it("should give 2 fistbumps to the golden fistbump user if they receive one fistbump", async () => {
+      const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+      await recognition.giveGratitude(gratitude, true);
+
+      expect(insert.calledTwice).to.be.true;
+    });
+
+    it("should create a golden recognition if a golden fistbump was given", async () => {
+      const insertGoldenRecognition = sinon
+        .stub(goldenRecognitionCollection, "insert")
+        .resolves({});
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "ReceiverX",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
+
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":goldenfistbump:",
+      };
+
+      await recognition.giveGratitude(gratitude);
+
+      expect(insertGoldenRecognition.called).to.be.true;
+    });
   });
+
   describe("validateAndSendGratitude", () => {
     it("should add gratitude to database if okay", async () => {
-      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
       const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const gratitude = {
         giver: {
           id: "Giver",
@@ -669,6 +1015,7 @@ describe("service/recognition", () => {
           },
         ],
         count: 1,
+        type: ":fistbump:",
       };
       const expectedResponse = {
         blocks: [
@@ -700,6 +1047,7 @@ describe("service/recognition", () => {
           },
         ],
         count: 2,
+        type: ":fistbump:",
       };
       const expectedResponse = {
         blocks: [
@@ -722,14 +1070,27 @@ describe("service/recognition", () => {
     it("should generate a markdown response for recognition", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(100);
       sinon.stub(balance, "currentBalance").resolves(5);
+      sinon
+        .stub(recognition, "composeReceiverNotificationText")
+        .resolves(
+          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message"
+        );
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
       const gratitude = {
         giver: {
-          id: "Giver",
+          id: "GiverX",
           tz: "America/Los_Angeles",
         },
         receivers: [
           {
-            id: "Receiver",
+            id: "ReceiverX",
           },
         ],
         count: 1,
@@ -743,7 +1104,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
+              text: "You just got a :fistbump: from <@GiverX> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
             },
           },
         ],
@@ -751,7 +1112,7 @@ describe("service/recognition", () => {
 
       const response = await recognition.receiverSlackNotification(
         gratitude,
-        "Receiver"
+        "ReceiverX"
       );
 
       expect(response).to.deep.equal(expectedResponse);
@@ -760,14 +1121,27 @@ describe("service/recognition", () => {
     it("should include additional message for first time earners", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(1);
       sinon.stub(balance, "currentBalance").resolves(1);
+      sinon
+        .stub(recognition, "composeReceiverNotificationText")
+        .resolves(
+          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message"
+        );
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({
+        recognizer: "Giver",
+        recognizee: "Receiver",
+        timestamp: new Date(2020, 1, 1),
+        message: "Test Message",
+        channel: "Test Channel",
+        values: ["Test Tag"],
+      });
       const gratitude = {
         giver: {
-          id: "Giver",
+          id: "GiverX",
           tz: "America/Los_Angeles",
         },
         receivers: [
           {
-            id: "Receiver",
+            id: "ReceiverX",
           },
         ],
         count: 1,
@@ -781,7 +1155,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
+              text: "You just got a :fistbump: from <@GiverX> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
             },
           },
           {
@@ -796,7 +1170,7 @@ describe("service/recognition", () => {
 
       const response = await recognition.receiverSlackNotification(
         gratitude,
-        "Receiver"
+        "ReceiverX"
       );
 
       expect(response).to.deep.equal(expectedResponse);

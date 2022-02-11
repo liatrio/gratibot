@@ -2,6 +2,7 @@ const config = require("../config");
 const moment = require("moment-timezone");
 
 const recognitionCollection = require("../database/recognitionCollection");
+const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
 const deductionCollection = require("../database/deductionCollection");
 
 async function currentBalance(user) {
@@ -11,7 +12,10 @@ async function currentBalance(user) {
 }
 
 async function lifetimeEarnings(user) {
-  return recognitionCollection.count({ recognizee: user });
+  const earnings =
+    (await recognitionCollection.count({ recognizee: user })) +
+    (await goldenRecognitionCollection.count({ recognizee: user })) * 20;
+  return earnings;
 }
 
 async function lifetimeSpendings(user) {

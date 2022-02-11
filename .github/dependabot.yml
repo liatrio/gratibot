@@ -3,19 +3,31 @@ updates:
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
+    labels:
+      - "dependencies"
 
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows/"
     schedule:
       interval: "weekly"
+      day: "sunday"
+    labels:
+      - "dependencies"
 
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
+    labels:
+      - "dependencies"
 
   - package-ecosystem: "terraform"
     directory: "/tf/"
     schedule:
       interval: "weekly"
+      day: "sunday"
+    labels:
+      - "dependencies"

@@ -116,6 +116,7 @@ function redeemSelector(gratibotRewards) {
           "text": "Stop, I've changed my mind!"
         }
       },
+      "action_id": "redeem"
     }
   }
 }

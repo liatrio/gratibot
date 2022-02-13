@@ -5,6 +5,32 @@ const redeem = require("../service/redeem");
 
 module.exports = function (app) {
   app.message("redeem", anyOf(directMention(), directMessage()), respondToRedeem);
+  app.action({ action_id: 'redeem' },
+  async ({ action, ack, body, context }) => {
+    await ack();
+    try {
+      console.log("ACTION!!!");
+
+      const result = await app.client.conversations.open({
+        token: context.botToken,
+        users: `${body.user.id}, U014N0A0CHZ`,
+      });
+      const result2 = await app.client.conversations.list({
+        token: context.botToken,
+        types: "mpim, im",
+      });
+      const result3 = await app.client.chat.postMessage({
+        channel: result.channel.id,  
+        token: context.botToken,
+        text: "TESTING MESSAGE FROM BOT",
+      });
+      console.log(result);
+      console.log(result2);
+    }
+    catch (error) {
+      console.error(error);
+    }
+  });
 };
 
 async function respondToRedeem({ message, client }) {

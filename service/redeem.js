@@ -1,4 +1,7 @@
 const balance = require("../service/balance");
+const config = require("../config")
+
+const { redemptionAdmins } = config;
 
 async function createRedeemBlocks(user) {
   let blocks = []
@@ -77,12 +80,16 @@ function redeemItems(gratibotRewards) {
 function redeemSelector(gratibotRewards) {
   options = [];
   for (let i = 0; i < gratibotRewards.length; i++) {
+    const item = {
+      name: `${gratibotRewards[i].name}`,
+      cost: `${gratibotRewards[i].cost}`,
+    }
     options.push({
       text: {
         type: "plain_text",
         text: `${gratibotRewards[i].name}`,
       },
-      value: `${gratibotRewards[i].name}`,
+      value: JSON.stringify(item),
     });
   }
   return {
@@ -121,6 +128,25 @@ function redeemSelector(gratibotRewards) {
   }
 }
 
+function createMPIM(redeemingUser) {
+  let mpimGroup = `${redeemingUser}`;
+  for (let i = 0; i < redemptionAdmins.length; i++) {
+    mpimGroup += `, ${redemptionAdmins[i]}`
+  }
+  return mpimGroup;
+}
+
+// Assumes value is json string  
+function getSelectedItemDetails(selectedItem) {  
+  const item = JSON.parse(selectedItem)  
+  return {  
+    "itemName": item.name,   
+    "itemCost": item.cost,   
+  }  
+}
+
 module.exports = {
   createRedeemBlocks,
+  createMPIM,
+  getSelectedItemDetails,
 }

@@ -5,32 +5,7 @@ const redeem = require("../service/redeem");
 
 module.exports = function (app) {
   app.message("redeem", anyOf(directMention(), directMessage()), respondToRedeem);
-  app.action({ action_id: 'redeem' },
-  async ({ action, ack, body, context }) => {
-    await ack();
-    try {
-      console.log("ACTION!!!");
-
-      const result = await app.client.conversations.open({
-        token: context.botToken,
-        users: `${body.user.id}, U014N0A0CHZ`,
-      });
-      const result2 = await app.client.conversations.list({
-        token: context.botToken,
-        types: "mpim, im",
-      });
-      const result3 = await app.client.chat.postMessage({
-        channel: result.channel.id,  
-        token: context.botToken,
-        text: "TESTING MESSAGE FROM BOT",
-      });
-      console.log(result);
-      console.log(result2);
-    }
-    catch (error) {
-      console.error(error);
-    }
-  });
+  app.action({ action_id: 'redeem' }, redeemItem);
 };
 
 async function respondToRedeem({ message, client }) {
@@ -44,4 +19,28 @@ async function respondToRedeem({ message, client }) {
     text: "Gratibot Rewards",
     blocks: await redeem.createRedeemBlocks(message.user),
   });
+}
+
+async function redeemItem({ action, ack, body, context, client }) {
+  await ack();
+  try {
+    const result = await client.conversations.open({
+      token: context.botToken,
+      users: redeem.createMPIM(body.user.id),
+    });
+    const result2 = await client.conversations.list({
+      token: context.botToken,
+      types: "mpim, im",
+    });
+    const { itemName, itemCost } = redeem.getSelectedItemDetails(body.actions[0].selected_option.value);
+    const result3 = await client.chat.postMessage({
+      channel: result.channel.id,  
+      token: context.botToken,
+      text: `<@${body.user.id}> has redeemed ${itemName} for ${itemCost} fistbumps`,
+    });
+    // Create deduction
+  }
+  catch (error) {
+    console.error(error);
+  }
 }

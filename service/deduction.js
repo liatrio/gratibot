@@ -1,4 +1,5 @@
 const moment = require("moment-timezone");
+const balance = require("../service/balance");
 const deductionCollection = require("../database/deductionCollection");
 
 async function createDeduction(user, value, message = "") {
@@ -24,7 +25,12 @@ async function getDeductions(user, timezone = null, days = null) {
   return await deductionCollection.find(filter);
 }
 
+async function isBalanceSufficent(user, deductionValue) {
+  return (await balance.currentBalance(user)) >= deductionValue;
+}
+
 module.exports = {
   createDeduction,
   getDeductions,
+  isBalanceSufficent,
 };

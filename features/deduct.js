@@ -1,5 +1,4 @@
 const deduction = require("../service/deduction");
-const balance = require("../service/balance");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { directMessage, anyOf } = require("../middleware");
@@ -40,7 +39,7 @@ async function attemptDeduction({ message, context, client }) {
       text: "You can only deduct positive numbers.",
     });
   }
-  if (!(await isBalanceSufficent(message.user, deductionValue))) {
+  if (!(await deduction.isBalanceSufficent(message.user, deductionValue))) {
     return client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
@@ -57,8 +56,4 @@ async function attemptDeduction({ message, context, client }) {
     user: message.user,
     text: `Deducted ${deductionValue} from your current balance.`,
   });
-}
-
-async function isBalanceSufficent(user, deductionValue) {
-  return (await balance.currentBalance(user)) >= deductionValue;
 }

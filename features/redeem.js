@@ -2,10 +2,15 @@ const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { anyOf, directMessage } = require("../middleware");
 const redeem = require("../service/redeem");
+const deduction = require("../service/deduction");
 
 module.exports = function (app) {
-  app.message("redeem", anyOf(directMention(), directMessage()), respondToRedeem);
-  app.action({ action_id: 'redeem' }, redeemItem);
+  app.message(
+    "redeem",
+    anyOf(directMention(), directMessage()),
+    respondToRedeem
+  );
+  app.action({ action_id: "redeem" }, redeemItem);
 };
 
 async function respondToRedeem({ message, client }) {
@@ -23,24 +28,34 @@ async function respondToRedeem({ message, client }) {
 
 async function redeemItem({ action, ack, body, context, client }) {
   await ack();
+  const userID = body.user.id;
   try {
     const result = await client.conversations.open({
       token: context.botToken,
-      users: redeem.createMPIM(body.user.id),
+      users: redeem.createMPIM(userID),
     });
-    const result2 = await client.conversations.list({
+    await client.conversations.list({
       token: context.botToken,
       types: "mpim, im",
     });
-    const { itemName, itemCost } = redeem.getSelectedItemDetails(body.actions[0].selected_option.value);
-    const result3 = await client.chat.postMessage({
-      channel: result.channel.id,  
+    const { itemName, itemCost } = redeem.getSelectedItemDetails(
+      body.actions[0].selected_option.value
+    );
+    const redemptionMessage = `<@${userID}> has redeemed ${itemName} for ${itemCost} fistbumps`;
+    if (!(await deduction.isBalanceSufficent(userID, itemCost))) {
+      return client.chat.postEphemeral({
+        channel: body.channel.id,
+        user: userID,
+        text: "Your current balance isn't high enough to deduct that much",
+      });
+    }
+    await deduction.createDeduction(userID, itemCost, redemptionMessage);
+    await client.chat.postMessage({
+      channel: result.channel.id,
       token: context.botToken,
-      text: `<@${body.user.id}> has redeemed ${itemName} for ${itemCost} fistbumps`,
+      text: redemptionMessage,
     });
-    // Create deduction
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
   }
 }

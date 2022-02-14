@@ -1,0 +1,20 @@
+[  
+  {  
+    "name": "Item 1",  
+    "description": "This test item is really really nice.",  
+    "imageURL": "",  
+    "cost": 10
+  },  
+  {  
+    "name": "Item 2",  
+    "description": "This test item is really really nice.",  
+    "imageURL": "",  
+    "cost": 100
+  },
+  {  
+    "name": "Item 3",  
+    "description": "This test item is okay.",  
+    "imageURL": "",  
+    "cost": 50
+  }
+]

@@ -1,32 +1,20 @@
 const balance = require("../service/balance");
 const config = require("../config");
+const fs = require('fs');
+
+const path = require("path");
+let rawdata = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
+const gratibotRewards = JSON.parse(rawdata);
+
+
 
 const { redemptionAdmins } = config;
+
+  // TODO: Long term this should be sourced from DB
 
 async function createRedeemBlocks(user) {
   let blocks = [];
 
-  // TODO: Long term this should be sourced from DB
-  const gratibotRewards = [
-    {
-      name: "Test Item 1",
-      description: "This test item is really really nice.",
-      imageURL: "",
-      cost: 10,
-    },
-    {
-      name: "Test Item 2",
-      description: "This test item is really really nice.",
-      imageURL: "",
-      cost: 100,
-    },
-    {
-      name: "Test Item 3",
-      description: "This test item is okay.",
-      imageURL: "",
-      cost: 50,
-    },
-  ];
 
   const currentBalance = await balance.currentBalance(user);
 
@@ -128,10 +116,10 @@ function redeemSelector(gratibotRewards) {
   };
 }
 
-function createMPIM(redeemingUser) {
+function createMPIM(redeemingUser, admins = redemptionAdmins) {
   let mpimGroup = `${redeemingUser}`;
-  for (let i = 0; i < redemptionAdmins.length; i++) {
-    mpimGroup += `, ${redemptionAdmins[i]}`;
+  for (let i = 0; i < admins.length; i++) {
+    mpimGroup += `, ${admins[i]}`;
   }
   return mpimGroup;
 }

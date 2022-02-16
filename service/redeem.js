@@ -3,17 +3,15 @@ const config = require("../config");
 const fs = require("fs");
 
 const path = require("path");
+// TODO: Long term this should be sourced from DB
 let rawdata = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
 const gratibotRewards = JSON.parse(rawdata);
 
 const { redemptionAdmins } = config;
 
-// TODO: Long term this should be sourced from DB
 
-async function createRedeemBlocks(user) {
+function createRedeemBlocks(currentBalance) {
   let blocks = [];
-
-  const currentBalance = await balance.currentBalance(user);
 
   blocks.push(redeemHeader());
   blocks.push(redeemHelpText(currentBalance));

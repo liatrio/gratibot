@@ -2,6 +2,7 @@ const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { anyOf, directMessage } = require("../middleware");
 const redeem = require("../service/redeem");
+const balance = require("../service/balance");
 const deduction = require("../service/deduction");
 
 module.exports = function (app) {
@@ -18,11 +19,12 @@ async function respondToRedeem({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
+  const currentBalance = await balance.currentBalance(message.user);
   await client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
     text: "Gratibot Rewards",
-    blocks: await redeem.createRedeemBlocks(message.user),
+    blocks: await redeem.createRedeemBlocks(currentBalance),
   });
 }
 

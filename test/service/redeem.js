@@ -30,6 +30,35 @@ describe("service/redeem", () => {
     });
   });
 
+  describe("createRedeemBlocks", () => {
+    it("returns expected blocks", async () => {
+      let expectedBlocks = []
+      const expectedHeader = {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "Gratibot Rewards",
+        },
+      };
+
+      expectedBlocks.push(expectedHeader);
+
+      const expectedHelpText = {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Take a look at the currently available rewards!\nBalance: 100`,
+        },
+      };
+
+      expectedBlocks.push(expectedHelpText);
+
+      const actualBlocks = redeem.createRedeemBlocks(100);
+      expect(actualBlocks[0]).to.deep.eq(expectedHeader);
+      expect(actualBlocks[1]).to.deep.eq(expectedHelpText);
+    });
+  });
+
   describe("redeemHeader", () => {
     it("returns expected block", async () => {
       const expectedHeader = {
@@ -47,7 +76,7 @@ describe("service/redeem", () => {
 
   describe("redeemHelpText", () => {
     it("returns expected block", async () => {
-      const expectedText = {
+      const expectedHelpText = {
         type: "section",
         text: {
           type: "mrkdwn",
@@ -56,7 +85,7 @@ describe("service/redeem", () => {
       };
 
       const actualText = redeem.redeemHelpText(100);
-      expect(actualText).to.deep.eq(expectedText);
+      expect(actualText).to.deep.eq(expectedHelpText);
     });
   });
 

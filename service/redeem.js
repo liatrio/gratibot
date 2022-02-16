@@ -1,20 +1,17 @@
 const balance = require("../service/balance");
 const config = require("../config");
-const fs = require('fs');
+const fs = require("fs");
 
 const path = require("path");
 let rawdata = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
 const gratibotRewards = JSON.parse(rawdata);
 
-
-
 const { redemptionAdmins } = config;
 
-  // TODO: Long term this should be sourced from DB
+// TODO: Long term this should be sourced from DB
 
 async function createRedeemBlocks(user) {
   let blocks = [];
-
 
   const currentBalance = await balance.currentBalance(user);
 
@@ -137,4 +134,8 @@ module.exports = {
   createRedeemBlocks,
   createMPIM,
   getSelectedItemDetails,
+  redeemHeader,
+  redeemHelpText,
+  redeemItems,
+  redeemSelector,
 };

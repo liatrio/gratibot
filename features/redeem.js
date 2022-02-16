@@ -26,7 +26,7 @@ async function respondToRedeem({ message, client }) {
   });
 }
 
-async function redeemItem({ action, ack, body, context, client }) {
+async function redeemItem({ ack, body, context, client }) {
   await ack();
   const userID = body.user.id;
   try {

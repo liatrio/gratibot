@@ -2,7 +2,6 @@
 // Ex: @gratibot refund DEDUCTION_ID
 // only redemption admins can execute this command
 
-
 module.exports = function (app) {
-  console.log("Hello");
+  console.log(app);
 };

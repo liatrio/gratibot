@@ -32,7 +32,7 @@ describe("service/redeem", () => {
 
   describe("createRedeemBlocks", () => {
     it("returns expected blocks", async () => {
-      let expectedBlocks = []
+      let expectedBlocks = [];
       const expectedHeader = {
         type: "header",
         text: {

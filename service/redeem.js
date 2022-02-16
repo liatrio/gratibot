@@ -1,4 +1,3 @@
-const balance = require("../service/balance");
 const config = require("../config");
 const fs = require("fs");
 
@@ -8,7 +7,6 @@ let rawdata = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
 const gratibotRewards = JSON.parse(rawdata);
 
 const { redemptionAdmins } = config;
-
 
 function createRedeemBlocks(currentBalance) {
   let blocks = [];

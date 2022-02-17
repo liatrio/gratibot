@@ -43,7 +43,6 @@ async function redeemItem({ ack, body, context, client }) {
     const { itemName, itemCost } = redeem.getSelectedItemDetails(
       body.actions[0].selected_option.value
     );
-    const redemptionMessage = `<@${userID}> has redeemed ${itemName} for ${itemCost} fistbumps`;
     if (!(await deduction.isBalanceSufficent(userID, itemCost))) {
       return client.chat.postEphemeral({
         channel: body.channel.id,
@@ -51,7 +50,12 @@ async function redeemItem({ ack, body, context, client }) {
         text: "Your current balance isn't high enough to deduct that much",
       });
     }
-    await deduction.createDeduction(userID, itemCost, redemptionMessage);
+
+    let redemptionMessage = `<@${userID}> has redeemed ${itemName} for ${itemCost} fistbumps.`;
+    const deductionInfo = await deduction.createDeduction(userID, itemCost, redemptionMessage);
+    redemptionMessage += ` Deduction ID is \`${deductionInfo._id}\``;
+    
+    console.log(deductionInfo);
     await client.chat.postMessage({
       channel: result.channel.id,
       token: context.botToken,

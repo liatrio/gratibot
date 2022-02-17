@@ -39,7 +39,7 @@ describe("deduction/balance", () => {
       expect(insert.args[0][0]).to.deep.equal(object);
     });
   });
-  describe("createDeduction", () => {
+  describe("getDeductions", () => {
     it("should return deductions found in db", async () => {
       sinon.stub(deductionCollection, "find").resolves([
         {

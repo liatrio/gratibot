@@ -1,6 +1,7 @@
 const moment = require("moment-timezone");
 const balance = require("../service/balance");
 const deductionCollection = require("../database/deductionCollection");
+const { ObjectId } = require('mongodb');
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();
@@ -10,6 +11,10 @@ async function createDeduction(user, value, message = "") {
     value,
     message,
   });
+}
+
+async function removeDeduction(id) {
+  return await deductionCollection.remove({ _id: ObjectId(id) });
 }
 
 async function getDeductions(user, timezone = null, days = null) {
@@ -31,6 +36,7 @@ async function isBalanceSufficent(user, deductionValue) {
 
 module.exports = {
   createDeduction,
+  removeDeduction,
   getDeductions,
   isBalanceSufficent,
 };

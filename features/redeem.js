@@ -52,9 +52,13 @@ async function redeemItem({ ack, body, context, client }) {
     }
 
     let redemptionMessage = `<@${userID}> has redeemed ${itemName} for ${itemCost} fistbumps.`;
-    const deductionInfo = await deduction.createDeduction(userID, itemCost, redemptionMessage);
+    const deductionInfo = await deduction.createDeduction(
+      userID,
+      itemCost,
+      redemptionMessage
+    );
     redemptionMessage += ` Deduction ID is \`${deductionInfo._id}\``;
-    
+
     console.log(deductionInfo);
     await client.chat.postMessage({
       channel: result.channel.id,

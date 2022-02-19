@@ -1,7 +1,7 @@
 const moment = require("moment-timezone");
 const balance = require("../service/balance");
 const deductionCollection = require("../database/deductionCollection");
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require("mongodb");
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();

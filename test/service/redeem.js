@@ -96,7 +96,7 @@ describe("service/redeem", () => {
           name: "test",
           description: "test description",
           cost: "10",
-          imageUUL: "http://test.com",
+          imageURL: "http://test.com",
         },
       ];
 

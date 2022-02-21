@@ -64,4 +64,5 @@ module.exports = {
   handleGratitudeError,
   handleGenericError,
   sendNotificationToReceivers,
+  getRecieverMessage,
 };

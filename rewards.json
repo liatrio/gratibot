@@ -1,20 +1,74 @@
 [  
   {  
-    "name": "Item 1",  
-    "description": "This test item is really really nice.",  
-    "imageURL": "",  
-    "cost": 10
+    "name": "Visa Gift Card",  
+    "description": "$25 Visa Gift Card",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
+    "cost": 100
   },  
   {  
-    "name": "Item 2",  
-    "description": "This test item is really really nice.",  
-    "imageURL": "",  
+    "name": "New Black T-Shirt",  
+    "description": "New Black T-Shirt.",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (8).png",  
+    "cost": 40
+  },  
+  {  
+    "name": "New Black Polo",  
+    "description": "New Black Polo.",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (8).png",  
+    "cost": 80
+  },
+  {  
+    "name": "New Liatrio Hat",  
+    "description": "Liatrio Baseball Cap",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (9).png",
+    "cost": 80
+  },
+  {  
+    "name": "New Black Jacket",  
+    "description": "New Black Jacket",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (9).png",
     "cost": 100
   },
   {  
-    "name": "Item 3",  
-    "description": "This test item is okay.",  
-    "imageURL": "",  
-    "cost": 50
+    "name": "New Camera Cover",  
+    "description": "New Camera Cover",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (10).png",
+    "cost": 10
+  },
+  {  
+    "name": "New Water Bottle",  
+    "description": "New Water Bottle",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (12).png",
+    "cost": 40
+  },
+  {  
+    "name": "New Hoodie",  
+    "description": "New Hoodie",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (13).png",
+    "cost": 80
+  },
+  {  
+    "name": "RTIC Tumbler",  
+    "description": "30oz RTIC Tumbler",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (14).png",
+    "cost": 65
+  },
+  {  
+    "name": "Donation: Girls Who Code",  
+    "description": "Donate $50 to Girls Who Code",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (17).png",
+    "cost": 100
+  },
+  {  
+    "name": "Donation: 4ocean",  
+    "description": "Donate $20 to 4ocean",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (15).png",
+    "cost": 40
+  },
+  {  
+    "name": "Donation: Go Climate Neutral",  
+    "description": "Donate $20 to 4ocean",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (16).png",
+    "cost": 100
   }
 ]

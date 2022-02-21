@@ -58,8 +58,6 @@ async function redeemItem({ ack, body, context, client }) {
       redemptionMessage
     );
     redemptionMessage += ` Deduction ID is \`${deductionInfo._id}\``;
-
-    console.log(deductionInfo);
     await client.chat.postMessage({
       channel: result.channel.id,
       token: context.botToken,

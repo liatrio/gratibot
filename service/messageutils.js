@@ -31,7 +31,7 @@ async function handleGenericError(client, message, error) {
   winston.error("Slack API returned an error response", {
     error,
   });
-  const userMessage = `An unknown error occured inGratibot: ${error.message}`;
+  const userMessage = `An unknown error occured in Gratibot: ${error.message}`;
   return client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,

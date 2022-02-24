@@ -4,6 +4,10 @@ const expect = require("chai").expect;
 const deduction = require("../../service/deduction");
 const deductionCollection = require("../../database/deductionCollection");
 
+const balance = require("../../service/balance");
+
+const { ObjectId } = require("mongodb");
+
 describe("deduction/balance", () => {
   afterEach(() => {
     sinon.restore();
@@ -37,6 +41,30 @@ describe("deduction/balance", () => {
         message: "",
       };
       expect(insert.args[0][0]).to.deep.equal(object);
+    });
+  });
+  describe("removeDeduction", () => {
+    it("should call remove deduction", async () => {
+      const remove = sinon.stub(deductionCollection, "remove").resolves({});
+
+      await deduction.removeDeduction("62171d78b5daaa0011771cfd");
+      sinon.assert.calledWith(remove, {
+        _id: ObjectId("62171d78b5daaa0011771cfd"),
+      });
+    });
+  });
+  describe("isBalanceSufficent", () => {
+    it("should return true if balance is sufficient", async () => {
+      sinon.stub(balance, "currentBalance").resolves(20);
+
+      const result = await deduction.isBalanceSufficent("testUser", 10);
+      expect(result).to.be.true;
+    });
+    it("should return false if balance is not sufficient", async () => {
+      sinon.stub(balance, "currentBalance").resolves(20);
+
+      const result = await deduction.isBalanceSufficent("testUser", 30);
+      expect(result).to.be.false;
     });
   });
   describe("getDeductions", () => {

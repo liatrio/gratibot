@@ -295,7 +295,7 @@ async function giverGoldenSlackNotification(gratitude) {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `You have handed off the ${recognitionType}. Thanks for sharing the wealth!.`,
+      text: `You have handed off the ${recognitionType}. Thanks for sharing the wealth!`,
     },
   });
   return { blocks };
@@ -397,6 +397,7 @@ module.exports = {
   giveGratitude,
   validateAndSendGratitude,
   giverSlackNotification,
+  giverGoldenSlackNotification,
   doesUserHoldGoldenRecognition,
   composeReceiverNotificationText,
   receiverSlackNotification,

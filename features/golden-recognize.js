@@ -59,7 +59,9 @@ async function respondToRecognitionMessage({ message, client }) {
     }),
     client.chat.postMessage({
       channel: config.goldenRecognizeChannel,
-      text: `The ${goldenRecognizeEmoji} has been bestowed upon thy majesty <@${gratitude.receivers[0].id}> by <@${gratitude.giver.id}> in <#${message.channel}>! :crown:  :tada:`,
+      text: `The ${goldenRecognizeEmoji} has been bestowed upon thy majesty ` +
+            `<@${gratitude.receivers[0].id}> by <@${gratitude.giver.id}> in <#${message.channel}>! :crown:  :tada:` +
+            `\n>${message.text}\n>`,
     })
   ]);
 }

@@ -18,6 +18,6 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U8T585Y8J",
 ];
 
-config.initialGoldenRecognitionHolder = "U019B8LBA8M";
+config.initialGoldenRecognitionHolder = "UE1QRFSSY";
 
 module.exports = config;

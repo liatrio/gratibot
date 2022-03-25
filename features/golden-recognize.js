@@ -62,9 +62,9 @@ async function respondToRecognitionMessage({ message, client }) {
     //this call to postMessage sends a message to a separate public channel for everyone to see
     client.chat.postMessage({
       channel: config.goldenRecognizeChannel,
-      text: [`The ${goldenRecognizeEmoji} has been bestowed upon thy majesty `,
-             `<@${gratitude.receivers[0].id}> by <@${gratitude.giver.id}> in <#${message.channel}>! :crown:  :tada:`,
-             `\n>${message.text}\n>`],
+      text: `The ${goldenRecognizeEmoji} has been bestowed upon thy majesty `,
+             ...`<@${gratitude.receivers[0].id}> by <@${gratitude.giver.id}> in <#${message.channel}>! :crown:  :tada:`,
+             ...`\n>${message.text}\n>`,
     }),
   ]);
 }

@@ -287,6 +287,20 @@ async function giverSlackNotification(gratitude) {
   return { blocks };
 }
 
+async function giverGoldenSlackNotification(gratitude) {
+  let blocks = [];
+  const recognitionType = gratitude.type;
+
+  blocks.push({
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `You have handed off the ${recognitionType}. Thanks for sharing the wealth!.`,
+    },
+  });
+  return { blocks };
+}
+
 async function receiverSlackNotification(gratitude, receiver) {
   const lifetimeTotal = await balance.lifetimeEarnings(receiver);
   const receiverBalance = await balance.currentBalance(receiver);

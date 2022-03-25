@@ -55,7 +55,11 @@ async function respondToRecognitionMessage({ message, client }) {
       channel: message.channel,
       user: message.user,
       text: `${goldenRecognizeEmoji} has been sent.`,
-      ...(await recognition.giverSlackNotification(gratitude)),
+      ...(await recognition.giverGoldenSlackNotification(gratitude)),
     }),
+    client.chat.postMessage({
+      channel: config.goldenRecognizeChannel,
+      text: `The ${goldenRecognizeEmoji} has been bestowed upon thy majesty <@${gratitude.receivers[0].id}> by <@${gratitude.giver.id}> in <#${message.channel}>! :crown:  :tada:`,
+    })
   ]);
 }

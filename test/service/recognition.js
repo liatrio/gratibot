@@ -1087,7 +1087,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "You have handed off the ${recognitionType}. Thanks for sharing the wealth!",
+              text: "You have handed off the :goldenfistbump:. Thanks for sharing the wealth!",
             },
           },
         ],

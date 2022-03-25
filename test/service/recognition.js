@@ -1093,7 +1093,9 @@ describe("service/recognition", () => {
         ],
       };
 
-      const response = await recognition.giverGoldenSlackNotification(gratitude);
+      const response = await recognition.giverGoldenSlackNotification(
+        gratitude
+      );
 
       expect(response).to.deep.equal(expectedResponse);
     });

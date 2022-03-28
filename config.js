@@ -7,6 +7,7 @@ config.logLevel = process.env.LOG_LEVEL || "info";
 config.recognizeEmoji = process.env.RECOGNIZE_EMOJI || ":fistbump:";
 config.goldenRecognizeEmoji =
   process.env.GOLDEN_RECOGNIZE_EMOJI || ":goldenfistbump:";
+config.goldenRecognizeChannel = "liatrio";
 config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
 config.maximum = process.env.GRATIBOT_LIMIT || 5;
 config.minimumMessageLength = 20;

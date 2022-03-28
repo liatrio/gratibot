@@ -50,12 +50,21 @@ async function respondToRecognitionMessage({ message, client }) {
   }
 
   return Promise.all([
+    //send notification to receivers sends a DM from gratibot to the receiver of the fistbump
     sendNotificationToReceivers(client, gratitude),
+    //this call to postEphemeral sends a message only the giver can see in the channel where the fistbump was given
     client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
       text: `${goldenRecognizeEmoji} has been sent.`,
-      ...(await recognition.giverSlackNotification(gratitude)),
+      ...(await recognition.giverGoldenSlackNotification(gratitude)),
+    }),
+    //this call to postMessage sends a message to a separate public channel for everyone to see
+    client.chat.postMessage({
+      channel: config.goldenRecognizeChannel,
+      text: `The ${goldenRecognizeEmoji} has been bestowed upon thy majesty `,
+      ...`<@${gratitude.receivers[0].id}> by <@${gratitude.giver.id}> in <#${message.channel}>! :crown:  :tada:`,
+      ...`\n>${message.text}\n>`,
     }),
   ]);
 }

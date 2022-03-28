@@ -1066,6 +1066,40 @@ describe("service/recognition", () => {
       expect(response).to.deep.equal(expectedResponse);
     });
   });
+  describe("giverGoldenSlackNotification", () => {
+    it("default path for golden fistbump", async () => {
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+        },
+        receivers: [
+          {
+            id: "Receiver",
+          },
+        ],
+        count: 1,
+        type: ":goldenfistbump:",
+      };
+      const expectedResponse = {
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "You have handed off the :goldenfistbump:. Thanks for sharing the wealth!",
+            },
+          },
+        ],
+      };
+
+      const response = await recognition.giverGoldenSlackNotification(
+        gratitude
+      );
+
+      expect(response).to.deep.equal(expectedResponse);
+    });
+  });
   describe("receiverSlackNotification", () => {
     it("should generate a markdown response for recognition", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(100);

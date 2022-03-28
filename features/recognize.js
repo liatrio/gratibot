@@ -29,6 +29,9 @@ async function respondToRecognitionMessage({ message, client }) {
   });
   let gratitude;
   try {
+    giverID = "<@" + message.user + ">";
+    message.text = message.text.replace(giverID, '');
+
     gratitude = {
       giver: await userInfo(client, message.user),
       receivers: await Promise.all(
@@ -80,6 +83,9 @@ async function respondToRecognitionReaction({ event, client }) {
     if (!originalMessage.text.includes(recognizeEmoji)) {
       return;
     }
+
+    giverID = "<@" + event.user + ">"
+    originalMessage.text.replace(giverID, '');
 
     gratitude = {
       giver: await userInfo(client, event.user),

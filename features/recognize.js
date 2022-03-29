@@ -29,8 +29,8 @@ async function respondToRecognitionMessage({ message, client }) {
   });
   let gratitude;
   try {
-    giverID = "<@" + message.user + ">";
-    message.text = message.text.replace(giverID, '');
+    let giverID = "<@" + message.user + ">";
+    message.text = message.text.replaceAll(giverID, "");
 
     gratitude = {
       giver: await userInfo(client, message.user),
@@ -84,8 +84,8 @@ async function respondToRecognitionReaction({ event, client }) {
       return;
     }
 
-    giverID = "<@" + event.user + ">"
-    originalMessage.text.replace(giverID, '');
+    let giverID = "<@" + event.user + ">";
+    originalMessage.text.replaceAll(giverID, "");
 
     gratitude = {
       giver: await userInfo(client, event.user),

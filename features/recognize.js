@@ -35,10 +35,8 @@ async function respondToRecognitionMessage({ message, client }) {
       receivers: await Promise.all(
         recognition
           .gratitudeReceiverIdsIn(message.text)
-          .filter(async function (receiver) {
-            return receiver != giver;
-          })
-          .map(async (receiver) => userInfo(client, receiver))
+          .filter((receiver) => receiver !== giver)
+          .map((receiver) => userInfo(client, receiver))
       ),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,

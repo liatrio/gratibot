@@ -29,14 +29,15 @@ async function respondToRecognitionMessage({ message, client }) {
   });
   let gratitude;
   try {
-    let giverID = "<@" + message.user + ">";
-    message.text = message.text.replaceAll(giverID, "");
-
+    const giver = await userInfo(client, message.user);
     gratitude = {
-      giver: await userInfo(client, message.user),
+      giver: giver,
       receivers: await Promise.all(
         recognition
           .gratitudeReceiverIdsIn(message.text)
+          .filter(async function (receiver) {
+            return receiver != giver;
+          })
           .map(async (receiver) => userInfo(client, receiver))
       ),
       count: recognition.gratitudeCountIn(message.text),
@@ -83,9 +84,6 @@ async function respondToRecognitionReaction({ event, client }) {
     if (!originalMessage.text.includes(recognizeEmoji)) {
       return;
     }
-
-    let giverID = "<@" + event.user + ">";
-    originalMessage.text.replaceAll(giverID, "");
 
     gratitude = {
       giver: await userInfo(client, event.user),

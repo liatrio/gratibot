@@ -31,7 +31,7 @@ async function respondToRecognitionMessage({ message, client }) {
   try {
     const giver = await userInfo(client, message.user);
     gratitude = {
-      giver: giver,
+      giver,
       receivers: await Promise.all(
         recognition
           .gratitudeReceiverIdsIn(message.text)

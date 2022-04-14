@@ -1,14 +1,16 @@
-const { recognizeEmoji, maximum, reactionEmoji } = require("../config");
+const {
+  recognizeEmoji,
+  maximum,
+  reactionEmoji,
+  goldenRecognizeEmoji,
+} = require("../config");
 const winston = require("../winston");
+const { directMention } = require("@slack/bolt");
+const { anyOf, directMessage } = require("../middleware");
 
-module.exports = function (controller) {
-  controller.hears("help", ["direct_message", "direct_mention"], respondToHelp);
-
-  controller.hears(
-    ["thunderfury", "Thunderfury"],
-    ["direct_message", "direct_mention", "mention", "message"],
-    respondToEasterEgg
-  );
+module.exports = function (app) {
+  app.message("help", anyOf(directMention(), directMessage()), respondToHelp);
+  app.message(/(thunderfury|Thunderfury)/, respondToEasterEgg);
 };
 
 const helpMarkdown = `
@@ -68,7 +70,7 @@ give away today
 *View Leaderboard*
 
 Send me a direct message with 'leaderboard' and I'll show you who is giving \
-and receiving the most recognition.
+and receiving the most recognition. I'll also show who currently holds the :goldenfistbump:!
 
 
 
@@ -76,10 +78,18 @@ and receiving the most recognition.
 *View Metrics*
 
 Send me a direct message with 'metrics' and I'll show you how many times \
-people have given recognition over the last month.
+people have given recognitions over the last month.
 
 
+*Give Golden Recognition*
 
+The golden fistbump :goldenfistbump: is a special recognition that can only be held by one user at a time. Only the current holder of the golden recognition can give the golden recognition.
+
+Giving a golden fistbump is the same as giving a normal fistbump
+
+> Thanks @alice for helping fix the prod issues! ${goldenRecognizeEmoji}
+
+Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held. 
 
 *Deduct (BETA)*
 
@@ -92,12 +102,16 @@ are done by accident. No permanent harm should be done by mistaken deductions \
 but be careful. As this is a beta feature, deductions may be wiped in the future.
 `;
 
-async function respondToHelp(bot, message) {
+async function respondToHelp({ message, client }) {
   winston.info("@gratibot help Called", {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await bot.replyEphemeral(message, helpMarkdown);
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: helpMarkdown,
+  });
 }
 
 const thunderfuryResponse = [
@@ -107,10 +121,10 @@ const thunderfuryResponse = [
   ":thunderfury_blessed_blade_of_the_windseeker:?",
 ].join(" ");
 
-async function respondToEasterEgg(bot, message) {
+async function respondToEasterEgg({ message, say }) {
   winston.info("heard reference to thunderfury", {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await bot.reply(message, thunderfuryResponse);
+  await say(thunderfuryResponse);
 }

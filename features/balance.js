@@ -1,31 +1,34 @@
 const balance = require("../service/balance");
 const winston = require("../winston");
+const { directMention } = require("@slack/bolt");
+const { directMessage, anyOf } = require("../middleware");
 
-module.exports = function (controller) {
-  controller.hears(
+module.exports = function (app) {
+  app.message(
     "balance",
-    ["direct_message", "direct_mention"],
+    anyOf(directMention(), directMessage()),
     respondToBalance
   );
 };
 
-async function respondToBalance(bot, message) {
+async function respondToBalance({ message, client }) {
   winston.info("@gratibot balance Called", {
     callingUser: message.user,
     slackMessage: message.text,
   });
 
-  const userInfo = await bot.api.users.info({ user: message.user });
+  const userInfo = await client.users.info({ user: message.user });
   if (!userInfo.ok) {
     winston.error("Slack API returned error from users.info", {
       callingUser: message.user,
       slackMessage: message.text,
       error: userInfo.error,
     });
-    await bot.replyEphemeral(
-      message,
-      `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`
-    );
+    await client.chat.postEphemeral({
+      channel: message.channel,
+      user: message.user,
+      text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
+    });
     return;
   }
 
@@ -43,5 +46,9 @@ async function respondToBalance(bot, message) {
     `You have \`${remainingToday}\` left to give away today.`,
   ].join("\n");
 
-  await bot.replyEphemeral(message, response);
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: response,
+  });
 }

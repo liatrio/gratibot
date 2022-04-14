@@ -1,4 +1,4 @@
-FROM node:15.12.0-alpine3.10
+FROM node:15.14.0-alpine3.10
 WORKDIR /app
 
 COPY package*.json ./

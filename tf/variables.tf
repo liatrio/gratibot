@@ -44,8 +44,8 @@ variable "gratibot_image" {
   type        = string
 }
 
-variable "signing_secret" {
-  description = "Signing secret for Slack app integration"
+variable "app_token" {
+  description = "App token for Slack app integration"
   type        = string
   sensitive   = true
 }

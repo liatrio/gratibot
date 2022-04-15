@@ -26,6 +26,7 @@ async function createLeaderboardBlocks(timeRange) {
   const { giverScores, receiverScores } = await leaderboardScoreData(timeRange);
 
   blocks.push(leaderboardHeader());
+  blocks.push(await goldenFistbumpHolder());
   blocks.push(topGivers(giverScores));
   blocks.push(topReceivers(receiverScores));
   blocks.push(timeRangeInfo(timeRange));
@@ -37,6 +38,25 @@ async function createLeaderboardBlocks(timeRange) {
   });
 
   return blocks;
+}
+
+async function goldenFistbumpHolder() {
+  let { goldenFistbumpHolder, message, timestamp } =
+    await recognition.getGoldenFistbumpHolder();
+  let receivedDate = new Date(timestamp);
+  receivedDate = receivedDate.toLocaleDateString().substring(0, 10);
+
+  let markdown = `*Current Golden Fistbump Holder. Received ${receivedDate}*\n\n`;
+  markdown += `<@${goldenFistbumpHolder}> - *${message}*`;
+
+  return {
+    type: "section",
+    block_id: "goldenFistbumpHolder",
+    text: {
+      type: "mrkdwn",
+      text: markdown,
+    },
+  };
 }
 
 /* Block Kit Content */

@@ -37,6 +37,10 @@ webserver.get("/health", async (req, res) => {
     status_checks.slack_auth = e.message;
   }
 
+  status_checks.slack_websocket_connection = app.receiver.client.badConnection
+    ? "Connection Failed"
+    : "OK";
+
   // Check Database Connection
   //
   // TODO

@@ -1,3 +1,4 @@
+const winston = require("../winston");
 const recognition = require("./recognition");
 
 const rank = [
@@ -30,6 +31,11 @@ async function createLeaderboardBlocks(timeRange) {
   blocks.push(topReceivers(receiverScores));
   blocks.push(timeRangeInfo(timeRange));
   blocks.push(timeRangeButtons());
+
+  winston.debug("created leaderboad block", {
+    func: "service.leaderboard.createLeaderboardBlocks",
+    time_range: timeRange,
+  });
 
   return blocks;
 }
@@ -249,6 +255,10 @@ function aggregateData(response) {
     recognizeeLeaderboard[recognizee].totalRecognition++;
     recognizeeLeaderboard[recognizee].uniqueUsers.add(recognizer);
   }
+
+  winston.debug("aggregated leaderboard data", {
+    func: "service.leaderboard.aggregateData",
+  });
 
   return {
     giverScores: convertToScores(recognizerLeaderboard),

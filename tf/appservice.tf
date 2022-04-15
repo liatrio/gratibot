@@ -36,5 +36,6 @@ resource "azurerm_app_service" "gratibot_app_service" {
     "BOT_USER_OAUTH_ACCESS_TOKEN" = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.bot_user_token.id})"
     "RECOGNIZE_EMOJI"             = var.gratibot_recognize_emoji
     "REACTION_EMOJI"              = var.gratibot_reaction_emoji
+    "LOG_LEVEL"                   = var.gratibot_log_level
   }
 }

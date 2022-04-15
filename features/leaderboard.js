@@ -20,6 +20,7 @@ module.exports = function (app) {
  */
 async function respondToLeaderboard({ message, client }) {
   winston.info("@gratibot leaderboard Called", {
+    func: "feature.leaderboard.respondToLeaderboard",
     callingUser: message.user,
     slackMessage: message.text,
   });
@@ -28,6 +29,11 @@ async function respondToLeaderboard({ message, client }) {
     user: message.user,
     text: "Gratibot Leaderboard",
     blocks: await leaderboard.createLeaderboardBlocks(30),
+  });
+  winston.debug("response to leaderboard request was posted to Slack", {
+    func: "feature.leaderboard.respondToLeaderboard",
+    callingUser: message.user,
+    slackMessage: message.text,
   });
 }
 
@@ -40,10 +46,15 @@ async function respondToLeaderboard({ message, client }) {
 async function updateLeaderboardResponse({ ack, body, action, respond }) {
   await ack();
   winston.info("Gratibot interactive leaderboard button clicked", {
+    func: "feature.leaderboard.updateLeaderboardResponse",
     callingUser: body.user.id,
   });
 
   await respond({
     blocks: await leaderboard.createLeaderboardBlocks(action.value),
+  });
+  winston.debug("leaderboard interactive button response posted to Slack", {
+    func: "feature.leaderboard.updateLeaderboardResponse",
+    callingUser: body.user.id,
   });
 }

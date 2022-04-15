@@ -1,8 +1,16 @@
+const winston = require("../winston");
 const moment = require("moment-timezone");
 const deductionCollection = require("../database/deductionCollection");
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();
+
+  winston.debug("creating new deduction", {
+    func: "service.deduction.createDeduction",
+    callingUser: user,
+    deductionValue: value,
+  });
+
   return await deductionCollection.insert({
     user,
     timestamp,
@@ -21,6 +29,14 @@ async function getDeductions(user, timezone = null, days = null) {
       $gte: new Date(midnight),
     };
   }
+
+  winston.debug(`retrieving ${user}'s deductions`, {
+    func: "service.deduction.createDeduction",
+    callingUser: user,
+    timezone: timezone,
+    days: days,
+  });
+
   return await deductionCollection.find(filter);
 }
 

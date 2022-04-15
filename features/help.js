@@ -104,6 +104,7 @@ but be careful. As this is a beta feature, deductions may be wiped in the future
 
 async function respondToHelp({ message, client }) {
   winston.info("@gratibot help Called", {
+    func: "feature.help.respondToHelp",
     callingUser: message.user,
     slackMessage: message.text,
   });
@@ -111,6 +112,12 @@ async function respondToHelp({ message, client }) {
     channel: message.channel,
     user: message.user,
     text: helpMarkdown,
+  });
+
+  winston.debug("successfully posted ephemeral help message to Slack", {
+    func: "feature.help.respondToHelp",
+    callingUser: message.user,
+    slackMessage: message.text,
   });
 }
 
@@ -126,5 +133,12 @@ async function respondToEasterEgg({ message, say }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
+
   await say(thunderfuryResponse);
+
+  winston.debug("successfully posted thunderfury message to Slack", {
+    func: "feature.help.respondToEasterEgg",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
 }

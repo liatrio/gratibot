@@ -1,7 +1,7 @@
 const { App } = require("@slack/bolt");
 const express = require("express");
 const webserver = express();
-const winston = require("winston");
+const winston = require("./winston");
 
 const app = new App({
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,

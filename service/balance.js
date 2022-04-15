@@ -10,7 +10,7 @@ async function currentBalance(user) {
   const spending = await lifetimeSpendings(user);
 
   winston.debug(
-    `user's current earnings are [${earning}] and spendings are [${spending}]`,
+    `${user} current earnings are [${earning}] and spendings are [${spending}]`,
     {
       func: "service.balance.currentBalance",
     }
@@ -31,7 +31,7 @@ async function lifetimeSpendings(user) {
 
 async function dailyGratitudeRemaining(user, timezone) {
   if (config.usersExemptFromMaximum.includes(user)) {
-    winston.info("current user is exempt from limits!", {
+    winston.debug("current user is exempt from limits!", {
       func: "service.balance.dailyGratitudeRemaining",
       callingUser: user,
     });
@@ -45,7 +45,7 @@ async function dailyGratitudeRemaining(user, timezone) {
     },
   });
 
-  winston.info(
+  winston.debug(
     `${user} has [${config.maximum - recognitionGivenToday}] recognitions left`,
     {
       func: "service.balance.dailyGratitudeRemaining",

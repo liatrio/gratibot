@@ -174,7 +174,7 @@ async function handleSlackError(client, message, error) {
 }
 
 async function handleGratitudeError(client, message, error) {
-  winston.error("Rejected gratitude request as invalid", {
+  winston.info("Rejected gratitude request as invalid", {
     gratitudeErrors: error.gratitudeErrors,
   });
   const errorString = error.gratitudeErrors.join("\n");

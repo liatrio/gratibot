@@ -44,12 +44,14 @@ webserver.get("/health", async (req, res) => {
   for (const i in status_checks) {
     if (status_checks[i] !== "OK") {
       res.status(500).send(status_checks);
-      winston.debug("failed health check status response sent");
+      winston.error("Health check failed", {
+        status_checks,
+      });
       return;
     }
   }
   res.send(status_checks);
-  winston.debug("health check status response sent");
+  winston.debug("Health check passed");
 });
 
 var normalizedPath = require("path").join(__dirname, "features");

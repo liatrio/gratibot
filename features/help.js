@@ -51,7 +51,7 @@ the same message that you reacted to.
 
 For details about how to redeem ${recognizeEmoji} check out Confluence:
 
-https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps
+https://liatrio.atlassian.net/wiki/spaces/LE/pages/2614919169/Redeeming+Fistbumps
 
 
 

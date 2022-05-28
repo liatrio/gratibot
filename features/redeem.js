@@ -34,7 +34,7 @@ async function redeemItem({ ack, body, context, client }) {
   try {
     const result = await client.conversations.open({
       token: context.botToken,
-      users: redeem.createMPIM(userID),
+      users: redeem.redeemNotificationUsers(userID),
     });
     await client.conversations.list({
       token: context.botToken,

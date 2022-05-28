@@ -25,7 +25,7 @@ describe("service/refund", () => {
         client: testClient,
         admins: testAdmins,
       };
-      sinon.stub(deduction, "removeDeduction").resolves({});
+      sinon.stub(deduction, "refundDeduction").resolves({});
       await refund.respondToRefund(testObject);
       sinon.assert.calledWith(testClient.chat.postMessage, {
         channel: testMessage.channel,
@@ -53,7 +53,7 @@ describe("service/refund", () => {
         client: testClient,
         admins: testAdmins,
       };
-      sinon.stub(deduction, "removeDeduction").resolves({});
+      sinon.stub(deduction, "refundDeduction").resolves({});
       await refund.respondToRefund(testObject);
       sinon.assert.calledWith(testClient.chat.postMessage, {
         channel: testMessage.channel,

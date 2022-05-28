@@ -109,7 +109,7 @@ function redeemSelector(gratibotRewards) {
   };
 }
 
-function createMPIM(redeemingUser, admins = redemptionAdmins) {
+function redeemNotificationUsers(redeemingUser, admins = redemptionAdmins) {
   let mpimGroup = `${redeemingUser}`;
   for (let i = 0; i < admins.length; i++) {
     mpimGroup += `, ${admins[i]}`;
@@ -128,7 +128,7 @@ function getSelectedItemDetails(selectedItem) {
 
 module.exports = {
   createRedeemBlocks,
-  createMPIM,
+  redeemNotificationUsers,
   getSelectedItemDetails,
   redeemHeader,
   redeemHelpText,

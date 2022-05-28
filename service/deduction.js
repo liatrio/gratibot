@@ -6,6 +6,7 @@ const { ObjectId } = require("mongodb");
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();
+  let refund = false;
 
   winston.debug("creating new deduction", {
     func: "service.deduction.createDeduction",
@@ -16,13 +17,17 @@ async function createDeduction(user, value, message = "") {
   return await deductionCollection.insert({
     user,
     timestamp,
+    refund,
     value,
     message,
   });
 }
 
-async function removeDeduction(id) {
-  return await deductionCollection.remove({ _id: ObjectId(id) });
+async function refundDeduction(id) {
+  return await deductionCollection.findOneAndUpdate(
+    { _id: ObjectId(id) },
+    { $set: { refund: true } }
+  );
 }
 
 async function getDeductions(user, timezone = null, days = null) {
@@ -52,7 +57,7 @@ async function isBalanceSufficent(user, deductionValue) {
 
 module.exports = {
   createDeduction,
-  removeDeduction,
+  refundDeduction,
   getDeductions,
   isBalanceSufficent,
 };

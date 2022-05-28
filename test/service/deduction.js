@@ -23,6 +23,7 @@ describe("deduction/balance", () => {
       const object = {
         user: "User",
         timestamp: new Date(2020, 1, 1),
+        refund: false,
         value: 10,
         message: "Test Message",
       };
@@ -37,18 +38,21 @@ describe("deduction/balance", () => {
       const object = {
         user: "User",
         timestamp: new Date(2020, 1, 1),
+        refund: false,
         value: 10,
         message: "",
       };
       expect(insert.args[0][0]).to.deep.equal(object);
     });
   });
-  describe("removeDeduction", () => {
-    it("should call remove deduction", async () => {
-      const remove = sinon.stub(deductionCollection, "remove").resolves({});
+  describe("refundDeduction", () => {
+    it("should call refund deduction", async () => {
+      const findOneAndUpdate = sinon
+        .stub(deductionCollection, "findOneAndUpdate")
+        .resolves({});
 
-      await deduction.removeDeduction("62171d78b5daaa0011771cfd");
-      sinon.assert.calledWith(remove, {
+      await deduction.refundDeduction("62171d78b5daaa0011771cfd");
+      sinon.assert.calledWith(findOneAndUpdate, {
         _id: ObjectId("62171d78b5daaa0011771cfd"),
       });
     });

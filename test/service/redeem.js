@@ -7,9 +7,9 @@ describe("service/redeem", () => {
     sinon.restore();
   });
 
-  describe("createMPIM", () => {
+  describe("redeemNotificationUsers", () => {
     it("should return comma seperated list of users", async () => {
-      const actualMPIMGroup = redeem.createMPIM("TestUser2", [
+      const actualMPIMGroup = redeem.redeemNotificationUsers("TestUser2", [
         "Admin1",
         "Admin2",
       ]);

@@ -13,6 +13,7 @@ module.exports = function (app) {
 
 async function respondToBalance({ message, client }) {
   winston.info("@gratibot balance Called", {
+    func: "feature.balance.respondToBalance",
     callingUser: message.user,
     slackMessage: message.text,
   });
@@ -20,6 +21,7 @@ async function respondToBalance({ message, client }) {
   const userInfo = await client.users.info({ user: message.user });
   if (!userInfo.ok) {
     winston.error("Slack API returned error from users.info", {
+      func: "feature.balance.respondToBalance",
       callingUser: message.user,
       slackMessage: message.text,
       error: userInfo.error,
@@ -50,5 +52,11 @@ async function respondToBalance({ message, client }) {
     channel: message.channel,
     user: message.user,
     text: response,
+  });
+
+  winston.debug("successfully posted ephemeral balance result to Slack", {
+    func: "feature.balance.respondToBalance",
+    callingUser: message.user,
+    slackMessage: message.text,
   });
 }

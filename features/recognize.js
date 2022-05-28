@@ -24,6 +24,7 @@ module.exports = function (app) {
 
 async function respondToRecognitionMessage({ message, client }) {
   winston.info(`Heard reference to ${recognizeEmoji}`, {
+    func: "features.recognize.respondToRecognitionMessage",
     callingUser: message.user,
     slackMessage: message.text,
   });
@@ -45,6 +46,15 @@ async function respondToRecognitionMessage({ message, client }) {
     };
 
     await recognition.validateAndSendGratitude(gratitude);
+
+    winston.debug(
+      `validated and stored message recognitions from ${gratitude.giver}`,
+      {
+        func: "features.recognize.respondToRecognitionMessage",
+        callingUser: message.user,
+        slackMessage: message.text,
+      }
+    );
   } catch (e) {
     if (e instanceof SlackError) {
       return handleSlackError(client, message, e);
@@ -68,6 +78,7 @@ async function respondToRecognitionMessage({ message, client }) {
 
 async function respondToRecognitionReaction({ event, client }) {
   winston.info(`Saw a reaction containing ${reactionEmoji}`, {
+    func: "features.recognize.respondToRecognitionReaction",
     callingUser: event.user,
     reactionEmoji: event.reaction,
   });
@@ -96,6 +107,14 @@ async function respondToRecognitionReaction({ event, client }) {
       type: reactionEmoji,
     };
     await recognition.validateAndSendGratitude(gratitude);
+    winston.debug(
+      `validated and stored reaction recognitions from ${gratitude.giver}`,
+      {
+        func: "features.recognize.respondToRecognitionReaction",
+        callingUser: event.user,
+        slackMessage: event.reactions,
+      }
+    );
   } catch (e) {
     if (e instanceof SlackError) {
       return handleSlackError(client, event, e);

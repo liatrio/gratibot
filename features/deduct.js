@@ -13,12 +13,15 @@ module.exports = function (app) {
 
 async function attemptDeduction({ message, context, client }) {
   winston.info("@gratibot deduct Called", {
+    func: "service.deduct.attemptDeduction",
     callingUser: message.user,
     slackMessage: message.text,
   });
   const matches = message.text.match(/deduct\s+([0-9]+)(\s+.*)?$/);
   if (!matches) {
-    winston.info("Failed to parse deduct input");
+    winston.info("Failed to parse deduct input", {
+      func: "service.deduct.attemptDeduction",
+    });
     const response = [
       "Please specify an amount to deduct,",
       `Ex: \`<@${context.botUserId}> deduct 100 Optional Message\``,
@@ -33,6 +36,12 @@ async function attemptDeduction({ message, context, client }) {
   const deductionValue = parseInt(matches[1], 10);
   const deductionMessage = matches[2]?.trim() | "";
   if (deductionValue <= 0) {
+    winston.info(
+      `${message.user} entered a negative deduct value: [${deductionValue}]`,
+      {
+        func: "service.deduct.attemptDeduction",
+      }
+    );
     return client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
@@ -40,6 +49,9 @@ async function attemptDeduction({ message, context, client }) {
     });
   }
   if (!(await deduction.isBalanceSufficent(message.user, deductionValue))) {
+    winston.info(`${message.user}'s balance is insufficent`, {
+      func: "service.deduct.attemptDeduction",
+    });
     return client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
@@ -51,9 +63,23 @@ async function attemptDeduction({ message, context, client }) {
     deductionValue,
     deductionMessage
   );
-  return client.chat.postEphemeral({
+
+  winston.debug(
+    `[${deductionValue}] recognitons deducted from ${message.user}`,
+    {
+      func: "service.deduct.attemptDeduction",
+    }
+  );
+
+  await client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
     text: `Deducted ${deductionValue} from your current balance.`,
+  });
+
+  winston.debug("successfully posted ephemeral deduct result to Slack", {
+    func: "feature.balance.respondToBalance",
+    callingUser: message.user,
+    slackMessage: message.text,
   });
 }

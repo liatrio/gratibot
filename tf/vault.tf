@@ -16,7 +16,7 @@ resource "azurerm_key_vault_access_policy" "gratibot_access" {
   object_id = azurerm_app_service.gratibot_app_service.identity.0.principal_id
 
   secret_permissions = [
-    "get",
+    "Get",
   ]
 }
 

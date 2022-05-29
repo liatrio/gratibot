@@ -1,9 +1,12 @@
 const winston = require("../winston");
 const moment = require("moment-timezone");
+const balance = require("../service/balance");
 const deductionCollection = require("../database/deductionCollection");
+const { ObjectId } = require("mongodb");
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();
+  let refund = false;
 
   winston.debug("creating new deduction", {
     func: "service.deduction.createDeduction",
@@ -14,9 +17,17 @@ async function createDeduction(user, value, message = "") {
   return await deductionCollection.insert({
     user,
     timestamp,
+    refund,
     value,
     message,
   });
+}
+
+async function refundDeduction(id) {
+  return await deductionCollection.findOneAndUpdate(
+    { _id: ObjectId(id) },
+    { $set: { refund: true } }
+  );
 }
 
 async function getDeductions(user, timezone = null, days = null) {
@@ -40,7 +51,13 @@ async function getDeductions(user, timezone = null, days = null) {
   return await deductionCollection.find(filter);
 }
 
+async function isBalanceSufficent(user, deductionValue) {
+  return (await balance.currentBalance(user)) >= deductionValue;
+}
+
 module.exports = {
   createDeduction,
+  refundDeduction,
   getDeductions,
+  isBalanceSufficent,
 };

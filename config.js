@@ -21,4 +21,8 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
 
 config.initialGoldenRecognitionHolder = "UE1QRFSSY";
 
+config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
+  "U6BS54PJM",
+];
+
 module.exports = config;

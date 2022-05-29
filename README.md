@@ -84,3 +84,50 @@ workspace you chose to develop for. You should now be ready to test your bot,
 and progress with development.
 
 [Bolt Docs](https://slack.dev/bolt-js/concepts)
+
+
+### Useful Mongo commands
+
+list databases. `gratibot` is the database being used for this project.
+
+```
+db.adminCommand( { listDatabases: 1 } )
+```
+
+switch to `gratibot` db.
+
+```
+use gratibot
+```
+
+list collections (in the current db)
+
+```
+db.getCollectionNames()
+```
+
+list all items in a collections
+
+```
+db.COLLECTION_NAME.find()
+```
+
+find item in collection based on index value
+
+```
+db.COLLECTION_NAME.find({KEY: VALUE})
+```
+
+### Utility Commands
+
+run tests
+
+```
+npm test
+```
+
+run lint fix
+
+```
+npm run lint-fix
+```

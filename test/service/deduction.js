@@ -4,6 +4,10 @@ const expect = require("chai").expect;
 const deduction = require("../../service/deduction");
 const deductionCollection = require("../../database/deductionCollection");
 
+const balance = require("../../service/balance");
+
+const { ObjectId } = require("mongodb");
+
 describe("deduction/balance", () => {
   afterEach(() => {
     sinon.restore();
@@ -19,6 +23,7 @@ describe("deduction/balance", () => {
       const object = {
         user: "User",
         timestamp: new Date(2020, 1, 1),
+        refund: false,
         value: 10,
         message: "Test Message",
       };
@@ -33,13 +38,40 @@ describe("deduction/balance", () => {
       const object = {
         user: "User",
         timestamp: new Date(2020, 1, 1),
+        refund: false,
         value: 10,
         message: "",
       };
       expect(insert.args[0][0]).to.deep.equal(object);
     });
   });
-  describe("createDeduction", () => {
+  describe("refundDeduction", () => {
+    it("should call refund deduction", async () => {
+      const findOneAndUpdate = sinon
+        .stub(deductionCollection, "findOneAndUpdate")
+        .resolves({});
+
+      await deduction.refundDeduction("62171d78b5daaa0011771cfd");
+      sinon.assert.calledWith(findOneAndUpdate, {
+        _id: ObjectId("62171d78b5daaa0011771cfd"),
+      });
+    });
+  });
+  describe("isBalanceSufficent", () => {
+    it("should return true if balance is sufficient", async () => {
+      sinon.stub(balance, "currentBalance").resolves(20);
+
+      const result = await deduction.isBalanceSufficent("testUser", 10);
+      expect(result).to.be.true;
+    });
+    it("should return false if balance is not sufficient", async () => {
+      sinon.stub(balance, "currentBalance").resolves(20);
+
+      const result = await deduction.isBalanceSufficent("testUser", 30);
+      expect(result).to.be.false;
+    });
+  });
+  describe("getDeductions", () => {
     it("should return deductions found in db", async () => {
       sinon.stub(deductionCollection, "find").resolves([
         {

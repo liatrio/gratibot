@@ -28,7 +28,7 @@ async function lifetimeEarnings(user) {
 }
 
 async function lifetimeSpendings(user) {
-  const deductions = await deductionCollection.find({ user });
+  const deductions = await deductionCollection.find({ user, refund: false });
   const deductionAmounts = deductions.map((x) => x.value);
   return deductionAmounts.reduce((total, num) => total + num, 0);
 }

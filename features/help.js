@@ -49,11 +49,12 @@ the same message that you reacted to.
 
 *Redeeming*
 
-For details about how to redeem ${recognizeEmoji} check out Confluence:
 
-https://liatrio.atlassian.net/wiki/spaces/LE/pages/2614919169/Redeeming+Fistbumps
+Send me a direct message with 'redeem' and I'll give you the options for prizes to redeem! Once you've selcted an item then I'll start a MPIM with the redemption admins to promote the dialog to acknowledge and receive your item.
 
+Refunds can be given via the 'refund' command if the item redeem can't be fulfilled for whatever reason. Only redemption admins can give refunds. Deduction ID is sent as part of the MPIM when an item is redeemed
 
+> @gratibot refund DEDUCTIONID
 
 
 *View Balance*

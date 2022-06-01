@@ -92,7 +92,7 @@ Giving a golden fistbump is the same as giving a normal fistbump
 
 Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held. 
 
-*Deduct (BETA)*
+*Deduct (archived - this command has been deprecated and is no longer usable)*
 
 Send me a direct message with 'deduct {value}' such as 'deduct 50' and I \
 will remove that number of ${recognizeEmoji} from your total. You can use \

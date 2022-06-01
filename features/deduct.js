@@ -1,3 +1,4 @@
+/*
 const deduction = require("../service/deduction");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
@@ -83,3 +84,4 @@ async function attemptDeduction({ message, context, client }) {
     slackMessage: message.text,
   });
 }
+*/

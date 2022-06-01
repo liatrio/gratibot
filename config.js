@@ -23,6 +23,7 @@ config.initialGoldenRecognitionHolder = "UE1QRFSSY";
 
 config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
   "U6BS54PJM",
+  "U9BFCFPGW",
 ];
 
 module.exports = config;

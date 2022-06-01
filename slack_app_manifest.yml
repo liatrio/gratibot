@@ -18,13 +18,18 @@ oauth_config:
     bot:
       - app_mentions:read
       - channels:history
+      - channels:read
       - chat:write
       - groups:history
+      - groups:read
       - im:history
       - mpim:history
       - reactions:read
       - users:read
+      - im:read
       - im:write
+      - mpim:read
+      - mpim:write
 settings:
   event_subscriptions:
     bot_events:

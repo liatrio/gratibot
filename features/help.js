@@ -91,16 +91,6 @@ Giving a golden fistbump is the same as giving a normal fistbump
 > Thanks @alice for helping fix the prod issues! ${goldenRecognizeEmoji}
 
 Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held. 
-
-*Deduct (BETA)*
-
-Send me a direct message with 'deduct {value}' such as 'deduct 50' and I \
-will remove that number of ${recognizeEmoji} from your total. You can use \
-this to track when you've redeemed prizes.
-
-Note: This feature is still in beta. Deductions are difficult to undo if they \
-are done by accident. No permanent harm should be done by mistaken deductions \
-but be careful. As this is a beta feature, deductions may be wiped in the future.
 `;
 
 async function respondToHelp({ message, client }) {

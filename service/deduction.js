@@ -18,7 +18,7 @@ async function createDeduction(user, value, message = "") {
     user,
     timestamp,
     refund,
-    value,
+    value: Number(value),
     message,
   });
 }

@@ -73,6 +73,11 @@ async function respondToRecognitionMessage({ message, client }) {
       text: `${recognizeEmoji} has been sent.`,
       ...(await recognition.giverSlackNotification(gratitude)),
     }),
+    client.reactions.add({
+      channel: message.channel,
+      name: config.reactionEmoji.slice(1, -1),
+      timestamp: message.ts,
+    }),
   ]);
 }
 

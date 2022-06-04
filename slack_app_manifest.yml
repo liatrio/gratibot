@@ -25,6 +25,7 @@ oauth_config:
       - im:history
       - mpim:history
       - reactions:read
+      - reactions:write
       - users:read
       - im:read
       - im:write

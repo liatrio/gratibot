@@ -6,6 +6,15 @@ on:
     paths-ignore:
       - "README.md"
       - "catalog.yaml"
+
+  workflow_dispatch:
+    inputs:
+      gratibot_limit:
+        description: "The amount of fistbumps that a user can give for one day."
+        required: false
+        default: "5"
+        type: string
+
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
 
@@ -57,3 +66,4 @@ jobs:
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":oof:"
           TF_VAR_gratibot_log_level: "debug"
+          GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}

@@ -3,6 +3,15 @@ on:
   push:
     tags:
       - v*.*.*
+
+  workflow_dispatch:
+    inputs:
+      gratibot_limit:
+        description: "The amount of fistbumps that a user can give for one day."
+        required: false
+        default: "5"
+        type: string
+
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
 
@@ -54,6 +63,7 @@ jobs:
           TF_VAR_app_token: ${{ secrets.PROD_PLAN_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_PLAN_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":fistbump:"
+          GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}
   apply:
     name: "Terraform Prod Apply"
     runs-on: ubuntu-latest
@@ -81,3 +91,4 @@ jobs:
           TF_VAR_app_token: ${{ secrets.PROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":fistbump:"
+          GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}

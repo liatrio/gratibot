@@ -67,4 +67,4 @@ jobs:
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":oof:"
           TF_VAR_gratibot_log_level: "debug"
-          GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}
+          TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}

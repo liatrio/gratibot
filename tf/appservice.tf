@@ -37,5 +37,6 @@ resource "azurerm_app_service" "gratibot_app_service" {
     "RECOGNIZE_EMOJI"             = var.gratibot_recognize_emoji
     "REACTION_EMOJI"              = var.gratibot_reaction_emoji
     "LOG_LEVEL"                   = var.gratibot_log_level
+    "GRATIBOT_LIMIT"              = var.gratibot_limit
   }
 }

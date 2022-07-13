@@ -6,12 +6,22 @@ on:
     paths-ignore:
       - "README.md"
       - "catalog.yaml"
+
+  workflow_dispatch:
+    inputs:
+      gratibot_limit:
+        description: "The amount of fistbumps that a user can give for one day."
+        required: false
+        default: "5"
+        type: string
+
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
 
 jobs:
   build:
     name: Build and Publish Image
+    if: github.event_name == 'push' || contains(['Pactionly', 'gesparza3'], github.actor)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -57,3 +67,4 @@ jobs:
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":oof:"
           TF_VAR_gratibot_log_level: "debug"
+          TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}

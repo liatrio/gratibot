@@ -73,3 +73,9 @@ variable "gratibot_log_level" {
   type        = string
   default     = "info"
 }
+
+variable "gratibot_limit" {
+  description = "The limit of fistbumps one person can give in a single day."
+  type        = string
+  default     = "5"
+}

@@ -19,7 +19,7 @@ jobs:
   build:
     name: Tag image
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || contains(['Pactionly', 'gesparza3'], github.actor)
+    if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)
     steps:
       - uses: actions/checkout@v2
 

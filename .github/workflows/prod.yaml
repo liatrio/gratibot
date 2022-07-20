@@ -43,7 +43,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          push: true
+          push: false
           tags: ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
           labels: runnumber=${{ github.run_id }}
 

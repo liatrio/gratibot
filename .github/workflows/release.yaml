@@ -63,6 +63,7 @@ jobs:
 
     outputs:
       docker_tag: ${{ steps.tag.outputs.newVersion }}
+      changed: ${{ steps.tag.outputs.changed }}
 
   staging-apply:
     name: "Terraform Non-Prod Apply"
@@ -121,6 +122,7 @@ jobs:
       name: "prod"
     container: "hashicorp/terraform:0.14.10"
     needs: [build, prod-plan]
+    if: needs.test.outputs.changed == true
     steps:
       - name: Checkout
         uses: actions/checkout@v2

@@ -1,8 +1,11 @@
-name: "prod"
+name: "nonprod"
 on:
   push:
-    tags:
-      - v*.*.0
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - "catalog.yaml"
 
   workflow_dispatch:
     inputs:
@@ -14,14 +17,21 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
+  TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
 
 jobs:
   build:
-    name: Tag image
-    runs-on: ubuntu-latest
+    name: Build and Publish Image
     if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code with commit history
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -29,9 +39,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Generate tag
+      - name: Generate Release Tag
         id: tag
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        uses: liatrio/github-actions/conventional-release@master
+        with:
+          debug: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker Login
         uses: docker/login-action@v2.0.0
@@ -43,13 +57,39 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          push: false
-          tags: ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.newVersion }}
           labels: runnumber=${{ github.run_id }}
 
     outputs:
-      docker_tag: ${{ steps.tag.outputs.tag }}
-  plan:
+      docker_tag: ${{ steps.tag.outputs.newVersion }}
+
+  staging-apply:
+    name: "Terraform Non-Prod Apply"
+    runs-on: ubuntu-latest
+    environment:
+      name: "nonprod"
+    container: "hashicorp/terraform:0.14.10"
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Deploy Gratibot to Nonprod
+        working-directory: tf
+        run: |
+          terraform init -backend-config=backends/nonprod.tf
+          terraform apply -auto-approve
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
+          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
+          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
+          TF_VAR_environment: "nonprod"
+          TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
+          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
+          TF_VAR_gratibot_recognize_emoji: ":oof:"
+          TF_VAR_gratibot_log_level: "debug"
+
+  prod-plan:
     name: "Terraform Prod plan"
     runs-on: ubuntu-latest
     environment:
@@ -65,9 +105,6 @@ jobs:
           terraform init -backend-config=backends/prod.tf
           terraform plan
         env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           TF_VAR_instance_capacity: "2"
@@ -76,14 +113,14 @@ jobs:
           TF_VAR_app_token: ${{ secrets.PROD_PLAN_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_PLAN_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":fistbump:"
-          TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
-  apply:
+
+  prod-apply:
     name: "Terraform Prod Apply"
     runs-on: ubuntu-latest
     environment:
       name: "prod"
     container: "hashicorp/terraform:0.14.10"
-    needs: [build, plan]
+    needs: [build, prod-plan]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -93,9 +130,6 @@ jobs:
           terraform init -backend-config=backends/prod.tf
           terraform apply -auto-approve
         env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           TF_VAR_instance_capacity: "2"
@@ -104,4 +138,3 @@ jobs:
           TF_VAR_app_token: ${{ secrets.PROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}
           TF_VAR_gratibot_recognize_emoji: ":fistbump:"
-          GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}

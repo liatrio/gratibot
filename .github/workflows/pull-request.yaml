@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - "README.md"
       - "catalog.yaml"
-      - ".github/**"
       - ".releaserc.yaml"
       - ".husky/**"
       - "docs/**"

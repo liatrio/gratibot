@@ -13,7 +13,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@slack/bolt": "^3.12.0",
+    "@slack/bolt": "^3.12.1",
     "express": "^4.18.1",
     "moment-timezone": "^0.5.31",
     "mongodb": "^4.8.0",

@@ -122,7 +122,7 @@ jobs:
       name: "prod"
     container: "hashicorp/terraform:0.14.10"
     needs: [build, prod-plan]
-    if: needs.test.outputs.changed == true
+    if: needs.build.outputs.changed == true
     steps:
       - name: Checkout
         uses: actions/checkout@v2

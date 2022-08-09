@@ -1,6 +1,7 @@
 branches: 
   - main
 repositoryUrl: https://github.com/liatrio/gratibot.git
+preset: conventionalcommits
 plugins:
   - "@semantic-release/commit-analyzer"
   - "@semantic-release/release-notes-generator"

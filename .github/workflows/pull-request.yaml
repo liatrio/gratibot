@@ -6,6 +6,9 @@ on:
     paths-ignore:
       - "README.md"
       - "catalog.yaml"
+      - ".releaserc.yaml"
+      - ".husky/**"
+      - "docs/**"
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
 
@@ -39,10 +42,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Docker Build
         uses: docker/build-push-action@v3
         with:
-          push: true
+          push: false
           tags: ${{ env.IMAGE_NAME }}:${{ needs.setup.outputs.docker-tag }}
           labels: runnumber=${{ github.run_id }}
 

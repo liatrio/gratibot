@@ -14,7 +14,7 @@ colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatr
 - [x] Deploy on Azure
 - [ ] Implement Functional Testing
 - [ ] Refactor Logic to Service Module
-- [ ] Redeem Fistbumps Through Gratibot
+- [x] Redeem Fistbumps Through Gratibot
 - [x] Replace Botkit with Bolt
 
 ---
@@ -25,7 +25,7 @@ Gratibot is deployed in Liatrio's Azure environments using GitHub Actions and
 Terraform. After a change passes CI checks and is approved by reviewers, it can
 be merged into main.
 
-Merging to main will automatically kick off a deployment to Gratibot's
+Merging a commit (must follow [conventional commit standards](https://www.conventionalcommits.org/en/v1.0.0/)) to main will automatically kick off a deployment to Gratibot's
 non-prod environment, which corresponds to the 'gratibotdev' bot inside of
 Liatrio's Slack workspace.
 

@@ -13,7 +13,7 @@ jobs:
     name: Pipeline Setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Generate tag
         id: tag
@@ -36,7 +36,7 @@ jobs:
     container: "hashicorp/terraform:0.14.10"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Terraform fmt check
         run: terraform fmt -check -recursive
   
@@ -47,7 +47,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Terraform validate check
         run: terraform validate
         env:
@@ -68,7 +68,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Plan Gratibot staging deployment
         id: plan_gratibot_staging_deployment
         working-directory: tf

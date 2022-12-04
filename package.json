@@ -25,7 +25,7 @@
     "chai-as-promised": "^7.1.1",
     "chance": "^1.1.8",
     "codecov": "^3.8.3",
-    "eslint": "^8.20.0",
+    "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.1",

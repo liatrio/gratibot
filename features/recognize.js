@@ -10,6 +10,7 @@ const {
   handleGenericError,
   sendNotificationToReceivers,
 } = require("../service/messageutils");
+const { check } = require("prettier");
 
 const { recognizeEmoji, reactionEmoji } = config;
 
@@ -28,22 +29,41 @@ async function respondToRecognitionMessage({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
+
+  // BENGAL TESTING
+  // console.log("MESSAGE: ", message);
+  // console.log("_______________________________________________________");
+
+  let getIDS = {};
+  let allUsers = [];
   let gratitude;
   try {
+    // Get all users mentioned in the message (including users in groups)
+    getIDS = recognition.gratitudeReceiverIdsIn(message.text);
+    allUsers = getIDS.users;
+    if (getIDS.groups.length > 0) {
+      for (let i = 0; i < getIDS.groups.length; i++) {
+        allUsers = allUsers.concat(await groupUsers(client, getIDS.groups[i]).then((users) => {
+          return users;
+        }));
+      }
+    }
     gratitude = {
       giver: await userInfo(client, message.user),
-      receivers: await Promise.all(
-        recognition
-          .gratitudeReceiverIdsIn(message.text)
-          .map(async (receiver) => userInfo(client, receiver))
-      ),
+      receivers: await Promise.all(allUsers.map(async (id) => userInfo(client, id))),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
       channel: message.channel,
       tags: recognition.gratitudeTagsIn(message.text),
       type: recognizeEmoji,
+      giver_in_receivers: false,
     };
+
+    // Check if the user who reacted is also a receiver
+    if (gratitude.receivers.some((receiver) => receiver.id === gratitude.giver.id)) {
+      gratitude.giver_in_receivers = true;
+    }
 
     await recognition.validateAndSendGratitude(gratitude);
 
@@ -87,9 +107,16 @@ async function respondToRecognitionReaction({ event, client }) {
     callingUser: event.user,
     reactionEmoji: event.reaction,
   });
+
+  // BENGAL TESTING
+  // console.log("EVENT: ", event);
+
   event.channel = event.item.channel;
-  let originalMessage;
+
+  let getIDS = {};
+  let allUsers = [];
   let gratitude;
+  let originalMessage;
   try {
     originalMessage = await messageReactedTo(client, event);
 
@@ -97,21 +124,37 @@ async function respondToRecognitionReaction({ event, client }) {
       return;
     }
 
+    getIDS = recognition.gratitudeReceiverIdsIn(originalMessage.text);
+    allUsers = getIDS.users;
+    if (getIDS.groups.length > 0) {
+      for (let i = 0; i < getIDS.groups.length; i++) {
+        allUsers = allUsers.concat(await groupUsers(client, getIDS.groups[i]).then((users) => {
+          return users;
+        }));
+      }
+    }
+
+    // console.log("ALL USERS: ", allUsers);
+
     gratitude = {
       giver: await userInfo(client, event.user),
-      receivers: await Promise.all(
-        recognition
-          .gratitudeReceiverIdsIn(originalMessage.text)
-          .map(async (receiver) => userInfo(client, receiver))
-      ),
+      receivers: await Promise.all(allUsers.map(async (id) => userInfo(client, id))),
       count: 1,
       message: originalMessage.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
       channel: event.channel,
       tags: recognition.gratitudeTagsIn(originalMessage.text),
       type: reactionEmoji,
+      giver_in_receivers: false,
     };
+
+    // Check if the user who reacted is also a receiver
+    if (gratitude.receivers.some((receiver) => receiver.id === gratitude.giver.id)) {
+      gratitude.giver_in_receivers = true;
+    }
+
     await recognition.validateAndSendGratitude(gratitude);
+
     winston.debug(
       `validated and stored reaction recognitions from ${gratitude.giver}`,
       {
@@ -154,5 +197,20 @@ async function messageReactedTo(client, message) {
     "conversations.replies",
     response.error,
     `Something went wrong while sending recognition. When retreiving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+  );
+}
+
+// Get the users in a usergroup
+async function groupUsers(client, groupId) {
+  const response = await client.usergroups.users.list({ usergroup: groupId });
+  
+  if (response.ok) {
+    return response.users;
+  }
+
+  throw new SlackError(
+    "usergroups.users.list",
+    response.error,
+    `Something went wrong while sending recognition. When retreiving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
   );
 }

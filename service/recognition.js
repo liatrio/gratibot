@@ -15,6 +15,7 @@ const {
 } = config;
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
+const groupRegex = /<!subteam\^([a-zA-Z0-9]+)\|@([a-zA-Z0-9]+)>/g;
 const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
 const gratitudeEmojiRegex = new RegExp(config.recognizeEmoji, "g");
@@ -151,9 +152,16 @@ async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
 }
 
 function gratitudeReceiverIdsIn(text) {
-  return (text.match(userRegex) || []).map((userMention) =>
+  let users = (text.match(userRegex) || []).map((userMention) =>
     userMention.slice(2, -1)
   );
+  let groups = (text.match(groupRegex) || []).map((groupMention) =>
+    groupMention.substring(
+      groupMention.indexOf("^") + 1,
+      groupMention.lastIndexOf("|")
+    )
+  );
+  return { users, groups }
 }
 
 function gratitudeCountIn(text) {
@@ -169,7 +177,7 @@ function gratitudeTagsIn(text) {
 }
 
 function trimmedGratitudeMessage(text) {
-  return text.replace(userRegex, "").replace(generalEmojiRegex, "");
+  return text.replace(userRegex, "").replace(groupRegex, "").replace(generalEmojiRegex, "");
 }
 
 async function isGratitudeAffordable(gratitude) {
@@ -190,7 +198,7 @@ async function gratitudeErrors(gratitude) {
       ? "- Mention who you want to recognize with @user"
       : "",
 
-    gratitude.receivers.find((x) => x.id == gratitude.giver.id)
+    gratitude.receivers.find((x) => x.id == gratitude.giver.id && gratitude.receivers.length === 1)
       ? "- You can't recognize yourself"
       : "",
 
@@ -228,6 +236,11 @@ async function goldenGratitudeErrors(gratitude) {
 
 async function giveGratitude(gratitude) {
   let results = [];
+
+  if (gratitude.giver_in_receivers) {
+    gratitude.receivers = gratitude.receivers.filter((x) => x.id !== gratitude.giver.id);
+  }
+
   for (let i = 0; i < gratitude.receivers.length; i++) {
     if (gratitude.type === goldenRecognizeEmoji) {
       results.push(
@@ -306,14 +319,20 @@ async function giverSlackNotification(gratitude) {
   let blocks = [];
   const recognitionType = gratitude.type;
 
+  // Notify the user if they are giving recognition to themselves when in the receiver list
+  let excludingGiver = "";
+  if (gratitude.giver_in_receivers){
+    excludingGiver = ", excluding yourself";
+  }
+
   blocks.push({
     type: "section",
     text: {
       type: "mrkdwn",
       text:
         totalGratitudeValue > 1
-          ? `Your \`${totalGratitudeValue}\` ${recognitionType} have been sent. You have \`${gratitudeRemaining}\` left to give today.`
-          : `Your \`${totalGratitudeValue}\` ${recognitionType} has been sent. You have \`${gratitudeRemaining}\` left to give today.`,
+          ? `Your \`${totalGratitudeValue}\` ${recognitionType} have been sent${excludingGiver}. You have \`${gratitudeRemaining}\` left to give today.`
+          : `Your \`${totalGratitudeValue}\` ${recognitionType} has been sent${excludingGiver}. You have \`${gratitudeRemaining}\` left to give today.`,
     },
   });
   return { blocks };

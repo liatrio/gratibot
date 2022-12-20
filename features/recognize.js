@@ -30,10 +30,6 @@ async function respondToRecognitionMessage({ message, client }) {
     slackMessage: message.text,
   });
 
-  // BENGAL TESTING
-  // console.log("MESSAGE: ", message);
-  // console.log("_______________________________________________________");
-
   let getIDS = {};
   let allUsers = [];
   let gratitude;
@@ -108,9 +104,6 @@ async function respondToRecognitionReaction({ event, client }) {
     reactionEmoji: event.reaction,
   });
 
-  // BENGAL TESTING
-  // console.log("EVENT: ", event);
-
   event.channel = event.item.channel;
 
   let getIDS = {};
@@ -133,8 +126,6 @@ async function respondToRecognitionReaction({ event, client }) {
         }));
       }
     }
-
-    // console.log("ALL USERS: ", allUsers);
 
     gratitude = {
       giver: await userInfo(client, event.user),

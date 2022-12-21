@@ -10,7 +10,6 @@ const {
   handleGenericError,
   sendNotificationToReceivers,
 } = require("../service/messageutils");
-const { check } = require("prettier");
 
 const { recognizeEmoji, reactionEmoji } = config;
 
@@ -39,14 +38,18 @@ async function respondToRecognitionMessage({ message, client }) {
     allUsers = getIDS.users;
     if (getIDS.groups.length > 0) {
       for (let i = 0; i < getIDS.groups.length; i++) {
-        allUsers = allUsers.concat(await groupUsers(client, getIDS.groups[i]).then((users) => {
-          return users;
-        }));
+        allUsers = allUsers.concat(
+          await groupUsers(client, getIDS.groups[i]).then((users) => {
+            return users;
+          })
+        );
       }
     }
     gratitude = {
       giver: await userInfo(client, message.user),
-      receivers: await Promise.all(allUsers.map(async (id) => userInfo(client, id))),
+      receivers: await Promise.all(
+        allUsers.map(async (id) => userInfo(client, id))
+      ),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(message.text),
@@ -57,7 +60,7 @@ async function respondToRecognitionMessage({ message, client }) {
     };
 
     // Check if the user who reacted is also a receiver
-    if (gratitude.receivers.some((receiver) => receiver.id === gratitude.giver.id)) {
+    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
       gratitude.giver_in_receivers = true;
     }
 
@@ -121,15 +124,19 @@ async function respondToRecognitionReaction({ event, client }) {
     allUsers = getIDS.users;
     if (getIDS.groups.length > 0) {
       for (let i = 0; i < getIDS.groups.length; i++) {
-        allUsers = allUsers.concat(await groupUsers(client, getIDS.groups[i]).then((users) => {
-          return users;
-        }));
+        allUsers = allUsers.concat(
+          await groupUsers(client, getIDS.groups[i]).then((users) => {
+            return users;
+          })
+        );
       }
     }
 
     gratitude = {
       giver: await userInfo(client, event.user),
-      receivers: await Promise.all(allUsers.map(async (id) => userInfo(client, id))),
+      receivers: await Promise.all(
+        allUsers.map(async (id) => userInfo(client, id))
+      ),
       count: 1,
       message: originalMessage.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
@@ -140,7 +147,7 @@ async function respondToRecognitionReaction({ event, client }) {
     };
 
     // Check if the user who reacted is also a receiver
-    if (gratitude.receivers.some((receiver) => receiver.id === gratitude.giver.id)) {
+    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
       gratitude.giver_in_receivers = true;
     }
 
@@ -194,7 +201,6 @@ async function messageReactedTo(client, message) {
 // Get the users in a usergroup
 async function groupUsers(client, groupId) {
   const response = await client.usergroups.users.list({ usergroup: groupId });
-  
   if (response.ok) {
     return response.users;
   }

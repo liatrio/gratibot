@@ -324,20 +324,57 @@ describe("service/recognition", () => {
   describe("gratitudeReceiverIdsIn", () => {
     it("should find single user mentioned in message", async () => {
       const text = ":fistbump: <@TestUser> Test Message";
-      const results = recognition.gratitudeReceiverIdsIn(text);
+      const client = {
+        usergroups: {
+          users: {
+            list: "",
+          }
+        }
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal(["TestUser"]);
     });
 
     it("should find multiple users mentioned in message", async () => {
       const text = ":fistbump: <@TestUserOne> <@TestUserTwo> Test Message";
-      const results = recognition.gratitudeReceiverIdsIn(text);
+      const client = {
+        usergroups: {
+          users: {
+            list: "",
+          }
+        }
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal(["TestUserOne", "TestUserTwo"]);
     });
 
     it("should return empty when no users are mentioned in message", async () => {
       const text = ":fistbump: Test Message";
-      const results = recognition.gratitudeReceiverIdsIn(text);
+      const client = {
+        usergroups: {
+          users: {
+            list: "",
+          }
+        }
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal([]);
+    });
+
+    it("should find users in a usergroup", async () => {
+      const text = ":fistbump: <!subteam^TestUserGroup> Test Message";
+      const client = {
+        usergroups: {
+          users: {
+            list: sinon.stub().resolves({
+              ok: true,
+              users: ["TestUserOne", "TestUserTwo"],
+            }),
+          },
+        },
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
+      expect(results).to.deep.equal(["TestUserOne", "TestUserTwo"]);
     });
   });
 

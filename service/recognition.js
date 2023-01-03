@@ -3,7 +3,7 @@ const moment = require("moment-timezone");
 const recognitionCollection = require("../database/recognitionCollection");
 const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
 const balance = require("./balance");
-const { GratitudeError } = require("./errors");
+const { SlackError, GratitudeError } = require("./errors");
 const winston = require("../winston");
 
 const {
@@ -151,7 +151,21 @@ async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
   return await recognitionCollection.find(filter);
 }
 
-function gratitudeReceiverIdsIn(text) {
+// Get the users in a usergroup
+async function groupUsers(client, groupId) {
+  const response = await client.usergroups.users.list({ usergroup: groupId });
+  if (response.ok) {
+    return response.users;
+  }
+
+  throw new SlackError(
+    "usergroups.users.list",
+    response.error,
+    `Something went wrong while sending recognition. When retreiving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+  );
+}
+
+async function gratitudeReceiverIdsIn(client, text) {
   let users = (text.match(userRegex) || []).map((userMention) =>
     userMention.slice(2, -1)
   );
@@ -161,7 +175,10 @@ function gratitudeReceiverIdsIn(text) {
       groupMention.lastIndexOf("|")
     )
   );
-  return { users, groups };
+  for (let i = 0; i < groups.length; i++) {
+    users = users.concat(await groupUsers(client, groups[i]));
+  }
+  return users;
 }
 
 function gratitudeCountIn(text) {
@@ -459,4 +476,5 @@ module.exports = {
   doesUserHoldGoldenRecognition,
   composeReceiverNotificationText,
   receiverSlackNotification,
+  groupUsers,
 };

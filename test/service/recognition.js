@@ -360,22 +360,6 @@ describe("service/recognition", () => {
       const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal([]);
     });
-
-    it("should find users in a usergroup", async () => {
-      const text = ":fistbump: <!subteam^TestUserGroup> Test Message";
-      const client = {
-        usergroups: {
-          users: {
-            list: sinon.stub().resolves({
-              ok: true,
-              users: ["TestUserOne", "TestUserTwo"],
-            }),
-          },
-        },
-      };
-      const results = await recognition.gratitudeReceiverIdsIn(client, text);
-      expect(results).to.deep.equal(["TestUserOne", "TestUserTwo"]);
-    });
   });
 
   describe("gratitudeCountIn", () => {

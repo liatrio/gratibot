@@ -328,8 +328,8 @@ describe("service/recognition", () => {
         usergroups: {
           users: {
             list: "",
-          }
-        }
+          },
+        },
       };
       const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal(["TestUser"]);
@@ -341,8 +341,8 @@ describe("service/recognition", () => {
         usergroups: {
           users: {
             list: "",
-          }
-        }
+          },
+        },
       };
       const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal(["TestUserOne", "TestUserTwo"]);
@@ -354,8 +354,8 @@ describe("service/recognition", () => {
         usergroups: {
           users: {
             list: "",
-          }
-        }
+          },
+        },
       };
       const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal([]);

@@ -218,9 +218,8 @@ async function gratitudeErrors(gratitude) {
       ? "- Mention who you want to recognize with @user"
       : "",
 
-    gratitude.receivers.find(
-      (x) => x.id == gratitude.giver.id && gratitude.receivers.length === 1
-    )
+    gratitude.receivers.find((x) => x.id == gratitude.giver.id) &&
+    gratitude.receivers.length === 1
       ? "- You can't recognize yourself"
       : "",
 

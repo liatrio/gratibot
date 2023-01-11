@@ -321,6 +321,23 @@ describe("service/recognition", () => {
     });
   });
 
+  describe("groupUsers", () => {
+    it("should return a list of users from a mentioned group", async () => {
+      const client = {
+        usergroups: {
+          users: {
+            list: sinon.stub().resolves({
+              ok: true,
+              users: ["TestUserOne", "TestUserTwo"],
+            }),
+          },
+        },
+      };
+      const results = await recognition.groupUsers(client, "TestGroup");
+      expect(results).to.deep.equal(["TestUserOne", "TestUserTwo"]);
+    });
+  });
+
   describe("gratitudeReceiverIdsIn", () => {
     it("should find single user mentioned in message", async () => {
       const text = ":fistbump: <@TestUser> Test Message";
@@ -359,6 +376,44 @@ describe("service/recognition", () => {
       };
       const results = await recognition.gratitudeReceiverIdsIn(client, text);
       expect(results).to.deep.equal([]);
+    });
+
+    it("should return the users within the group when a group is mentioned", async () => {
+      const group = "<!subteam^S1234567890|@TestGroupOne>";
+      const text = ":fistbump: " + group + " Test Message";
+      const client = {
+        usergroups: {
+          users: {
+            list: sinon.stub().resolves({
+              ok: true,
+              users: ["TestUserOne", "TestUserTwo"],
+            }),
+          },
+        },
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
+      expect(results).to.deep.equal(["TestUserOne", "TestUserTwo"]);
+    });
+
+    it("should return the users within the group when a group is mentioned and other users", async () => {
+      const group = "<!subteam^S1234567890|@TestGroupOne>";
+      const text = ":fistbump: " + group + " <@TestUserThree> Test Message";
+      const client = {
+        usergroups: {
+          users: {
+            list: sinon.stub().resolves({
+              ok: true,
+              users: ["TestUserOne", "TestUserTwo"],
+            }),
+          },
+        },
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
+      expect(results).to.deep.equal([
+        "TestUserThree",
+        "TestUserOne",
+        "TestUserTwo",
+      ]);
     });
   });
 

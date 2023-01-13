@@ -28,14 +28,15 @@ async function respondToRecognitionMessage({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
+
+  let allUsers = [];
   let gratitude;
   try {
+    allUsers = await recognition.gratitudeReceiverIdsIn(client, message.text);
     gratitude = {
       giver: await userInfo(client, message.user),
       receivers: await Promise.all(
-        recognition
-          .gratitudeReceiverIdsIn(message.text)
-          .map(async (receiver) => userInfo(client, receiver))
+        allUsers.map(async (id) => userInfo(client, id))
       ),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,
@@ -43,7 +44,13 @@ async function respondToRecognitionMessage({ message, client }) {
       channel: message.channel,
       tags: recognition.gratitudeTagsIn(message.text),
       type: recognizeEmoji,
+      giver_in_receivers: false,
     };
+
+    // Check if the user who reacted is also a receiver
+    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
+      gratitude.giver_in_receivers = true;
+    }
 
     await recognition.validateAndSendGratitude(gratitude);
 
@@ -87,9 +94,12 @@ async function respondToRecognitionReaction({ event, client }) {
     callingUser: event.user,
     reactionEmoji: event.reaction,
   });
+
   event.channel = event.item.channel;
-  let originalMessage;
+
+  let allUsers = [];
   let gratitude;
+  let originalMessage;
   try {
     originalMessage = await messageReactedTo(client, event);
 
@@ -97,21 +107,31 @@ async function respondToRecognitionReaction({ event, client }) {
       return;
     }
 
+    allUsers = await recognition.gratitudeReceiverIdsIn(
+      client,
+      originalMessage.text
+    );
     gratitude = {
       giver: await userInfo(client, event.user),
       receivers: await Promise.all(
-        recognition
-          .gratitudeReceiverIdsIn(originalMessage.text)
-          .map(async (receiver) => userInfo(client, receiver))
+        allUsers.map(async (id) => userInfo(client, id))
       ),
       count: 1,
       message: originalMessage.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
       channel: event.channel,
       tags: recognition.gratitudeTagsIn(originalMessage.text),
-      type: reactionEmoji,
+      type: recognizeEmoji,
+      giver_in_receivers: false,
     };
+
+    // Check if the user who reacted is also a receiver
+    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
+      gratitude.giver_in_receivers = true;
+    }
+
     await recognition.validateAndSendGratitude(gratitude);
+
     winston.debug(
       `validated and stored reaction recognitions from ${gratitude.giver}`,
       {

@@ -33,13 +33,21 @@ Recognize multiple people at once!
 
 > @bob and @alice crushed that showcase! ${recognizeEmoji}
 
+Recognize an entire group!
+
+> @bengal did an excellent job on the presentation! ${recognizeEmoji}
+
 Use \`#tags\` to call out specific Liatrio values!
 
 > I love the #energy in your Terraform demo @alice! ${recognizeEmoji}
 
-The more emojis you add, the more recognition they get!
+You can give more recognition by adding more emojis...
 
 > @alice just pushed the cleanest code I've ever seen! ${recognizeEmoji} ${recognizeEmoji} ${recognizeEmoji}
+
+Or by using a multiplier!
+
+> @alice just pushed the cleanest code I've ever seen! ${recognizeEmoji} x3
 
 
 If someone else has given a ${recognizeEmoji} to someone, and you'd like to \

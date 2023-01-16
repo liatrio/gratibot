@@ -23,14 +23,15 @@ oauth_config:
       - groups:history
       - groups:read
       - im:history
-      - mpim:history
-      - reactions:read
-      - reactions:write
-      - users:read
       - im:read
       - im:write
+      - mpim:history
       - mpim:read
       - mpim:write
+      - reactions:read
+      - reactions:write
+      - usergroups:read
+      - users:read
 settings:
   event_subscriptions:
     bot_events:

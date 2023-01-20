@@ -18,17 +18,18 @@ module.exports = function (app) {
 
 async function respondToRecognitionMessage({ message, client }) {
   winston.info(`Heard reference to ${goldenRecognizeEmoji}`, {
+    func: "features.recognize.respondToRecognitionMessage",
     callingUser: message.user,
     slackMessage: message.text,
   });
+  let allUsers = [];
   let gratitude;
   try {
+    allUsers = await recognition.gratitudeReceiverIdsIn(client, message.text);
     gratitude = {
       giver: await userInfo(client, message.user),
       receivers: await Promise.all(
-        recognition
-          .gratitudeReceiverIdsIn(message.text)
-          .map(async (receiver) => userInfo(client, receiver))
+        allUsers.map(async (id) => userInfo(client, id))
       ),
       count: 1,
       message: message.text,

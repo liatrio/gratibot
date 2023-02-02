@@ -24,6 +24,18 @@
     "cost": 70
   },  
   {  
+    "name": "Liatrio Pronunciation T-Shirt",  
+    "description": "Liatrio Pronunciation T-Shirt",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio Pronunciation Shirt.png",
+    "cost": 50
+  },  
+  {  
+    "name": "Rub a Lil DevOps On It T-Shirt",  
+    "description": "Rub a Lil DevOps On It T-Shirt",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Rub a little devops on it shirt.png",
+    "cost": 50
+  },  
+  {  
     "name": "Men's Short Sleeve Polo",
     "description": "Men's Short Sleeve Polo",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/9_MensGrayPolo.png",
@@ -102,10 +114,28 @@
     "cost": 30
   },
   {  
+    "name": "Liatrio Beanie",  
+    "description": "Liatrio Beanie",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio Beanie.jpg",
+    "cost": 60
+  },
+  {  
     "name": "OGIO Backpack",  
     "description": "OGIO Backpack",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/2_Backpack.jpg",
     "cost": 230
+  },
+  {  
+    "name": "Thule Tech Bag",  
+    "description": "Thule Tech Bag",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Thule Tech Bag.png",
+    "cost": 110
+  },
+  {  
+    "name": "Pre-Loved Laptop",  
+    "description": "Pre-Loved Laptop",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Pre Loved Laptop.jpeg",
+    "cost": 100
   },
   {  
     "name": "White Water Bottle 17oz",  

@@ -1,6 +1,5 @@
 const sinon = require("sinon");
 const expect = require("chai").expect;
-const { respondToBalance } = require("../../service/balance");
 const messageRouter = require("../../features/balance");
 
 describe("feature/balance", () => {
@@ -27,7 +26,7 @@ describe("feature/balance", () => {
     it("should register the correct handler", () => {
       expect(app.message.calledOnce).to.be.true;
       const handler = app.message.getCall(0).args[2];
-      expect(handler).to.be.a("function")
+      expect(handler).to.be.a("function");
     });
   });
 });

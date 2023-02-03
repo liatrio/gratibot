@@ -132,12 +132,6 @@
     "cost": 110
   },
   {  
-    "name": "Pre-Loved Laptop",  
-    "description": "Pre-Loved Laptop",
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Pre Loved Laptop.jpeg",
-    "cost": 100
-  },
-  {  
     "name": "White Water Bottle 17oz",  
     "description": "New Water Bottle",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (12).png",

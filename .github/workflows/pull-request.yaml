@@ -91,7 +91,7 @@ jobs:
           TF_VAR_gratibot_log_level: "debug"
 
       - name: Comment on pull request
-        uses: actions/github-script@v3
+        uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');

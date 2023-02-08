@@ -92,7 +92,7 @@ jobs:
 
       - uses: liatrio/terraform-change-pr-commenter@v1.4.1
         with:
-          json-file: ${{ inputs.WORKING_DIR }}/plan.json
+          json-file: tf/plan.json
           expand-comment: 'true'
 
       - name: Status

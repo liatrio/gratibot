@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Generate tag
         id: tag
@@ -46,7 +46,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Plan Gratibot prod deployment
         working-directory: tf
         run: |
@@ -74,7 +74,7 @@ jobs:
     needs: [build, plan]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Deploy Gratibot to Prod
         working-directory: tf
         run: |

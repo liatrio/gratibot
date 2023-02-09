@@ -2,7 +2,7 @@ const winston = require("../winston");
 const moment = require("moment-timezone");
 const balance = require("../service/balance");
 const deductionCollection = require("../database/deductionCollection");
-const { ObjectId } = require("mongodb");
+const monk = require("monk");
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();
@@ -25,7 +25,7 @@ async function createDeduction(user, value, message = "") {
 
 async function refundDeduction(id) {
   return await deductionCollection.findOneAndUpdate(
-    { _id: ObjectId(id) },
+    { _id: monk.id(id) },
     { $set: { refund: true } }
   );
 }

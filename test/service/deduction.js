@@ -1,12 +1,11 @@
 const sinon = require("sinon");
+const monk = require("monk");
 const expect = require("chai").expect;
 
 const deduction = require("../../service/deduction");
 const deductionCollection = require("../../database/deductionCollection");
 
 const balance = require("../../service/balance");
-
-const { ObjectId } = require("mongodb");
 
 describe("deduction/balance", () => {
   afterEach(() => {
@@ -53,7 +52,7 @@ describe("deduction/balance", () => {
 
       await deduction.refundDeduction("62171d78b5daaa0011771cfd");
       sinon.assert.calledWith(findOneAndUpdate, {
-        _id: ObjectId("62171d78b5daaa0011771cfd"),
+        _id: monk.id("62171d78b5daaa0011771cfd"),
       });
     });
   });

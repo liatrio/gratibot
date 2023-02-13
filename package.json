@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@slack/bolt": "^3.12.2",
-    "express": "^4.18.1",
+    "express": "^4.18.2",
     "moment-timezone": "^0.5.40",
     "monk": "^7.3.1",
     "winston": "^3.8.2"

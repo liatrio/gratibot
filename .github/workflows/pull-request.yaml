@@ -87,7 +87,7 @@ jobs:
 
       - uses: liatrio/terraform-change-pr-commenter@v1.4.1
         with:
-          json-file: tf/plan.json
+          json-file: infra/terragrunt/nonprod/gratibot/plan.json
           expand-comment: 'true'
 
       - name: Status

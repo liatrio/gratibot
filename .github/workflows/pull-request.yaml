@@ -30,71 +30,16 @@ jobs:
       image-name: gratibot
       tag: ${{ needs.setup.outputs.docker-tag }}
 
-  fmt:
-    name: "Terraform fmt check"
-    runs-on: ubuntu-latest
-    container: "hashicorp/terraform:0.14.10"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Terraform fmt check
-        run: terraform fmt -check -recursive
-
-  validate:
-    name: "Terraform validate check"
-    runs-on: ubuntu-latest
-    container: "hashicorp/terraform:0.14.10"
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Terraform validate check
-        run: terraform validate
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
-          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
-          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_environment: "nonprod"
-          TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
-          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
-
-  plan:
-    name: "Terraform Nonprod plan"
-    runs-on: ubuntu-latest
-    container: "hashicorp/terraform:0.14.10"
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Plan Gratibot staging deployment
-        id: plan_gratibot_staging_deployment
-        working-directory: tf
-        run: |
-          terraform init -backend-config=backends/nonprod.tf
-          terraform plan -out plan.out
-          terraform show -no-color -json plan.out > plan.json
-        continue-on-error: true
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
-          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
-          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_environment: "nonprod"
-          TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
-          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
-          TF_VAR_gratibot_recognize_emoji: ":oof:"
-          TF_VAR_gratibot_log_level: "debug"
-
-      - uses: liatrio/terraform-change-pr-commenter@v1.4.1
-        with:
-          json-file: tf/plan.json
-          expand-comment: 'true'
-
-      - name: Status
-        if: contains(steps.*.outcome, 'failure')
-        run: exit 1
+  azure-terragrunt-pr-plan:
+    uses: liatrio/github-workflows/.github/workflows/azure-terragrunt-pr-plan.yaml@v0.3.2
+    with:
+      WORKING_DIR: infra/terragrunt/nonprod/gratibot/
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
+    env:
+      TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
+      TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
+      TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
+      TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}

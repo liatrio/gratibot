@@ -25,7 +25,7 @@ updates:
       - "dependencies"
 
   - package-ecosystem: "terraform"
-    directory: "/tf/"
+    directory: "/infra/terraform"
     schedule:
       interval: "weekly"
       day: "sunday"

@@ -1,0 +1,4 @@
+gratibot_recognize_emoji: ":oof:"
+gratibot_log_level: "debug"
+environment: "nonprod"
+state_storage_account: "gratibotazuredatatfnp"

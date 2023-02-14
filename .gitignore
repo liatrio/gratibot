@@ -113,6 +113,8 @@ dist
 
 **/.terraform/*
 
+.terragrunt-cache
+
 # .tfstate files
 *.tfstate
 *.tfstate.*

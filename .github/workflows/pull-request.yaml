@@ -60,7 +60,7 @@ jobs:
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
-plan:
+  plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
     container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"

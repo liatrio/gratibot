@@ -33,7 +33,7 @@ jobs:
   fmt:
     name: "Terraform fmt check"
     runs-on: ubuntu-latest
-    container: "hashicorp/terraform:0.14.10"
+    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,13 +43,14 @@ jobs:
   validate:
     name: "Terraform validate check"
     runs-on: ubuntu-latest
-    container: "hashicorp/terraform:0.14.10"
+    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
     needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Terraform validate check
-        run: terraform validate
+        run: terragrunt validate
+        working-directory: infra/terragrunt/nonprod/gratibot/
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -57,25 +58,22 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_environment: "nonprod"
           TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
-
   plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
-    container: "hashicorp/terraform:0.14.10"
+    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
     needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Plan Gratibot staging deployment
         id: plan_gratibot_staging_deployment
-        working-directory: tf
+        working-directory: infra/terragrunt/nonprod/gratibot/
         run: |
-          terraform init -backend-config=backends/nonprod.tf
-          terraform plan -out plan.out
-          terraform show -no-color -json plan.out > plan.json
+          terragrunt plan -out plan.out
+          terragrunt show -no-color -json plan.out > plan.json
         continue-on-error: true
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -84,15 +82,12 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_environment: "nonprod"
           TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
-          TF_VAR_gratibot_recognize_emoji: ":oof:"
-          TF_VAR_gratibot_log_level: "debug"
 
       - uses: liatrio/terraform-change-pr-commenter@v1.4.1
         with:
-          json-file: tf/plan.json
+          json-file: infra/terragrunt/nonprod/gratibot/plan.json
           expand-comment: 'true'
 
       - name: Status

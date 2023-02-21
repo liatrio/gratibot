@@ -6,7 +6,6 @@ jobs:
     name: "Terraform Destroy"
     runs-on: ubuntu-latest
     container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
-    needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v3

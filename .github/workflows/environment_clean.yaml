@@ -1,0 +1,22 @@
+name: "Destroy Non-Prod Environments"
+on: push
+
+jobs:
+  plan:
+    name: "Terraform Destroy"
+    runs-on: ubuntu-latest
+    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Run Teardown Script
+        working-directory: scripts/
+        run: |
+          pip install -r requirements.txt
+          python teardown_non_prod_envs.py
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}

@@ -148,3 +148,6 @@ override.tf.json
 terraform.rc
 
 *.lock.hcl
+/test-results/
+/playwright-report/
+/playwright/.cache/

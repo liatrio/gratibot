@@ -1,23 +1,32 @@
-const { test, expect } = require("@playwright/test");
+const {test, expect} = require('@playwright/test');
 
-test("balance", async ({ page }) => {
-  const { SLACK_USERNAME: username, SLACK_PASSWORD: password } = process.env;
-  await page.goto("https://gratibot-lab.slack.com/sign_in_with_password");
+const {SlackSignInPage} = require('./pages/SignInPage');
+const {getConfig} = require('./config');
 
-  await page.getByRole("textbox", { name: "email" }).fill(username);
-  await page.getByRole("textbox", { name: "password" }).fill(password);
+test.describe('balance', () => {
+    let config;
 
-  await page.getByRole("button", { name: "Sign In", exact: true }).click();
+    test.beforeAll(() => {
+        config = getConfig();
+    })
 
-  await page.getByRole("textbox").waitFor();
+    test('when no fist bumps have been received, the user balance should be 0', async ({page}) => {
+        const user = config.users.sender;
+        const signInPage = new SlackSignInPage(page, config);
+        await signInPage.signIn(user.username, user.password);
 
-  await page.getByRole("textbox").type("@alexa-gratibot-2");
-  await page.getByRole("listbox").waitFor();
-
-  await page.getByRole("textbox").press("Enter");
-  await page.getByRole("textbox").type("balance");
-
-  await page.getByRole("button", { name: "Send now" }).click();
-
-  await page.getByText("Your current balance is: 0").waitFor();
+        await mention(page, config.gratibot.username);
+        await page.getByRole('textbox').type('balance');
+        await page.getByRole('button', {name: 'Send now'}).click();
+        await page.getByText('Your current balance is: 0').waitFor();
+    });
 });
+
+async function mention(page, username) {
+    const messageTextbox =  await page.getByRole("textbox");
+    await messageTextbox.waitFor();
+    await messageTextbox.type(username);
+
+    await page.getByRole("listbox").waitFor();
+    await messageTextbox.press("Enter");
+}

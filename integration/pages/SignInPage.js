@@ -4,7 +4,7 @@ exports.SlackSignInPage = class SlackSignInPage {
         this.config = config;
     }
 
-    async signIn(username, password) {
+    async authenticate(username, password) {
         await this.page.goto(`${this.config.slackBaseUrl}/sign_in_with_password`);
         await this.page
             .getByRole('textbox', {name: 'email'})

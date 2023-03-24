@@ -10,6 +10,7 @@ exports.SlackChannelConversationPage = class SlackChannelConversationPage {
     }
 
     async selectChannel(name) {
+        await this.page.goto("https://app.slack.com/client");
         await this.page.getByText(name, { exact: true }).click();
     }
 

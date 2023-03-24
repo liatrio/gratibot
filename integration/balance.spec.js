@@ -19,16 +19,11 @@ test.describe('balance', () => {
         });
         testChannel = response.channel;
 
-        if (!response.ok) {
-            console.log("oh no")
-        }
-
         console.log(`Created channel ${testChannel.name}`);
-
         await slackClient.conversations.invite({
             channel: testChannel.id,
-            users: "U04TFHAU3A7"
-        })
+            users: config.users.sender.id,
+        });
     });
 
 
@@ -49,6 +44,23 @@ test.describe('balance', () => {
         await conversation.mention(config.gratibot.username);
         await conversation.post('balance');
 
-        await page.getByText('Your current balance is: 0').waitFor();
+        await expect(page.getByText('Your current balance is: 0')).toBeVisible();
+        await expect(page.getByText(`You have ${config.gratibot.recognitionLimit} left to give away today`)).toBeVisible();
     });
+
+    test('when a fistbump is received, it should reflect in the balance', async ({page}) => {
+        const {username, password} = config.users.sender;
+
+        const signIn = new SlackSignInPage(page, config);
+        await signIn.authenticate(username, password);
+        const conversation = new SlackChannelConversationPage(page, config);
+        await conversation.selectChannel(testChannel.name);
+
+        await conversation.mention(config.users.receiver.username);
+        await conversation.post(config.gratibot.recognitionEmoji + " for letting me send him a bunch of notifications");
+
+        await conversation.mention(config.gratibot.username);
+        await conversation.post('balance');
+        await expect(page.getByText(`You have ${config.gratibot.recognitionLimit - 1} left to give away today`)).toBeVisible();
+    })
 });

@@ -20,28 +20,38 @@ describe("middleware/index", () => {
   });
 
   describe("anyOf", () => {
-    it("should call next if any of the passed functions return true", async () => {
-      let nextCalled = false;
-      const input = {
-        next: () => (nextCalled = true),
-      };
+    it("should call next if any of the passed functions call next", async () => {
+      const next = sinon.spy();
       const func1 = async () => {};
-      const func2 = async () => {
-        input.next();
+      const func2 = async (data) => {
+        data.next();
       };
       const anyOfFunc = anyOf(func1, func2);
-      await anyOfFunc(input);
-      expect(nextCalled).to.be.true;
+      await anyOfFunc({ next });
+      expect(next.called).to.be.true;
     });
 
-    it("should not call next if none of the passed functions return true", async () => {
+    it("should not call next if none of the passed functions call next", async () => {
       const next = sinon.spy();
-      const input = { next };
-      const func1 = sinon.stub().resolves(false);
-      const func2 = sinon.stub().resolves(false);
-      await anyOf(func1, func2)(input);
+      const func1 = async () => {};
+      const func2 = async () => {};
+      const anyOfFunc = anyOf(func1, func2);
+      await anyOfFunc({ next });
       expect(next.called).to.be.false;
     });
+  });
+
+  it("should pass data on to nested functions", async () => {
+    const next = sinon.spy();
+    const func1 = async () => {};
+    const func2 = async (data) => {
+      if (data.message) {
+        data.next();
+      }
+    };
+    const anyOfFunc = anyOf(func1, func2);
+    await anyOfFunc({ message: "test", next });
+    expect(next.called).to.be.true;
   });
 
   describe("reactionMatches", () => {

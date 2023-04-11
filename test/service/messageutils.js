@@ -127,7 +127,7 @@ describe("service/messageutils", () => {
   });
 
   describe("getRecieverMessage", () => {
-    it("should get golden fistbump message", async () => {
+    it("should get golden fistbump message", () => {
       const testGratitude = {
         type: goldenRecognizeEmoji,
       };
@@ -137,7 +137,7 @@ describe("service/messageutils", () => {
         `You earned a ${goldenRecognizeEmoji}!!!`
       );
     });
-    it("should get fistbump message", async () => {
+    it("should get fistbump message", () => {
       const testGratitude = {
         type: recognizeEmoji,
       };

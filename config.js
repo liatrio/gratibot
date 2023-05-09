@@ -1,10 +1,11 @@
 var config = {};
+var _ = require("lodash");
 
 config.mongo_url = process.env.MONGO_URL || "mongodb://mongodb:27017/gratibot";
 
 config.logLevel = process.env.LOG_LEVEL || "info";
 
-config.recognizeEmoji = process.env.RECOGNIZE_EMOJI || ":fistbump:";
+config.recognizeEmoji = _.escapeRegExp(process.env.RECOGNIZE_EMOJI) || ":fistbump:";
 config.goldenRecognizeEmoji =
   process.env.GOLDEN_RECOGNIZE_EMOJI || ":goldenfistbump:";
 config.goldenRecognizeChannel =

@@ -447,6 +447,31 @@ describe("service/recognition", () => {
       const result = recognition.gratitudeCountIn(text);
       expect(result).to.equal(1);
     });
+
+    it("should use the multiplier found after the fistbump", async () => {
+      const text = "x4ce level work :fistbump: x5 <@TestUser> Test Message";
+      const result = recognition.gratitudeCountIn(text);
+      expect(result).to.equal(5);
+    });
+
+    it("should use the multiplier found before the fistbump", async () => {
+      const text = "x4ce level work x5 :fistbump: <@TestUser> Test Message";
+      const result = recognition.gratitudeCountIn(text);
+      expect(result).to.equal(5);
+    });
+
+    it("should use the multiplier found before the fistbump even with more than 3 x findings", async () => {
+      const text =
+        "x4ce level work x5 :fistbump: <@TestUser> Test Message lets x8 the building";
+      const result = recognition.gratitudeCountIn(text);
+      expect(result).to.equal(5);
+    });
+
+    it("should use the multiplier found before the fistbump even if there is a following multiplier", async () => {
+      const text = "x4ce level work x5 :fistbump: x3 <@TestUser> Test Message";
+      const result = recognition.gratitudeCountIn(text);
+      expect(result).to.equal(5);
+    });
   });
 
   describe("gratitudeTagsIn", () => {

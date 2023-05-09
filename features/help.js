@@ -41,6 +41,13 @@ The more emojis you add, the more recognition they get!
 
 > @alice just pushed the cleanest code I've ever seen! ${recognizeEmoji} ${recognizeEmoji} ${recognizeEmoji}
 
+Use multipliers to give more recognition!
+
+> @alice presented an amazing demo at a conference! ${recognizeEmoji} x2
+
+or
+
+> @alice presented an amazing demo at a conference! x2 ${recognizeEmoji}
 
 If someone else has given a ${recognizeEmoji} to someone, and you'd like to \
 give one of your own for the same reason, you can react to the message with \

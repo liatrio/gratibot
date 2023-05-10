@@ -1,8 +1,10 @@
 
 # Gratibot
 
+[![Prod](https://github.com/liatrio/gratibot/actions/workflows/apply-prod.yml/badge.svg)](https://github.com/liatrio/gratibot/actions/workflows/apply-prod.yml)
+[![Release](https://github.com/liatrio/gratibot/actions/workflows/release.yml/badge.svg)](https://github.com/liatrio/gratibot/actions/workflows/release.yml)
 [![prod](https://github.com/liatrio/gratibot-rewrite/actions/workflows/prod.yaml/badge.svg)](https://github.com/liatrio/gratibot-rewrite/actions/workflows/release.yaml)
-[![nonprod](https://github.com/liatrio/gratibot-rewrite/actions/workflows/nonprod.yaml/badge.svg)](https://github.com/liatrio/gratibot-rewrite/actions/workflows/nonprod.yaml)
+
 [![codecov](https://codecov.io/gh/liatrio/gratibot/branch/main/graph/badge.svg)](https://codecov.io/gh/liatrio/gratibot)
 
 Gratibot is a Slack bot for recognizing the accomplishments of friends and

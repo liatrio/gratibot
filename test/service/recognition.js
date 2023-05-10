@@ -1297,7 +1297,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "I noticed this is your first time receiving a :fistbump:. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running `<@gratibot> help` for more information about me.",
+              text: "I noticed this is your first time receiving a :fistbump:. Use `<@gratibot> redeem` to see what you can redeem :fistbump: for, or try running `<@gratibot> help` for more information about me.",
             },
           },
         ],

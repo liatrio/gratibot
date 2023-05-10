@@ -1,8 +1,7 @@
-name: "prod"
+name: "Apply Release to Prod"
 on:
-  push:
-    tags:
-      - v*.*.*
+  release:
+    types: [published]
 
   workflow_dispatch:
     inputs:

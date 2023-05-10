@@ -1,4 +1,4 @@
-name: "Apply Release to Prod"
+name: "Prod"
 on:
   release:
     types: [created]

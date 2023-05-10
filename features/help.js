@@ -91,7 +91,7 @@ people have given recognitions over the last month.
 
 *Give Golden Recognition*
 
-The golden fistbump :goldenfistbump: is a special recognition that can only be held by one user at a time. Only the current holder of the golden recognition can give the golden recognition.
+The golden fistbump ${goldenRecognizeEmoji} is a special recognition that can only be held by one user at a time. Only the current holder of the golden recognition can give the golden recognition.
 
 Giving a golden fistbump is the same as giving a normal fistbump
 

@@ -66,7 +66,8 @@ jobs:
           TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
   release:
     name: "Create Release"
-    environment: prod
+    runs-on: ubuntu-latest
+    environment:
       name: "prod"
     needs: apply
     steps:

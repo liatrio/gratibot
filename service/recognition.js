@@ -401,7 +401,7 @@ async function receiverSlackNotification(gratitude, receiver) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `I noticed this is your first time receiving a ${recognizeEmoji}. Check out <https://liatrio.atlassian.net/wiki/spaces/LE/pages/817857117/Redeeming+Fistbumps|Confluence> to see what they can be used for, or try running \`<@${botName}> help\` for more information about me.`,
+        text: `I noticed this is your first time receiving a ${recognizeEmoji}. Use \`<@${botName}> redeem\` to see what you can redeem ${recognizeEmoji} for, or try running \`<@${botName}> help\` for more information about me.`,
       },
     });
   }

@@ -67,8 +67,6 @@ jobs:
   release:
     name: "Create Release"
     runs-on: ubuntu-latest
-    environment:
-      name: "prod"
     needs: apply
     steps:
       - name: Checkout

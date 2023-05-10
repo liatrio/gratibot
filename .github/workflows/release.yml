@@ -1,4 +1,4 @@
-name: "nonprod"
+name: "Release"
 on:
   push:
     branches:
@@ -64,3 +64,25 @@ jobs:
           TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
           TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
           TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
+  release:
+    name: "Create Release"
+    environment: prod
+      name: "prod"
+    needs: apply
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install devDependencies
+        run: npm install
+
+      - name: Create Release
+        run: npm run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

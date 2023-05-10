@@ -20,22 +20,33 @@ colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatr
 
 ---
 
+### Contributing
+
+Gratibot leverages [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+to drive version bumps and mantain a clean commit history. Things worth noting:
+
+- Commits will be linted locally to enforce valid conventional commits
+  - [husky](https://typicode.github.io/husky/#/)
+  - [commitlint](https://github.com/conventional-changelog/commitlint)
+- Releases will be published and maintained by [semantic-release](https://github.com/semantic-release/semantic-release)
+  - Preview your release locally with `npm run semantic-release --dry-run`(_You'll need a GITHUB_TOKEN_)
+
+---
+
 ### Deployment
 
 Gratibot is deployed in Liatrio's Azure environments using GitHub Actions and
 Terraform. After a change passes CI checks and is approved by reviewers, it can
 be merged into main.
 
-Merging a commit (must follow [conventional commit standards](https://www.conventionalcommits.org/en/v1.0.0/)) to main will automatically kick off a deployment to Gratibot's
-non-prod environment, which corresponds to the 'gratibotdev' bot inside of
-Liatrio's Slack workspace.
+Commits to main will kickoff the following steps:
 
-After validating in non-prod, a new release can be initiated by pushing a
-[Semantic Version](https://semver.org/) tag to GitHub. This will initiate the
-production workflow which will require a code owner to review the deployment's
-Terraform plan. After the workflow is approved, it will automatically deploy
-to Gratibot's prod environment, which corresponds to the 'gratibot' bot inside
-of Liatrio's Slack workspace.
+1. Build & Publish a new Docker image using the current Git ref as a tag
+2. Apply the new image and any infrastructure changes to our nonprod Azure subscription
+3. Upon manual review from maintainers, a new Release will be generated and published to GitHub
+
+New GitHub Releases will trigger our workflow to deploy changes to our prod Azure subscription
+
 
 ---
 
@@ -131,3 +142,4 @@ run lint fix
 ```
 npm run lint-fix
 ```
+

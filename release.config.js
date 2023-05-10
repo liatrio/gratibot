@@ -46,11 +46,5 @@ module.exports = {
         failComment: false,
       },
     ],
-    [
-      "@semantic-release/git",
-      {
-        assets: ["CHANGELOG.md", "package.json", "package-lock.json"],
-      },
-    ],
   ],
 };

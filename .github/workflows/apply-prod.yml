@@ -1,4 +1,4 @@
-name: "Apply Release to Prod"
+name: "Prod"
 on:
   release:
     types: [created]
@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate tag
         id: tag
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Build image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME:${{ steps.tag.outputs.tag }} --label "runnumber=${GITHUB_RUN_ID}"

@@ -40,7 +40,7 @@ jobs:
   fmt:
     name: "Terraform fmt check"
     runs-on: ubuntu-latest
-    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
+    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.6.1"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -50,7 +50,7 @@ jobs:
   validate:
     name: "Terraform validate check"
     runs-on: ubuntu-latest
-    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
+    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.6.1"
     needs: build
     steps:
       - name: Checkout
@@ -68,7 +68,7 @@ jobs:
   plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
-    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
+    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.6.1"
     needs: build
     steps:
       - name: Checkout

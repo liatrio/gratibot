@@ -52,7 +52,7 @@ jobs:
         run: terragrunt validate
         working-directory: infra/terragrunt/nonprod/gratibot/
         env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_READER }}
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
@@ -74,7 +74,7 @@ jobs:
           terragrunt show -no-color -json plan.out > plan.json
         continue-on-error: true
         env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_READER }}
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true

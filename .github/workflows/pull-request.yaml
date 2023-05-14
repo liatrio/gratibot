@@ -8,6 +8,13 @@ on:
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
 
+permissions:
+  id-token: write
+  pull-requests: write
+  contents: read
+  packages: write
+
+
 jobs:
   setup:
     name: Pipeline Setup

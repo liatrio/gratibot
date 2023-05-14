@@ -75,6 +75,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Setup Terragrunt
         run: |
           wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.2/terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt

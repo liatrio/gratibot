@@ -41,11 +41,15 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: "prod-plan"
-    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
     needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Setup Terragrunt
+        run: |
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.11/terragrunt_linux_amd64
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+          sudo chmod +x /usr/local/bin/terragrunt
       - name: Plan Gratibot prod deployment
         working-directory: infra/terragrunt/prod/gratibot/
         run: |
@@ -65,11 +69,15 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: "prod"
-    container: "ghcr.io/liatrio/builder-image-azure-terraform:v2.1.0"
     needs: [build, plan]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Setup Terragrunt
+        run: |
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.11/terragrunt_linux_amd64
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+          sudo chmod +x /usr/local/bin/terragrunt
       - name: Deploy Gratibot to Prod
         working-directory: infra/terragrunt/prod/gratibot/
         run: |

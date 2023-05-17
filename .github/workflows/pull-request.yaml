@@ -52,17 +52,11 @@ jobs:
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
           sudo chmod +x /usr/local/bin/terragrunt
       - name: Terraform validate check
-        run: terragrunt validate
+        run: |
+          terragrunt init -backend=false
+          terragrunt validate --terragrunt-no-auto-init
         working-directory: infra/terragrunt/nonprod/gratibot/
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
-          TF_VAR_acr_subscription_id: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
-          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
-          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
+
   plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest

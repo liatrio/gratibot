@@ -9,6 +9,11 @@ variable "resource_group_name" {
   type        = string
 }
 
+variable "key_vault_name" {
+  description = "Key vault containing required Gratibot secrets"
+  type        = string
+}
+
 variable "location" {
   description = "Primary deployment region for Azure resources"
   default     = "Central US"
@@ -42,18 +47,6 @@ variable "instance_capacity" {
 variable "gratibot_image" {
   description = "Docker image to be used for Gratibot service"
   type        = string
-}
-
-variable "app_token" {
-  description = "App token for Slack app integration"
-  type        = string
-  sensitive   = true
-}
-
-variable "bot_user_token" {
-  description = "Bot OAuth token for Slack app integration"
-  type        = string
-  sensitive   = true
 }
 
 variable "gratibot_recognize_emoji" {

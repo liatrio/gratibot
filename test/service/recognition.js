@@ -515,6 +515,126 @@ describe("service/recognition", () => {
     });
   });
 
+  describe('isGratitudeAffordable', () => {
+    let balanceStub;
+
+    beforeEach(() => {
+      balanceStub = sinon.stub(balance, 'dailyGratitudeRemaining');
+    });
+
+    afterEach(() => {
+      balanceStub.restore();
+    });
+
+    it('should return true for golden gratitude', async () => {
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "Receiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        type: ":goldenfistbump:",
+      };
+
+      const result = await recognition.isGratitudeAffordable(gratitude);
+
+      expect(result).to.be.true;
+    });
+
+    it('should return true if daily gratitude remaining is greater than or equal to the gratitude cost', async () => {
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+      const dailyGratitudeRemaining = 5;
+      balanceStub.withArgs(gratitude.giver.id, gratitude.giver.tz).resolves(dailyGratitudeRemaining);
+
+      const result = await recognition.isGratitudeAffordable(gratitude);
+
+      expect(result).to.be.true;
+    });
+
+    it('should return false if daily gratitude remaining is less than the gratitude cost', async () => {
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+      const dailyGratitudeRemaining = -1;
+      balanceStub.withArgs(gratitude.giver.id, gratitude.giver.tz).resolves(dailyGratitudeRemaining);
+
+      const result = await recognition.isGratitudeAffordable(gratitude);
+
+      expect(result).to.be.false;
+    });
+
+    it('should remove the giver from receivers if giver_in_receivers is true', async () => {
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          { id: "Giver" },
+          { id: "Receiver1" },
+          { id: "Receiver2" },
+        ],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        giver_in_receivers: true,
+      };
+      const dailyGratitudeRemaining = 10;
+      balanceStub.withArgs(gratitude.giver.id, gratitude.giver.tz).resolves(dailyGratitudeRemaining);
+
+      const result = await recognition.isGratitudeAffordable(gratitude);
+
+      expect(result).to.be.true;
+      expect(gratitude.receivers).to.deep.equal([
+        { id: "Receiver1" },
+        { id: "Receiver2" },
+      ])
+    });
+  });
+
+
   describe("gratitudeErrors", () => {
     it("should return empty if gratitude is okay", async () => {
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);

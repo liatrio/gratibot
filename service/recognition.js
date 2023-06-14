@@ -472,6 +472,7 @@ module.exports = {
   getPreviousXDaysOfRecognition,
   gratitudeReceiverIdsIn,
   gratitudeCountIn,
+  isGratitudeAffordable,
   gratitudeErrors,
   goldenGratitudeErrors,
   trimmedGratitudeMessage,

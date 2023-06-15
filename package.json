@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "test": "nyc --all --include '*/**' mocha test/* --recursive --require test/setup.js",
+    "test:ci": "npm ci && npm test && npm run report-coverage",
     "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov",
     "lint": "eslint '*.js' 'features/**' 'service/**' 'test/**'",
     "test-n-lint": "npm test && npm run lint",

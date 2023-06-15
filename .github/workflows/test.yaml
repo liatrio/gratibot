@@ -26,7 +26,4 @@ jobs:
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.code_climate_reporter_id }}
         with:
-          coverageCommand: |
-            npm ci
-            npm test
-            npm run report-coverage
+          coverageCommand: npm run test:ci

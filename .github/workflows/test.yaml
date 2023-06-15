@@ -14,11 +14,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-     - name: Run Tests
-       run: |
-         npm ci
-         npm test
-         npm run report-coverage
+      - name: Run Tests
+        run: |
+          npm ci
+          npm test
+          npm run report-coverage
       - name: Publish to code climate
         uses: paambaati/codeclimate-action@v4.0.0
         env:

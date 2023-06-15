@@ -23,3 +23,7 @@ jobs:
         uses: paambaati/codeclimate-action@v4.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.code_climate_reporter_id }}
+        with:
+          coverageCommand: ls ${{github.workspace}}
+          coverageLocations: |
+            ${{github.workspace}}/*.lcov:lcov

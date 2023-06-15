@@ -14,16 +14,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
-#      - name: Run Tests
-#        run: |
-#          npm ci
-#          npm test
-#          npm run report-coverage
-
-      - name: Test & publish
+     - name: Run Tests
+       run: |
+         npm ci
+         npm test
+         npm run report-coverage
+      - name: Publish to code climate
         uses: paambaati/codeclimate-action@v4.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.code_climate_reporter_id }}
-        with:
-          coverageCommand: npm run test:ci

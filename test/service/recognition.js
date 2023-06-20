@@ -634,6 +634,33 @@ describe("service/recognition", () => {
         { id: "Receiver2" },
       ]);
     });
+
+    it("should remove the giver from receivers and allow recognition if daily gratitude remaining is equal to the gratitude cost", async () => {
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [{ id: "Giver" }, { id: "Receiver1" }, { id: "Receiver2" }],
+        count: 1,
+        message: ":fistbump: <@Receiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+        giver_in_receivers: true,
+      };
+      const dailyGratitudeRemaining = 2;
+      balanceStub
+        .withArgs(gratitude.giver.id, gratitude.giver.tz)
+        .resolves(dailyGratitudeRemaining);
+
+      const result = await recognition.isGratitudeAffordable(gratitude);
+
+      expect(result).to.be.true;
+      expect(gratitude.receivers.length).to.deep.equal(dailyGratitudeRemaining);
+    });
   });
 
   describe("gratitudeErrors", () => {

@@ -211,6 +211,11 @@ async function isGratitudeAffordable(gratitude) {
     gratitude.giver.id,
     gratitude.giver.tz
   );
+  if (gratitude.giver_in_receivers) {
+    gratitude.receivers = gratitude.receivers.filter(
+      (x) => x.id !== gratitude.giver.id
+    );
+  }
   const gratitudeCost = gratitude.receivers.length * gratitude.count;
   return dailyGratitudeRemaining >= gratitudeCost;
 }
@@ -467,6 +472,7 @@ module.exports = {
   getPreviousXDaysOfRecognition,
   gratitudeReceiverIdsIn,
   gratitudeCountIn,
+  isGratitudeAffordable,
   gratitudeErrors,
   goldenGratitudeErrors,
   trimmedGratitudeMessage,

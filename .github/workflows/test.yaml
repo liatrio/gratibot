@@ -10,13 +10,18 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: node:14.7.0
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@master
+        with:
+          node-version: '18'
       - name: Checkout Code
         uses: actions/checkout@v3
-
-      - name: Run Tests
-        run: |
-          npm ci
-          npm test
-          npm run report-coverage
+      - name: Test & publish
+        uses: paambaati/codeclimate-action@v4.0.0
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.code_climate_reporter_id }}
+        with:
+          coverageCommand: npm run test:ci
+          coverageLocations: |
+            ${{github.workspace}}/*.lcov:lcov

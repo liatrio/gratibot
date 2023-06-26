@@ -1,8 +1,3 @@
-variable "acr_subscription_id" {
-  description = "Azure subscription to use for Gratibot resources"
-  type        = string
-}
-
 variable "resource_group_name" {
   description = "Azure resource group for Gratibot"
   default     = "gratibot-azure-data"

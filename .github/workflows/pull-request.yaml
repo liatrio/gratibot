@@ -64,8 +64,6 @@ jobs:
         working-directory: infra/terragrunt/nonprod/gratibot/
         env:
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
-          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
   plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
@@ -91,8 +89,6 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_app_token: ${{ secrets.NONPROD_APP_TOKEN }}
-          TF_VAR_bot_user_token: ${{ secrets.NONPROD_BOT_TOKEN }}
 
       - uses: liatrio/terraform-change-pr-commenter@v1.4.1
         with:

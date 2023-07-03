@@ -6,7 +6,7 @@ data "azurerm_key_vault" "gratibot" {
 resource "azurerm_role_assignment" "gratibot" {
   scope                = data.azurerm_key_vault.gratibot.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_app_service.gratibot_app_service.identity.0.principal_id
+  principal_id         = azurerm_linux_web_app.gratibot_app_service.identity.0.principal_id
 }
 
 resource "azurerm_key_vault_secret" "mongo_connection_string" {

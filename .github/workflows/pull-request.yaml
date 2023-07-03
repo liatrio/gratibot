@@ -6,7 +6,7 @@ on:
       - "README.md"
       - "catalog.yaml"
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
+  IMAGE_PATH: ${{ github.repository_owner }}/gratibot
 
 permissions:
   id-token: write
@@ -63,7 +63,7 @@ jobs:
           terragrunt validate --terragrunt-no-auto-init
         working-directory: infra/terragrunt/nonprod/gratibot/
         env:
-          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
+          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
   plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
@@ -88,7 +88,7 @@ jobs:
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
-          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
+          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
 
       - uses: liatrio/terraform-change-pr-commenter@v1.4.1
         with:

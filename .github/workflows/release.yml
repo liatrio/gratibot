@@ -17,6 +17,7 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
+  IMAGE_PATH: ${{ github.repository_owner }}/gratibot
 
 permissions:
   id-token: write
@@ -68,7 +69,7 @@ jobs:
           ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
-          TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
+          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
           TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
   release:
     name: "Create Release"

@@ -44,6 +44,12 @@ variable "gratibot_image" {
   type        = string
 }
 
+variable "gratibot_image_registry" {
+  description = "Image registry for Gratibot"
+  type        = string
+  default     = "https://ghcr.io"
+}
+
 variable "gratibot_recognize_emoji" {
   description = "Recognition emoji to use for recognitions"
   type        = string

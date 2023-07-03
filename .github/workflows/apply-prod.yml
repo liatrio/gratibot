@@ -44,6 +44,8 @@ jobs:
   plan:
     name: "Terraform Prod plan"
     runs-on: ubuntu-latest
+    environment:
+      name: "plan"
     needs: build
     steps:
       - name: Checkout
@@ -63,8 +65,6 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_app_token: ${{ secrets.PROD_PLAN_APP_TOKEN }}
-          TF_VAR_bot_user_token: ${{ secrets.PROD_PLAN_BOT_TOKEN }}
           TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
   apply:
     name: "Terraform Prod Apply"
@@ -90,6 +90,4 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
           TF_VAR_gratibot_image: "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.docker_tag }}"
-          TF_VAR_app_token: ${{ secrets.PROD_APP_TOKEN }}
-          TF_VAR_bot_user_token: ${{ secrets.PROD_BOT_TOKEN }}
           GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}

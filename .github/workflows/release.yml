@@ -89,5 +89,5 @@ jobs:
       - name: Create Release
         run: npm run semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GRATIBOT_RELEASE_TOKEN }}
 

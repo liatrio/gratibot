@@ -4,8 +4,8 @@ resource "azurerm_service_plan" "gratibot_app_service_plan" {
   os_type             = "Linux"
   resource_group_name = var.resource_group_name
 
-  sku_name            = var.instance_size
-  worker_count        = var.instance_capacity
+  sku_name     = var.instance_size
+  worker_count = var.instance_capacity
 }
 
 resource "azurerm_linux_web_app" "gratibot_app_service" {

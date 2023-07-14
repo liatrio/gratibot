@@ -20,6 +20,7 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U037FL37G",
   "U8T585Y8J",
   "U04KTAJRS5T",
+  "U0K32MUSF",
 ];
 
 config.initialGoldenRecognitionHolder =

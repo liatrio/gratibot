@@ -5,6 +5,12 @@
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
     "cost": 100
   },  
+  {
+    "name": "Pre-Loved Laptop",
+    "description": "Pre-Loved Laptop",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Pre Loved Laptop.jpeg",
+    "cost": 500
+  },
   {  
     "name": "Black on Black T-Shirt",  
     "description": "New Black T-Shirt.",  

@@ -6,6 +6,12 @@
     "cost": 100
   },  
   {
+    "name": "Custom Nike Air Force 1's",
+    "description": "Nike Air Force 1 Shoes",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Nike_Air_Force1.png",
+    "cost": 500
+  },
+  {
     "name": "Pre-Loved Laptop",
     "description": "Pre-Loved Laptop",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Pre Loved Laptop.jpeg",
@@ -160,30 +166,6 @@
     "description": "Sticker Assortment",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/19_StickerAssortment.jpg",
     "cost": 10
-  },
-  {  
-    "name": "Men's Retro Jacket",  
-    "description": "Men's Retro Jacket",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/13_MensRetroJacket.png",
-    "cost": 60
-  },
-  {  
-    "name": "Women's Retro Jacket",  
-    "description": "Women's Retro Jacket",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/23_WomensRetroJacket.png",
-    "cost": 60
-  },
-  {  
-    "name": "Retro Water Bottle",  
-    "description": "Retro Water Bottle",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/17_RetroWaterBottle.jpg",
-    "cost": 30
-  },
-  {  
-    "name": "Retro Tumbler",  
-    "description": "Retro Tumbler",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/16_RetroTumbler.jpg",
-    "cost": 25
   },
   {  
     "name": "Donation: Open Source Mental Health",  

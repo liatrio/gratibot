@@ -6,8 +6,11 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    container: node:14.7.0
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@master
+        with:
+          node-version: '18'  
       - name: Checkout Code
         uses: actions/checkout@v3
 

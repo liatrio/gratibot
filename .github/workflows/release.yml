@@ -30,7 +30,7 @@ jobs:
     if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Generate tag
         id: tag
@@ -54,7 +54,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Terragrunt
         run: |
           wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.11/terragrunt_linux_amd64
@@ -77,7 +77,7 @@ jobs:
     needs: apply
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v3

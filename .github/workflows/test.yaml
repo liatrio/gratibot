@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: '18'
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Test & publish
         uses: paambaati/codeclimate-action@v5.0.0
         env:

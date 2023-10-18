@@ -4,7 +4,7 @@
     "description": "$25 Visa Gift Card",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
     "cost": 100
-  },  
+  },
   {
     "name": "Custom Nike Air Force 1's",
     "description": "Nike Air Force 1 Shoes",
@@ -18,154 +18,10 @@
     "cost": 500
   },
   {  
-    "name": "Black on Black T-Shirt",  
-    "description": "New Black T-Shirt.",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/3_BlackOnBlackTshirt.png",
-    "cost": 50
-  },  
-  {  
-    "name": "2021 Design T-Shirt",  
-    "description": "2021 Design T-Shirt",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/1_2021DesignShirt.png",
-    "cost": 50
-  },  
-  {  
-    "name": "Pride T-Shirt",  
-    "description": "Pride T-Shirt",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/14_PrideShirt.png",
-    "cost": 70
-  },  
-  {  
-    "name": "Liatrio Pronunciation T-Shirt",  
-    "description": "Liatrio Pronunciation T-Shirt",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio Pronunciation Shirt.png",
-    "cost": 50
-  },  
-  {  
-    "name": "Rub a Lil DevOps On It T-Shirt",  
-    "description": "Rub a Lil DevOps On It T-Shirt",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Rub a little devops on it shirt.png",
-    "cost": 50
-  },  
-  {  
-    "name": "Men's Short Sleeve Polo",
-    "description": "Men's Short Sleeve Polo",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/9_MensGrayPolo.png",
-    "cost": 80
-  },
-  {  
-    "name": "Women's Short Sleeve Polo",
-    "description": "Women's Short Sleeve Polo.",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/20_WomensGrayPolo.png",
-    "cost": 80
-  },
-  {  
-    "name": "Men's Long Sleeve Polo",
-    "description": "Men's Long Sleeve Polo.",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/8_MensGrayLongPolo.png",
-    "cost": 80
-  },
-  {  
     "name": "Hawaiian Shirt",
     "description": "Hawaiian Shirt.",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/5_HawaiianShirt.png",
     "cost": 80
-  },
-  {  
-    "name": "Men's North Face Jacket",
-    "description": "Men's North Face Jacket.",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/11_MensNorthFaceJacket.png",
-    "cost": 440
-  },
-  {  
-    "name": "Women's North Face Jacket",
-    "description": "Women's North Face Jacket.",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/21_WomensNorthFaceJacket.png",
-    "cost": 440
-  },
-  {  
-    "name": "Men's North Face Vest",
-    "description": "Men's North Face Vest.",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/12_MensNorthFaceVest.png",
-    "cost": 340
-  },
-  {  
-    "name": "Women's North Face Vest",
-    "description": "Women's North Face Vest.",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/22_WomensNorthFaceVest.png",
-    "cost": 340
-  },
-  {  
-    "name": "Black Zip Jacket",
-    "description": "Black Zip Jacket",
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/10_MensJacket.png",
-    "cost": 100
-  },
-  {  
-    "name": "Zip Hoodie",
-    "description": "Zip Hoodie",
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/24_ZipHoodie.png",
-    "cost": 70
-  },
-  {  
-    "name": "Pullover Hoodie",
-    "description": "Pullover Hoodie",
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/15_PulloverHoodie.png",
-    "cost": 60
-  },
-  {  
-    "name": "Flex Fit Hat",  
-    "description": "Flex Fit Hat",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/4_FlexFitHat.png",
-    "cost": 40
-  },
-  {  
-    "name": "Snapback Hat",  
-    "description": "Snapback Hat",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/18_SnapbackHat.png",
-    "cost": 30
-  },
-  {  
-    "name": "Liatrio Beanie",  
-    "description": "Liatrio Beanie",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio Beanie.jpg",
-    "cost": 60
-  },
-  {  
-    "name": "OGIO Backpack",  
-    "description": "OGIO Backpack",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/2_Backpack.jpg",
-    "cost": 230
-  },
-  {  
-    "name": "Thule Tech Bag",  
-    "description": "Thule Tech Bag",
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Thule Tech Bag.png",
-    "cost": 110
-  },
-  {  
-    "name": "White Water Bottle 17oz",  
-    "description": "New Water Bottle",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (12).png",
-    "cost": 40
-  },
-  {  
-    "name": "30oz RTIC Tumbler",  
-    "description": "30oz RTIC Tumbler",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (14).png",
-    "cost": 65
-  },
-  {  
-    "name": "Liatrio Journal",  
-    "description": "Liatrio Journal",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/6_Journal.png",
-    "cost": 30
-  },
-  {  
-    "name": "Sticker Assortment",  
-    "description": "Sticker Assortment",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/19_StickerAssortment.jpg",
-    "cost": 10
   },
   {  
     "name": "Donation: Open Source Mental Health",  

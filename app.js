@@ -39,6 +39,7 @@ webserver.get("/health", async (req, res) => {
     const slack_auth_status = await app.client.auth.test();
     if (slack_auth_status.ok) {
       status_checks.slack_auth = "OK";
+
     }
   } catch (e) {
     status_checks.slack_auth = e.message;
@@ -105,7 +106,7 @@ function parseCommand (command) {
     user: "", // holds the value for the user that will be targeted
   };
 
-  const raw = command.text.split(' '); // raw command as an array
+  const raw = command.text.split(" "); // raw command as an array
   parsed.command = raw[0];
 
   switch (raw[0]) {

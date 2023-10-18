@@ -17,13 +17,13 @@
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/5_HawaiianShirt.png",
     "cost": 80
   },
-  {  
+  {
     "name": "Visa Gift Card",  
     "description": "$25 Visa Gift Card",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
     "cost": 100
   },
-  {  
+  {
     "name": "Donation: Open Source Mental Health",  
     "description": "Donate $50 to Open Source Mental Health",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/OSMH logo.jpeg",

@@ -7,7 +7,7 @@ const {
   maximum,
   reactionEmoji,
   goldenRecognizeEmoji,
-  slashCommand
+  slashCommand,
 } = require("./config");
 
 const app = new App({
@@ -77,15 +77,13 @@ require("fs")
 /// ////////////////////////////////////////////////////////////
 
 app.command(slashCommand, async ({ command, ack, respond }) => {
-
   await ack();
   const userCommand = parseCommand(command);
 
   switch (userCommand.command) {
-    case 'help':
+    case "help":
       await respond(helpMarkdown);
   }
-
 });
 
 (async () => {
@@ -103,15 +101,15 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
 function parseCommand (command) {
   const parsed = { // Default values for each parameter
     valid: false, // indicates if a command is valid
-    command: '', // holds the type of command
-    user: '', // holds the value for the user that will be targeted
+    command: "", // holds the type of command
+    user: "", // holds the value for the user that will be targeted
   };
 
   const raw = command.text.split(' '); // raw command as an array
   parsed.command = raw[0];
 
   switch (raw[0]) {
-    case 'help':
+    case "help":
       parsed.valid = true; // command is valid, but doesn't require any additional info
       break;
   }

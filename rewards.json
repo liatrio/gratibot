@@ -1,9 +1,9 @@
-[  
-  {  
-    "name": "Visa Gift Card",  
-    "description": "$25 Visa Gift Card",  
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
-    "cost": 100
+[
+  {
+    "name": "Pre-Loved Laptop",
+    "description": "Pre-Loved Laptop",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Pre Loved Laptop.jpeg",
+    "cost": 500
   },
   {
     "name": "Custom Nike Air Force 1's",
@@ -11,17 +11,17 @@
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Nike_Air_Force1.png",
     "cost": 500
   },
-  {
-    "name": "Pre-Loved Laptop",
-    "description": "Pre-Loved Laptop",
-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Pre Loved Laptop.jpeg",
-    "cost": 500
-  },
   {  
     "name": "Hawaiian Shirt",
     "description": "Hawaiian Shirt.",  
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/5_HawaiianShirt.png",
     "cost": 80
+  },
+  {  
+    "name": "Visa Gift Card",  
+    "description": "$25 Visa Gift Card",  
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
+    "cost": 100
   },
   {  
     "name": "Donation: Open Source Mental Health",  

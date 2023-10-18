@@ -2,6 +2,16 @@ const { App } = require("@slack/bolt");
 const express = require("express");
 const webserver = express();
 const winston = require("./winston");
+const {
+  recognizeEmoji,
+  maximum,
+  reactionEmoji,
+  goldenRecognizeEmoji,
+  slashCommand
+} = require("./config");
+// const { directMention } = require("@slack/bolt");
+// const { anyOf, directMessage } = require("./middleware");
+// const { helpMarkdown } = require("./features/help");
 
 const app = new App({
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
@@ -65,9 +75,147 @@ require("fs")
     require("./features/" + file)(app);
   });
 
+/// ////////////////////////////////////////////////////////////
+// Slash Command Logic //
+/// ////////////////////////////////////////////////////////////
+
+// config.slashCommand
+console.warn(`This is the var ${slashCommand}`)
+
+app.command(slashCommand, async ({ command, ack, respond }) => {
+
+  await ack();
+  const userCommand = parseCommand(command);
+
+  switch (userCommand.command) {
+    case 'help':
+      // await respond(`You are attempting to use the help command`);
+      // app.message("help", anyOf(directMention(), directMessage()), respondToHelp);
+      await respond(helpMarkdown);
+  }
+
+});
+
+// app.start(3000).then(() => {
+//   logger.debug('Bolt Dev app is running on port 3000');
+// });
+
 (async () => {
-  await app.start();
+  await app.start(3000);
   webserver.listen(process.env.PORT || 3000);
 
   winston.info("⚡️ Bolt app is running!");
 })();
+
+
+// Parse Command Function
+function parseCommand (command) {
+  // logger.debug(`Parsing command ${command.text}`);
+  const parsed = { // Default values for each parameter
+    valid: false, // indicates if a command is valid
+    command: '', // holds the type of command
+    users: [], // holds the list of users (stays empty for commands that don't need users)
+    group: '' // holds the name of the target group (stays empty for commands that don't need a group)
+  };
+
+  const raw = command.text.split(' '); // raw command as an array
+  parsed.command = raw[0];
+
+  switch (raw[0]) {
+    case 'help':
+      parsed.valid = true; // command is valid, but doesn't require any additional info
+      break;
+  }
+
+  // if none of the above cases are true, parsed.valid will stay false
+  // logger.debug(`Command parsed to: { vaild: ${parsed.valid}, command: ${parsed.command}, users: ${parsed.users}, group: ${parsed.group} }`);
+
+  return parsed;
+}
+
+const helpMarkdown = `
+:wave: Hi there! Let's take a look at what I can do!
+
+
+
+
+*Give Recognition*
+
+You can give up to ${maximum} recognitions per day.
+
+First, make sure I have been invited to the channel you want to recognize \
+someone in. Then, write a brief message describing what someone did, \
+\`@mention\` them and include the ${recognizeEmoji} emoji...I'll take it from there!
+
+> Thanks @alice for helping me fix my pom.xml ${recognizeEmoji}
+
+Recognize multiple people at once!
+
+> @bob and @alice crushed that showcase! ${recognizeEmoji}
+
+Use \`#tags\` to call out specific Liatrio values!
+
+> I love the #energy in your Terraform demo @alice! ${recognizeEmoji}
+
+The more emojis you add, the more recognition they get!
+
+> @alice just pushed the cleanest code I've ever seen! ${recognizeEmoji} ${recognizeEmoji} ${recognizeEmoji}
+
+Use multipliers to give more recognition!
+
+> @alice presented an amazing demo at a conference! ${recognizeEmoji} x2
+
+or
+
+> @alice presented an amazing demo at a conference! x2 ${recognizeEmoji}
+
+If someone else has given a ${recognizeEmoji} to someone, and you'd like to \
+give one of your own for the same reason, you can react to the message with \
+a ${reactionEmoji}. Gratibot will record your shout-out as though you sent \
+the same message that you reacted to.
+
+*Redeeming*
+
+
+Send me a direct message with 'redeem' and I'll give you the options for prizes to redeem! Once you've selcted an item then I'll start a MPIM with the redemption admins to promote the dialog to acknowledge and receive your item.
+
+Refunds can be given via the 'refund' command if the item redeem can't be fulfilled for whatever reason. Only redemption admins can give refunds. Deduction ID is sent as part of the MPIM when an item is redeemed
+
+> @gratibot refund DEDUCTIONID
+
+
+*View Balance*
+
+Send me a direct message with 'balance' and I'll let you know how many \
+recognitions you have left to give and how many you have received.
+
+> You have received 0 ${recognizeEmoji} and you have ${maximum} ${recognizeEmoji} remaining to \
+give away today
+
+
+
+
+*View Leaderboard*
+
+Send me a direct message with 'leaderboard' and I'll show you who is giving \
+and receiving the most recognition. I'll also show who currently holds the :goldenfistbump:!
+
+
+
+
+*View Metrics*
+
+Send me a direct message with 'metrics' and I'll show you how many times \
+people have given recognitions over the last month.
+
+
+*Give Golden Recognition*
+
+The golden fistbump ${goldenRecognizeEmoji} is a special recognition that can only be held by one user at a time. Only the current holder of the golden recognition can give the golden recognition.
+
+Giving a golden fistbump is the same as giving a normal fistbump
+
+> Thanks @alice for helping fix the prod issues! ${goldenRecognizeEmoji}
+
+Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held. 
+`;

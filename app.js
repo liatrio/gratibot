@@ -39,7 +39,6 @@ webserver.get("/health", async (req, res) => {
     const slack_auth_status = await app.client.auth.test();
     if (slack_auth_status.ok) {
       status_checks.slack_auth = "OK";
-
     }
   } catch (e) {
     status_checks.slack_auth = e.message;
@@ -99,8 +98,9 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
 /// ////////////////////////////////////////////////////////////
 
 // Parse Command Function
-function parseCommand (command) {
-  const parsed = { // Default values for each parameter
+function parseCommand(command) {
+  const parsed = {
+    // Default values for each parameter
     valid: false, // indicates if a command is valid
     command: "", // holds the type of command
     user: "", // holds the value for the user that will be targeted

@@ -9,9 +9,6 @@ const {
   goldenRecognizeEmoji,
   slashCommand
 } = require("./config");
-// const { directMention } = require("@slack/bolt");
-// const { anyOf, directMessage } = require("./middleware");
-// const { helpMarkdown } = require("./features/help");
 
 const app = new App({
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
@@ -79,9 +76,6 @@ require("fs")
 // Slash Command Logic //
 /// ////////////////////////////////////////////////////////////
 
-// config.slashCommand
-console.warn(`This is the var ${slashCommand}`)
-
 app.command(slashCommand, async ({ command, ack, respond }) => {
 
   await ack();
@@ -89,16 +83,10 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
 
   switch (userCommand.command) {
     case 'help':
-      // await respond(`You are attempting to use the help command`);
-      // app.message("help", anyOf(directMention(), directMessage()), respondToHelp);
       await respond(helpMarkdown);
   }
 
 });
-
-// app.start(3000).then(() => {
-//   logger.debug('Bolt Dev app is running on port 3000');
-// });
 
 (async () => {
   await app.start(3000);
@@ -107,15 +95,16 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
   winston.info("⚡️ Bolt app is running!");
 })();
 
+/// ////////////////////////////////////////////////////////////
+// Functions //
+/// ////////////////////////////////////////////////////////////
 
 // Parse Command Function
 function parseCommand (command) {
-  // logger.debug(`Parsing command ${command.text}`);
   const parsed = { // Default values for each parameter
     valid: false, // indicates if a command is valid
     command: '', // holds the type of command
-    users: [], // holds the list of users (stays empty for commands that don't need users)
-    group: '' // holds the name of the target group (stays empty for commands that don't need a group)
+    user: '', // holds the value for the user that will be targeted
   };
 
   const raw = command.text.split(' '); // raw command as an array
@@ -128,11 +117,15 @@ function parseCommand (command) {
   }
 
   // if none of the above cases are true, parsed.valid will stay false
-  // logger.debug(`Command parsed to: { vaild: ${parsed.valid}, command: ${parsed.command}, users: ${parsed.users}, group: ${parsed.group} }`);
 
   return parsed;
 }
 
+/// ////////////////////////////////////////////////////////////
+// Variables //
+/// ////////////////////////////////////////////////////////////
+
+// Text is rendered into help command
 const helpMarkdown = `
 :wave: Hi there! Let's take a look at what I can do!
 
@@ -217,5 +210,5 @@ Giving a golden fistbump is the same as giving a normal fistbump
 
 > Thanks @alice for helping fix the prod issues! ${goldenRecognizeEmoji}
 
-Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held. 
+Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held.
 `;

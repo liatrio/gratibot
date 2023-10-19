@@ -15,6 +15,7 @@ config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
 config.maximum = process.env.GRATIBOT_LIMIT || 5;
 config.minimumMessageLength = 20;
 config.botName = process.env.BOT_NAME || "gratibot";
+config.slashCommand = process.env.SLASH_COMMAND || "/gratibot";
 
 config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U037FL37G",
@@ -29,6 +30,12 @@ config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
   "U6BS54PJM",
   "U02KPMFA9DG",
   "U04666K57CP",
+];
+
+config.usersDeduction = process.env.USERS_DEDUCTION?.split(",") || [
+  "U04666K57CP", // Danielle
+  "U8T585Y8J", // Jeremy
+  "U02KPMFA9DG", // Smith
 ];
 
 module.exports = config;

@@ -23,6 +23,7 @@ services:
       - REDEMPTION_ADMINS
       - BOT_NAME
       - SLASH_COMMAND
+      - DEDUCTION_USERS
   mongodb:
     ports:
       - 27017:27017

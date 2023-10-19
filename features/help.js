@@ -3,14 +3,13 @@ const {
   maximum,
   reactionEmoji,
   goldenRecognizeEmoji,
+  slashCommand,
 } = require("../config");
 const winston = require("../winston");
-const { directMention } = require("@slack/bolt");
-const { anyOf, directMessage } = require("../middleware");
 
-module.exports = function (app) {
-  app.message("help", anyOf(directMention(), directMessage()), respondToHelp);
-  app.message(/(thunderfury|Thunderfury)/, respondToEasterEgg);
+module.exports = {
+  respondToHelp,
+  respondToEasterEgg,
 };
 
 const helpMarkdown = `
@@ -66,7 +65,7 @@ Refunds can be given via the 'refund' command if the item redeem can't be fulfil
 
 *View Balance*
 
-Send me a direct message with 'balance' and I'll let you know how many \
+Use the \`${slashCommand} balance\` command and I'll let you know how many \
 recognitions you have left to give and how many you have received.
 
 > You have received 0 ${recognizeEmoji} and you have ${maximum} ${recognizeEmoji} remaining to \
@@ -100,23 +99,18 @@ Giving a golden fistbump is the same as giving a normal fistbump
 Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held. 
 `;
 
-async function respondToHelp({ message, client }) {
-  winston.info("@gratibot help Called", {
+async function respondToHelp({ user }) {
+  winston.info("/gratibot help Called", {
     func: "feature.help.respondToHelp",
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
-  await client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
-    text: helpMarkdown,
+    callingUser: user,
   });
 
   winston.debug("successfully posted ephemeral help message to Slack", {
     func: "feature.help.respondToHelp",
-    callingUser: message.user,
-    slackMessage: message.text,
+    callingUser: user,
   });
+
+  return helpMarkdown;
 }
 
 const thunderfuryResponse = [
@@ -126,17 +120,15 @@ const thunderfuryResponse = [
   ":thunderfury_blessed_blade_of_the_windseeker:?",
 ].join(" ");
 
-async function respondToEasterEgg({ message, say }) {
+async function respondToEasterEgg({ user, say }) {
   winston.info("heard reference to thunderfury", {
-    callingUser: message.user,
-    slackMessage: message.text,
+    callingUser: user,
   });
-
-  await say(thunderfuryResponse);
 
   winston.debug("successfully posted thunderfury message to Slack", {
     func: "feature.help.respondToEasterEgg",
-    callingUser: message.user,
-    slackMessage: message.text,
+    callingUser: user,
   });
+
+  return thunderfuryResponse;
 }

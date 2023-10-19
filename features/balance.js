@@ -1,43 +1,31 @@
 const balance = require("../service/balance");
 const winston = require("../winston");
-const { directMention } = require("@slack/bolt");
-const { directMessage, anyOf } = require("../middleware");
 
-module.exports = function (app) {
-  app.message(
-    "balance",
-    anyOf(directMention(), directMessage()),
-    respondToBalance
-  );
+module.exports = {
+  respondToBalance,
 };
 
-async function respondToBalance({ message, client }) {
-  winston.info("@gratibot balance Called", {
+async function respondToBalance({ user, client }) {
+  winston.info("/gratibot balance Called", {
     func: "feature.balance.respondToBalance",
-    callingUser: message.user,
-    slackMessage: message.text,
+    callingUser: user,
   });
 
-  const userInfo = await client.users.info({ user: message.user });
+  const userInfo = await client.users.info({ user });
   if (!userInfo.ok) {
     winston.error("Slack API returned error from users.info", {
       func: "feature.balance.respondToBalance",
-      callingUser: message.user,
-      slackMessage: message.text,
+      callingUser: user,
       error: userInfo.error,
     });
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
-      text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
-    });
-    return;
+
+    return `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`;
   }
 
-  const currentBalance = await balance.currentBalance(message.user);
-  const lifetimeTotal = await balance.lifetimeEarnings(message.user);
+  const currentBalance = await balance.currentBalance(user);
+  const lifetimeTotal = await balance.lifetimeEarnings(user);
   const remainingToday = await balance.dailyGratitudeRemaining(
-    message.user,
+    user,
     userInfo.user.tz,
     1
   );
@@ -48,15 +36,10 @@ async function respondToBalance({ message, client }) {
     `You have \`${remainingToday}\` left to give away today.`,
   ].join("\n");
 
-  await client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
-    text: response,
-  });
-
   winston.debug("successfully posted ephemeral balance result to Slack", {
     func: "feature.balance.respondToBalance",
-    callingUser: message.user,
-    slackMessage: message.text,
+    callingUser: user,
   });
+
+  return response;
 }

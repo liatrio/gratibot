@@ -10,15 +10,15 @@ module.exports = function (app) {
     "deduct",
     anyOf(directMention(), directMessage()),
     respondToDeduction
-  )
-}
+  );
+};
 
 async function respondToDeduction({ message, client }) {
   winston.info("@gratibot deduction Called", {
     func: "feature.deduction.respondToDeduction",
     callingUser: message.user,
     slackMessage: message.text,
-  })
+  });
 
   const userInfo = await client.users.info({ user: message.user });
   if (!userInfo.ok) {
@@ -47,7 +47,11 @@ async function respondToDeduction({ message, client }) {
 
   const messageText = message.text.split(" ");
 
-  if (messageText.length < 4 || !userRegex.test(messageText[2]) || isNaN(+messageText[3])) {
+  if (
+    messageText.length < 4 ||
+    !userRegex.test(messageText[2]) ||
+    isNaN(+messageText[3])
+    ) {
     await client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
@@ -56,10 +60,10 @@ async function respondToDeduction({ message, client }) {
     return;
   }
 
-  user = messageText[2].match(userRegex)[1];
-  value = +messageText[3];
+  const user = messageText[2].match(userRegex)[1];
+  const value = +messageText[3];
 
-  if (!await deduction.isBalanceSufficent(message.user, value)) {
+  if (!await deduction.isBalanceSufficent(user, value)) {
     await client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,

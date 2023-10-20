@@ -27,7 +27,6 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
 config.initialGoldenRecognitionHolder =
   process.env.GOLDEN_RECOGNIZE_HOLDER || "UE1QRFSSY";
 config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
-  "U6BS54PJM",
   "U02KPMFA9DG",
   "U04666K57CP",
   "U8T585Y8J",

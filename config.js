@@ -30,12 +30,7 @@ config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
   "U6BS54PJM",
   "U02KPMFA9DG",
   "U04666K57CP",
-];
-
-config.usersDeduction = process.env.USERS_DEDUCTION?.split(",") || [
-  "U04666K57CP", // Danielle
-  "U8T585Y8J", // Jeremy
-  "U02KPMFA9DG", // Smith
+  "U8T585Y8J",
 ];
 
 module.exports = config;

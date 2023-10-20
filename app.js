@@ -76,28 +76,6 @@ require("fs")
 // Slash Command Logic //
 /// ////////////////////////////////////////////////////////////
 
-app.command(slashCommand, async ({ command, ack, respond }) => {
-  await ack();
-  const userCommand = parseCommand(command);
-
-  switch (userCommand.command) {
-    case "help":
-      await respond(helpMarkdown);
-  }
-});
-
-(async () => {
-  await app.start(3000);
-  webserver.listen(process.env.PORT || 3000);
-
-  winston.info("⚡️ Bolt app is running!");
-})();
-
-/// ////////////////////////////////////////////////////////////
-// Functions //
-/// ////////////////////////////////////////////////////////////
-
-// Parse Command Function
 function parseCommand(command) {
   const parsed = {
     // Default values for each parameter
@@ -119,6 +97,23 @@ function parseCommand(command) {
 
   return parsed;
 }
+
+app.command(slashCommand, async ({ command, ack, respond }) => {
+  await ack();
+  const userCommand = parseCommand(command);
+
+  switch (userCommand.command) {
+    case "help":
+      await respond(helpMarkdown);
+  }
+});
+
+(async () => {
+  await app.start(3000);
+  webserver.listen(process.env.PORT || 3000);
+
+  winston.info("⚡️ Bolt app is running!");
+})();
 
 /// ////////////////////////////////////////////////////////////
 // Variables //

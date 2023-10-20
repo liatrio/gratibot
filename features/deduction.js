@@ -51,7 +51,7 @@ async function respondToDeduction({ message, client }) {
     messageText.length < 4 ||
     !userRegex.test(messageText[2]) ||
     isNaN(+messageText[3])
-    ) {
+  ) {
     await client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
@@ -63,7 +63,7 @@ async function respondToDeduction({ message, client }) {
   const user = messageText[2].match(userRegex)[1];
   const value = +messageText[3];
 
-  if (!await deduction.isBalanceSufficent(user, value)) {
+  if (!(await deduction.isBalanceSufficent(user, value))) {
     await client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
@@ -82,6 +82,6 @@ async function respondToDeduction({ message, client }) {
   await client.chat.postMessage({
     channel: message.channel,
     user: message.user,
-    text: `A deduction of ${value} fistbumps has been made for <@${user}>. Deduction ID is \`${deductionInfo._id}\``
+    text: `A deduction of ${value} fistbumps has been made for <@${user}>. Deduction ID is \`${deductionInfo._id}\``,
   });
 }

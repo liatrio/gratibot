@@ -1,5 +1,4 @@
 var regex = {};
-var _ = require("lodash");
 
 regex.userRegex = /<@([^>]+)>/;
 regex.deductRegex = /<@([^|>]+)\|/; // For Slash command

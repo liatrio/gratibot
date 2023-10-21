@@ -1,5 +1,11 @@
 [
   {
+    "name": "Liatrio Store",
+    "description": "Choose an item from the <https://liatrio.axomo.com/|Liatrio Store>. 2 Fistbumps = 1 Dollar.",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Logo.png",
+    "cost": 0
+  },
+  {
     "name": "Pre-Loved Laptop",
     "description": "Pre-Loved Laptop",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Pre Loved Laptop.jpeg",

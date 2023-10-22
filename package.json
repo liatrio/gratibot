@@ -38,7 +38,7 @@
     "nyc": "^15.1.0",
     "prettier": "^2.8.8",
     "semantic-release": "^22.0.5",
-    "sinon": "^16.1.0"
+    "sinon": "^17.0.0"
   },
   "commitlint": {
     "extends": [

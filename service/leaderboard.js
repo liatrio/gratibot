@@ -1,5 +1,6 @@
 const winston = require("../winston");
 const recognition = require("./recognition");
+const { goldenFistbumpHolder } = require("./golden-recognition");
 
 const rank = [
   "1st",
@@ -38,25 +39,6 @@ async function createLeaderboardBlocks(timeRange) {
   });
 
   return blocks;
-}
-
-async function goldenFistbumpHolder() {
-  let { goldenFistbumpHolder, message, timestamp } =
-    await recognition.getGoldenFistbumpHolder();
-  let receivedDate = new Date(timestamp);
-  receivedDate = receivedDate.toLocaleDateString().substring(0, 10);
-
-  let markdown = `*Current Golden Fistbump Holder. Received ${receivedDate}*\n\n`;
-  markdown += `<@${goldenFistbumpHolder}> - *${message}*`;
-
-  return {
-    type: "section",
-    block_id: "goldenFistbumpHolder",
-    text: {
-      type: "mrkdwn",
-      text: markdown,
-    },
-  };
 }
 
 /* Block Kit Content */
@@ -286,6 +268,55 @@ function convertToScores(leaderboardData) {
   return scores.slice(0, 10);
 }
 
+/*
+ * Replies to a Slack user message with a leaderboard.
+ * @param {object} bot A Botkit bot object.
+ * @param {object} message A botkit message object, denoting the message triggering.
+ *     this call.
+ */
+async function respondToLeaderboard({ message, client }) {
+  winston.info("@gratibot leaderboard Called", {
+    func: "service.leaderboard.respondToLeaderboard",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: "Gratibot Leaderboard",
+    blocks: await createLeaderboardBlocks(30),
+  });
+  winston.debug("response to leaderboard request was posted to Slack", {
+    func: "service.leaderboard.respondToLeaderboard",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+}
+
+/*
+ * Replies to a Slack block_action on an existing leaderboard with updated info.
+ * @param {object} bot A Botkit bot object.
+ * @param {object} message A botkit message object, denoting the message triggering
+ *     this call.
+ */
+async function updateLeaderboardResponse({ ack, body, action, respond }) {
+  await ack();
+  winston.info("Gratibot interactive leaderboard button clicked", {
+    func: "service.leaderboard.updateLeaderboardResponse",
+    callingUser: body.user.id,
+  });
+
+  await respond({
+    blocks: await createLeaderboardBlocks(action.value),
+  });
+  winston.debug("leaderboard interactive button response posted to Slack", {
+    func: "service.leaderboard.updateLeaderboardResponse",
+    callingUser: body.user.id,
+  });
+}
+
 module.exports = {
   createLeaderboardBlocks,
+  respondToLeaderboard,
+  updateLeaderboardResponse,
 };

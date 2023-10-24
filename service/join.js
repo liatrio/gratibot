@@ -1,8 +1,5 @@
 const { SlackError } = require("./errors");
-const {
-  handleSlackError,
-  handleGenericError,
-} = require("./messageutils");
+const { handleSlackError, handleGenericError } = require("./messageutils");
 
 async function joinPublicChannel({ event, client }) {
   try {
@@ -18,4 +15,4 @@ async function joinPublicChannel({ event, client }) {
 
 module.exports = {
   joinPublicChannel,
-}
+};

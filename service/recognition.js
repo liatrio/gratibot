@@ -5,13 +5,22 @@ const goldenRecognitionCollection = require("../database/goldenRecognitionCollec
 const balance = require("./balance");
 const { SlackError, GratitudeError } = require("./errors");
 const winston = require("../winston");
+const { userInfo } = require("./apiwrappers");
+const {
+  handleSlackError,
+  handleGratitudeError,
+  handleGenericError,
+  sendNotificationToReceivers,
+  doesUserHoldGoldenRecognition,
+  handleGoldenGratitudeErrors,
+} = require("./messageutils");
 
 const {
   recognizeEmoji,
+  reactionEmoji,
   goldenRecognizeEmoji,
   maximum,
   minimumMessageLength,
-  botName,
 } = config;
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
@@ -94,41 +103,6 @@ async function countRecognitionsGiven(user, timezone = null, days = null) {
   });
 
   return await recognitionCollection.count(filter);
-}
-
-async function getGoldenFistbumpHolder() {
-  const goldenRecognition = await goldenRecognitionCollection.findOne(
-    {},
-    { sort: { timestamp: -1 } }
-  );
-  if (!goldenRecognition) {
-    return {
-      goldenFistbumpHolder: "none",
-      message: "",
-      timestamp: "",
-    };
-  }
-  return {
-    goldenFistbumpHolder: goldenRecognition.recognizee,
-    message: goldenRecognition.message,
-    timestamp: goldenRecognition.timestamp,
-  };
-}
-
-async function doesUserHoldGoldenRecognition(userId, rec) {
-  const goldenRecognition = await goldenRecognitionCollection.findOne(
-    {},
-    { sort: { timestamp: -1 } }
-  );
-
-  if (!goldenRecognition) {
-    return false;
-  }
-  if (goldenRecognition[rec] === userId) {
-    return true;
-  }
-
-  return false;
 }
 
 async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
@@ -251,18 +225,6 @@ async function gratitudeErrors(gratitude) {
   ].filter((x) => x !== "");
 }
 
-async function goldenGratitudeErrors(gratitude) {
-  return [
-    !(await doesUserHoldGoldenRecognition(gratitude.giver.id, "recognizee"))
-      ? "- Only the current holder of the golden fistbump can give the golden fistbump"
-      : "",
-
-    gratitude.receivers.length > 1
-      ? "- You can't give the golden fistbump to multiple users"
-      : "",
-  ].filter((x) => x !== "");
-}
-
 async function giveGratitude(gratitude) {
   let results = [];
 
@@ -327,7 +289,7 @@ async function validateAndSendGratitude(gratitude) {
   const errors = await gratitudeErrors(gratitude);
   let goldenRecognizeErrors = [];
   if (gratitude.type === goldenRecognizeEmoji) {
-    goldenRecognizeErrors = await goldenGratitudeErrors(gratitude);
+    goldenRecognizeErrors = await handleGoldenGratitudeErrors(gratitude);
   }
 
   const combinedErrors = [...errors, ...goldenRecognizeErrors];
@@ -369,76 +331,156 @@ async function giverSlackNotification(gratitude) {
   return { blocks };
 }
 
-async function giverGoldenSlackNotification(gratitude) {
-  let blocks = [];
-  const recognitionType = gratitude.type;
-
-  blocks.push({
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: `You have handed off the ${recognitionType}. Thanks for sharing the wealth!`,
-    },
-  });
-  return { blocks };
-}
-
-async function receiverSlackNotification(gratitude, receiver) {
-  const lifetimeTotal = await balance.lifetimeEarnings(receiver);
-  const receiverBalance = await balance.currentBalance(receiver);
-  let blocks = [];
-
-  const receiverNotificationText = await composeReceiverNotificationText(
-    gratitude,
-    receiver,
-    receiverBalance
-  );
-  blocks.push({
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: receiverNotificationText,
-    },
+async function respondToRecognitionMessage({ message, client }) {
+  winston.info(`Heard reference to ${recognizeEmoji}`, {
+    func: "service.recognition.respondToRecognitionMessage",
+    callingUser: message.user,
+    slackMessage: message.text,
   });
 
-  if (gratitude.count == lifetimeTotal) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `I noticed this is your first time receiving a ${recognizeEmoji}. Use \`<@${botName}> redeem\` to see what you can redeem ${recognizeEmoji} for, or try running \`<@${botName}> help\` for more information about me.`,
-      },
-    });
+  let allUsers = [];
+  let gratitude;
+  try {
+    allUsers = await gratitudeReceiverIdsIn(client, message.text);
+    gratitude = {
+      giver: await userInfo(client, message.user),
+      receivers: await Promise.all(
+        allUsers.map(async (id) => userInfo(client, id))
+      ),
+      count: gratitudeCountIn(message.text),
+      message: message.text,
+      trimmedMessage: trimmedGratitudeMessage(message.text),
+      channel: message.channel,
+      tags: gratitudeTagsIn(message.text),
+      type: recognizeEmoji,
+      giver_in_receivers: false,
+    };
+
+    // Check if the user who reacted is also a receiver
+    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
+      gratitude.giver_in_receivers = true;
+    }
+
+    await validateAndSendGratitude(gratitude);
+
+    winston.debug(
+      `validated and stored message recognitions from ${gratitude.giver}`,
+      {
+        func: "service.recognition.respondToRecognitionMessage",
+        callingUser: message.user,
+        slackMessage: message.text,
+      }
+    );
+  } catch (e) {
+    if (e instanceof SlackError) {
+      return handleSlackError(client, message, e);
+    } else if (e instanceof GratitudeError) {
+      return handleGratitudeError(client, message, e);
+    } else {
+      return handleGenericError(client, message, e);
+    }
   }
-  return { blocks };
+
+  return Promise.all([
+    sendNotificationToReceivers(client, gratitude),
+    client.chat.postEphemeral({
+      channel: message.channel,
+      user: message.user,
+      text: `${recognizeEmoji} has been sent.`,
+      ...(await giverSlackNotification(gratitude)),
+    }),
+    client.reactions.add({
+      channel: message.channel,
+      name: config.reactionEmoji.slice(1, -1),
+      timestamp: message.ts,
+    }),
+  ]);
 }
 
-async function composeReceiverNotificationText(
-  gratitude,
-  receiver,
-  receiverBalance
-) {
-  if (gratitude.type === goldenRecognizeEmoji) {
-    return `Congratulations, You just got the ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>, and are now the holder of the Golden Fistbump! You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>${gratitude.message}`;
+async function respondToRecognitionReaction({ event, client }) {
+  winston.info(`Saw a reaction containing ${reactionEmoji}`, {
+    func: "service.recognition.respondToRecognitionReaction",
+    callingUser: event.user,
+    reactionEmoji: event.reaction,
+  });
+
+  event.channel = event.item.channel;
+
+  let allUsers = [];
+  let gratitude;
+  let originalMessage;
+  try {
+    originalMessage = await messageReactedTo(client, event);
+
+    if (!originalMessage.text.includes(recognizeEmoji)) {
+      return;
+    }
+
+    allUsers = await gratitudeReceiverIdsIn(client, originalMessage.text);
+    gratitude = {
+      giver: await userInfo(client, event.user),
+      receivers: await Promise.all(
+        allUsers.map(async (id) => userInfo(client, id))
+      ),
+      count: 1,
+      message: originalMessage.text,
+      trimmedMessage: trimmedGratitudeMessage(originalMessage.text),
+      channel: event.channel,
+      tags: gratitudeTagsIn(originalMessage.text),
+      type: recognizeEmoji,
+      giver_in_receivers: false,
+    };
+
+    // Check if the user who reacted is also a receiver
+    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
+      gratitude.giver_in_receivers = true;
+    }
+
+    await validateAndSendGratitude(gratitude);
+
+    winston.debug(
+      `validated and stored reaction recognitions from ${gratitude.giver}`,
+      {
+        func: "service.recognition.respondToRecognitionReaction",
+        callingUser: event.user,
+        slackMessage: event.reactions,
+      }
+    );
+  } catch (e) {
+    if (e instanceof SlackError) {
+      return handleSlackError(client, event, e);
+    } else if (e instanceof GratitudeError) {
+      return handleGratitudeError(client, event, e);
+    } else {
+      return handleGenericError(client, event, e);
+    }
   }
 
-  const goldenRecognitionReceiver = await doesUserHoldGoldenRecognition(
-    receiver,
-    "recognizee"
+  return Promise.all([
+    sendNotificationToReceivers(client, gratitude),
+    client.chat.postEphemeral({
+      channel: event.channel,
+      user: event.user,
+      text: `${recognizeEmoji} has been sent.`,
+      ...(await giverSlackNotification(gratitude)),
+    }),
+  ]);
+}
+
+async function messageReactedTo(client, message) {
+  const response = await client.conversations.replies({
+    channel: message.item.channel,
+    ts: message.item.ts,
+    limit: 1,
+  });
+  if (response.ok) {
+    return response.messages[0];
+  }
+  throw new SlackError(
+    "conversations.replies",
+    response.error,
+    `Something went wrong while sending recognition. When retreiving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
   );
-  if (goldenRecognitionReceiver) {
-    return `You just got a ${gratitude.type} from <@${
-      gratitude.giver.id
-    }> in <#${
-      gratitude.channel
-    }>. With ${goldenRecognizeEmoji}${goldenRecognizeEmoji}${goldenRecognizeEmoji}${goldenRecognizeEmoji} multiplier you earned \`${
-      gratitude.count * 2
-    }\` and your new balance is \`${receiverBalance}\`\n>>>${
-      gratitude.message
-    }`;
-  }
-
-  return `You just got a ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>. You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`\n>>>${gratitude.message}`;
 }
 
 /*
@@ -464,25 +506,23 @@ async function composeReceiverNotificationText(
  *   type: string,
  * }
  */
+
 module.exports = {
   giveRecognition,
   countRecognitionsReceived,
   countRecognitionsGiven,
-  getGoldenFistbumpHolder,
   getPreviousXDaysOfRecognition,
   gratitudeReceiverIdsIn,
   gratitudeCountIn,
   isGratitudeAffordable,
   gratitudeErrors,
-  goldenGratitudeErrors,
   trimmedGratitudeMessage,
   gratitudeTagsIn,
   giveGratitude,
   validateAndSendGratitude,
   giverSlackNotification,
-  giverGoldenSlackNotification,
-  doesUserHoldGoldenRecognition,
-  composeReceiverNotificationText,
-  receiverSlackNotification,
   groupUsers,
+  respondToRecognitionMessage,
+  respondToRecognitionReaction,
+  messageReactedTo,
 };

@@ -3,7 +3,7 @@
 // only redemption admins can execute this command
 const { directMention } = require("@slack/bolt");
 const { anyOf, directMessage } = require("../middleware");
-const refund = require("../service/refund");
+const refund = require("../service/deduction");
 
 module.exports = function (app) {
   app.message(

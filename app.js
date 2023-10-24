@@ -105,6 +105,8 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
   switch (userCommand.command) {
     case "help":
       await respond(helpMarkdown);
+    default:
+      await respond(errorMarkdown);
   }
 });
 
@@ -118,6 +120,13 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
 /// ////////////////////////////////////////////////////////////
 // Variables //
 /// ////////////////////////////////////////////////////////////
+
+const errorMarkdown = '
+:well: Command does not exist.
+Here is a list of commands that actually work:
+
+/gratibot help: talks about what Gratibot can do!
+';
 
 // Text is rendered into help command
 const helpMarkdown = `

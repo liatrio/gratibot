@@ -978,7 +978,7 @@ describe("service/recognition", () => {
     });
   });
 
-  describe("goldenGratitudeErrors", () => {
+  describe("handleGoldenGratitudeErrors", () => {
     it("should return empty if gratitude is okay", async () => {
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(true);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
@@ -1011,7 +1011,7 @@ describe("service/recognition", () => {
         tags: [],
       };
 
-      const result = await recognition.goldenGratitudeErrors(gratitude);
+      const result = await recognition.handleGoldenGratitudeErrors(gratitude);
       expect(result).to.deep.equal([]);
     });
 
@@ -1047,7 +1047,7 @@ describe("service/recognition", () => {
         tags: [],
       };
 
-      const result = await recognition.goldenGratitudeErrors(gratitude);
+      const result = await recognition.handleGoldenGratitudeErrors(gratitude);
       expect(result).to.deep.equal([
         "- Only the current holder of the golden fistbump can give the golden fistbump",
       ]);

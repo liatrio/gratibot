@@ -72,7 +72,6 @@ async function respondToDeduction({ message, client }) {
     return;
   }
 
-  await deduction.createDeduction(user, value, message.text);
   const deductionInfo = await deduction.createDeduction(
     user,
     value,

@@ -2,6 +2,7 @@ const winston = require("../winston");
 const moment = require("moment-timezone");
 const balance = require("../service/balance");
 const deductionCollection = require("../database/deductionCollection");
+const { redemptionAdmins } = require("../config");
 const monk = require("monk");
 
 async function createDeduction(user, value, message = "") {
@@ -55,9 +56,34 @@ async function isBalanceSufficent(user, deductionValue) {
   return (await balance.currentBalance(user)) >= deductionValue;
 }
 
+async function respondToRefund({ message, client, admins = redemptionAdmins }) {
+  winston.info("@gratibot refund Called", {
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+
+  if (admins.includes(message.user)) {
+    const messageText = message.text.split(" ");
+    await refundDeduction(messageText[2]);
+
+    await client.chat.postMessage({
+      channel: message.channel,
+      user: message.user,
+      text: "Refund Successfully given",
+    });
+  } else {
+    await client.chat.postMessage({
+      channel: message.channel,
+      user: message.user,
+      text: "Only `Redemption Admins` can use the refund command",
+    });
+  }
+}
+
 module.exports = {
   createDeduction,
   refundDeduction,
   getDeductions,
   isBalanceSufficent,
+  respondToRefund,
 };

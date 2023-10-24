@@ -61,9 +61,60 @@ async function dailyGratitudeRemaining(user, timezone) {
   return config.maximum - recognitionGivenToday;
 }
 
+async function respondToBalance({ message, client }) {
+  winston.info("@gratibot balance Called", {
+    func: "service.balance.respondToBalance",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+
+  const userInfo = await client.users.info({ user: message.user });
+  if (!userInfo.ok) {
+    winston.error("Slack API returned error from users.info", {
+      func: "service.balance.respondToBalance",
+      callingUser: message.user,
+      slackMessage: message.text,
+      error: userInfo.error,
+    });
+    await client.chat.postEphemeral({
+      channel: message.channel,
+      user: message.user,
+      text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
+    });
+    return;
+  }
+
+  const current_balance = await currentBalance(message.user);
+  const lifetime_total = await lifetimeEarnings(message.user);
+  const remaining_today = await dailyGratitudeRemaining(
+    message.user,
+    userInfo.user.tz,
+    1
+  );
+
+  const response = [
+    `Your current balance is: \`${current_balance}\``,
+    `Your lifetime earnings are: \`${lifetime_total}\``,
+    `You have \`${remaining_today}\` left to give away today.`,
+  ].join("\n");
+
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: response,
+  });
+
+  winston.debug("successfully posted ephemeral balance result to Slack", {
+    func: "service.balance.respondToBalance",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+}
+
 module.exports = {
   currentBalance,
   lifetimeEarnings,
   lifetimeSpendings,
   dailyGratitudeRemaining,
+  respondToBalance,
 };

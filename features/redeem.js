@@ -51,13 +51,18 @@ async function redeemItem({ ack, body, context, client }) {
       });
     }
 
-    let redemptionMessage = `<@${userID}> has redeemed ${itemName} for ${itemCost} fistbumps.`;
-    const deductionInfo = await deduction.createDeduction(
-      userID,
-      itemCost,
-      redemptionMessage
-    );
-    redemptionMessage += ` Deduction ID is \`${deductionInfo._id}\``;
+    let redemptionMessage = `<@${userID}> has selected ${itemName}`;
+    if (itemName === "Liatrio Store") {
+      redemptionMessage += `. Please provide the link of the item from the <https://liatrio.axomo.com/|Liatrio Store>.`;
+    } else {
+      redemptionMessage += ` for ${itemCost} fistbumps.`;
+      const deductionInfo = await deduction.createDeduction(
+        userID,
+        itemCost,
+        redemptionMessage
+      );
+      redemptionMessage += ` Deduction ID is \`${deductionInfo._id}\``;
+    }
     await client.chat.postMessage({
       channel: result.channel.id,
       token: context.botToken,

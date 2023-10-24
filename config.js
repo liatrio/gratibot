@@ -18,24 +18,17 @@ config.botName = process.env.BOT_NAME || "gratibot";
 config.slashCommand = process.env.SLASH_COMMAND || "/gratibot";
 
 config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
-  "U037FL37G",
-  "U8T585Y8J",
-  "U04KTAJRS5T",
-  "U0K32MUSF",
+  "U037FL37G", // Chris Blackburn
+  "U8T585Y8J", // Jeremy Hayes
+  "U04KTAJRS5T", // Mike Denton
+  "U0K32MUSF", // Robert Kelly
 ];
 
 config.initialGoldenRecognitionHolder =
   process.env.GOLDEN_RECOGNIZE_HOLDER || "UE1QRFSSY";
 config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
-  "U6BS54PJM",
-  "U02KPMFA9DG",
-  "U04666K57CP",
-];
-
-config.usersDeduction = process.env.USERS_DEDUCTION?.split(",") || [
-  "U04666K57CP", // Danielle
-  "U8T585Y8J", // Jeremy
-  "U02KPMFA9DG", // Smith
+  "U02KPMFA9DG", // Smith Mize
+  "U04666K57CP", // Danielle Johnson
 ];
 
 module.exports = config;

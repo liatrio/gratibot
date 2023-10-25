@@ -180,7 +180,6 @@ function aggregateData(response, timeRange) {
   return data;
 }
 
-
 async function respondToMetrics({ message, client }) {
   winston.info("@gratibot metrics Called", {
     func: "service.metrics.respondToMetrics",

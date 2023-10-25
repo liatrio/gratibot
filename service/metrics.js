@@ -180,6 +180,44 @@ function aggregateData(response, timeRange) {
   return data;
 }
 
+
+async function respondToMetrics({ message, client }) {
+  winston.info("@gratibot metrics Called", {
+    func: "service.metrics.respondToMetrics",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+  await client.chat.postEphemeral({
+    channel: message.channel,
+    user: message.user,
+    text: "Gratibot Metrics",
+    blocks: await createMetricsBlocks(30),
+  });
+  winston.debug("metrics command response posted to Slack", {
+    func: "service.metrics.respondToMetrics",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+}
+
+async function updateMetricsResponse({ ack, body, action, respond }) {
+  await ack();
+  winston.info("Gratibot interactive metrics button clicked", {
+    func: "service.metrics.updateMetricsResponse",
+    callingUser: body.user.id,
+  });
+
+  await respond({
+    blocks: await createMetricsBlocks(action.value),
+  });
+  winston.debug("interactive metrics button response posted to Slack", {
+    func: "service.metrics.updateMetricsResponse",
+    callingUser: body.user.id,
+  });
+}
+
 module.exports = {
   createMetricsBlocks,
+  respondToMetrics,
+  updateMetricsResponse,
 };

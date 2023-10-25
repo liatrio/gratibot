@@ -63,7 +63,7 @@ function redeemSelector(gratibotRewards) {
   for (let i = 0; i < gratibotRewards.length; i++) {
     const item = {
       name: `${gratibotRewards[i].name}`,
-      cost: `${gratibotRewards[i].cost}`,
+      cot: `${gratibotRewards[i].cost}`,
     };
     options.push({
       text: {

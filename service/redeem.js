@@ -51,7 +51,7 @@ function redeemItems(gratibotRewards) {
       accessory: {
         type: "image",
         image_url: `${gratibotRewards[i].imageURL}`,
-        alt_text: `Image of ${gratibotRewards[i].name}s`,
+        alt_text: `Image of ${gratibotRewards[i].name}`,
       },
     });
   }
@@ -63,7 +63,7 @@ function redeemSelector(gratibotRewards) {
   for (let i = 0; i < gratibotRewards.length; i++) {
     const item = {
       name: `${gratibotRewards[i].name}`,
-      cost: `${gratibotRewards[i].cost}`,
+      cost: `${gratibotRewards[i].cost}s`,
     };
     options.push({
       text: {

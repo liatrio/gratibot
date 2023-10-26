@@ -14,7 +14,7 @@ module.exports = function (app) {
 };
 
 const helpMarkdown = `
-:wave: Hi their! Let's take a look at what I can do!
+:wave: Hi there! Let's take a look at what I can do!
 
 
 

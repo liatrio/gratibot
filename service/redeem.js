@@ -51,7 +51,7 @@ function redeemItems(gratibotRewards) {
       accessory: {
         type: "image",
         image_url: `${gratibotRewards[i].imageURL}`,
-        alt_text: `Image of ${gratibotRewards[i].name}`,
+        alt_text: `Image of ${gratibotRewards[i].name}s`,
       },
     });
   }

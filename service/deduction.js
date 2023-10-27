@@ -63,15 +63,34 @@ async function respondToRefund({ message, client, admins = redemptionAdmins }) {
     slackMessage: message.text,
   });
 
-  if (admins.includes(message.user)) {
-    const messageText = message.text.split(" ");
-    await refundDeduction(messageText[2]);
+  const messageText = message.text.split(" ");
 
-    await client.chat.postMessage({
-      channel: message.channel,
-      user: message.user,
-      text: "Refund Successfully given",
-    });
+  if (admins.includes(message.user)) {
+    try {
+      const result = await refundDeduction(messageText[2]);
+
+      if (result) {
+        await client.chat.postMessage({
+          channel: message.channel,
+          user: message.user,
+          text: "Refund Successfully given",
+        });
+      } else {
+        await client.chat.postMessage({
+          channel: message.channel,
+          user: message.user,
+          text: "Deduction not found or refund failed",
+        });
+      }
+    } catch (error) {
+      // Handle any errors that occur during the refund operation
+      console.error("Refund error:", error);
+      await client.chat.postMessage({
+        channel: message.channel,
+        user: message.user,
+        text: "An error occurred while processing the refund",
+      });
+    }
   } else {
     await client.chat.postMessage({
       channel: message.channel,

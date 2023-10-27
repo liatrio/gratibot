@@ -319,4 +319,12 @@ module.exports = {
   createLeaderboardBlocks,
   respondToLeaderboard,
   updateLeaderboardResponse,
+  convertToScores,
+  aggregateData,
+  leaderboardScoreData,
+  timeRangeButtons,
+  timeRangeInfo,
+  topReceivers,
+  topGivers,
+  leaderboardHeader,
 };

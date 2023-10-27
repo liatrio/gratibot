@@ -7,9 +7,7 @@ const {
   handleSlackError,
   handleGratitudeError,
   handleGenericError,
-  handleGoldenGratitudeErrors,
   sendNotificationToReceivers,
-  doesUserHoldGoldenRecognition,
 } = require("./messageutils");
 
 const {
@@ -126,9 +124,7 @@ async function goldenFistbumpHolder() {
 }
 
 module.exports = {
-  handleGoldenGratitudeErrors,
   getGoldenFistbumpHolder,
-  doesUserHoldGoldenRecognition,
   respondToGoldenRecognitionMessage,
   giverGoldenSlackNotification,
   goldenFistbumpHolder,

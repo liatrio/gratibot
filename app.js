@@ -58,14 +58,7 @@ webserver.get("/health", async (req, res) => {
   winston.debug("Health check passed");
 });
 
-// var normalizedPath = require("path").join(__dirname, "features");
-// require("fs")
-//   .readdirSync(normalizedPath)
-//   .forEach(function (file) {
-//     require("./features/" + file)(app);
-//   });
 require("./features")(app);
-require("./slash")(app);
 
 (async () => {
   await app.start(3000);

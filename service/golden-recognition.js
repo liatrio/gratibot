@@ -1,6 +1,7 @@
+const winston = require("../winston");
 const config = require("../config");
 const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
-const { userInfo, winstonInfo } = require("./apiwrappers");
+const { userInfo } = require("./apiwrappers");
 const {
   handleAllErrors,
   sendNotificationToReceivers,
@@ -49,11 +50,11 @@ async function giverGoldenSlackNotification(gratitude) {
 }
 
 async function respondToGoldenRecognitionMessage({ message, client }) {
-  winstonInfo(
-    `Heard reference to ${goldenRecognizeEmoji}`,
-    "service.recognition.respondToGoldenRecognitionMessage",
-    message
-  );
+  winston.info(`Heard reference to ${goldenRecognizeEmoji}`, {
+    func: "service.recognition.respondToGoldenRecognitionMessage",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
   let allUsers = [];
   let gratitude;
   try {

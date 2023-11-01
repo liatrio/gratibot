@@ -1,10 +1,9 @@
 const config = require("../config");
 const fs = require("fs");
 
+const winston = require("../winston");
 const balance = require("./balance");
 const deduction = require("./deduction");
-
-const { winstonInfo } = require("./apiwrappers");
 
 const path = require("path");
 // TODO: Long term this should be sourced from DB
@@ -132,12 +131,10 @@ function getSelectedItemDetails(selectedItem) {
 }
 
 async function respondToRedeem({ message, client }) {
-  winstonInfo(
-    "@gratibot redeem Called",
-    "service.redeem.respondToRedeem",
-    message
-  );
-
+  winston.info("@gratibot redeem Called", {
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
   const currentBalance = await balance.currentBalance(message.user);
   await client.chat.postEphemeral({
     channel: message.channel,

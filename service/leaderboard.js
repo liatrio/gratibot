@@ -1,7 +1,6 @@
 const winston = require("../winston");
 const recognition = require("./recognition");
 const { goldenFistbumpHolder } = require("./golden-recognition");
-const { winstonInfo } = require("./apiwrappers");
 
 const rank = [
   "1st",
@@ -276,11 +275,11 @@ function convertToScores(leaderboardData) {
  *     this call.
  */
 async function respondToLeaderboard({ message, client }) {
-  winstonInfo(
-    "@gratibot leaderboard Called",
-    "service.leaderboard.respondToLeaderboard",
-    message
-  );
+  winston.info("@gratibot leaderboard Called", {
+    func: "service.leaderboard.respondToLeaderboard",
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
   await client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
@@ -302,11 +301,10 @@ async function respondToLeaderboard({ message, client }) {
  */
 async function updateLeaderboardResponse({ ack, body, action, respond }) {
   await ack();
-  winstonInfo(
-    "Gratibot interactive leaderboard button clicked",
-    "service.leaderboard.updateLeaderboardResponse",
-    body
-  );
+  winston.info("Gratibot interactive leaderboard button clicked", {
+    func: "service.leaderboard.updateLeaderboardResponse",
+    callingUser: body.user.id,
+  });
 
   await respond({
     blocks: await createLeaderboardBlocks(action.value),

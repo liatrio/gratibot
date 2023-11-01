@@ -20,7 +20,7 @@ const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
 const gratitudeEmojiRegex = new RegExp(config.recognizeEmoji, "g");
 const multiplierRegex = new RegExp(
-  `${config.recognizeEmoji}\\sx([0-9]+)|x([0-9]+)\\s${config.recognizeEmoji}`
+  `${config.recognizeEmoji}\\s*x([0-9]+)|x([0-9]+)\\s${config.recognizeEmoji}`
 );
 
 // TODO Can we add a 'count' field to the recognition?

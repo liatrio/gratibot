@@ -7,63 +7,47 @@ const leaderboard = require("./service/leaderboard");
 const metrics = require("./service/metrics");
 const recognition = require("./service/recognition");
 const redeem = require("./service/redeem");
+const {
+  respondToGoldenRecognitionMessage,
+} = require("./service/golden-recognition");
 const { directMention } = require("@slack/bolt");
 const { directMessage, anyOf, reactionMatches } = require("./middleware");
 
 const { goldenRecognizeEmoji, reactionEmoji, recognizeEmoji } = config;
 
+function appMessage(app, message, ...func) {
+  app.message(message, anyOf(directMention(), directMessage()), ...func);
+}
+
 module.exports = function (app) {
   // Balance
-  app.message(
-    "balance",
-    anyOf(directMention(), directMessage()),
-    balance.respondToBalance
-  );
+  appMessage(app, "balance", balance.respondToBalance);
 
   // Deduction
-  app.message(
-    "deduct",
-    anyOf(directMention(), directMessage()),
-    deduction.respondToDeduction
-  );
+  appMessage(app, "deduct", deduction.respondToDeduction);
 
   // Golden Recognition
-  app.message(
-    goldenRecognizeEmoji,
-    recognition.respondToGoldenRecognitionMessage
-  );
+  appMessage(app, goldenRecognizeEmoji, respondToGoldenRecognitionMessage);
 
   // Help
-  app.message(
-    "help",
-    anyOf(directMention(), directMessage()),
-    help.respondToHelp
-  );
+  appMessage(app, "help", help.respondToHelp);
 
   // Easter Eggs
-  app.message(/(thunderfury|Thunderfury)/, help.respondToEasterEgg);
+  appMessage(app, /(thunderfury|Thunderfury)/, help.respondToEasterEgg);
 
   // Auto Join
   app.event("channel_created", join.joinPublicChannel);
 
   // Leaderboard
-  app.message(
-    "leaderboard",
-    anyOf(directMessage(), directMention()),
-    leaderboard.respondToLeaderboard
-  );
+  appMessage(app, "leaderboard", leaderboard.respondToLeaderboard);
   app.action(/leaderboard-\d+/, leaderboard.updateLeaderboardResponse);
 
   // Metrics
-  app.message(
-    "metrics",
-    anyOf(directMessage(), directMention()),
-    metrics.respondToMetrics
-  );
+  appMessage(app, "metrics", metrics.respondToMetrics);
   app.action(/metrics-\d+/, metrics.updateMetricsResponse);
 
   // Recognition
-  app.message(recognizeEmoji, recognition.respondToRecognitionMessage);
+  appMessage(app, recognizeEmoji, recognition.respondToRecognitionMessage);
   app.event(
     "reaction_added",
     reactionMatches(reactionEmoji),
@@ -71,17 +55,9 @@ module.exports = function (app) {
   );
 
   // Redeem
-  app.message(
-    "redeem",
-    anyOf(directMention(), directMessage()),
-    redeem.respondToRedeem
-  );
+  appMessage(app, "redeem", redeem.respondToRedeem);
   app.action({ action_id: "redeem" }, redeem.redeemItem);
 
   // Refund
-  app.message(
-    "refund",
-    anyOf(directMention(), directMessage()),
-    deduction.respondToRefund
-  );
+  appMessage(app, "refund", deduction.respondToRefund);
 };

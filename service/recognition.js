@@ -389,7 +389,7 @@ async function respondToRecognitionReaction({ event, client }) {
       sendUserNotification(client, event, gratitude),
     ]);
   } catch (e) {
-    return handleError(client, event, e);
+    return handleAllErrors(client, event, e);
   }
 }
 

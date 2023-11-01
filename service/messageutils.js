@@ -3,6 +3,7 @@ const config = require("../config");
 const balance = require("./balance");
 const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
 const { recognizeEmoji, goldenRecognizeEmoji, botName } = config;
+const { SlackError, GratitudeError } = require("./errors");
 
 async function handleSlackError(client, message, error) {
   winston.error("Slack API returned an error response", {
@@ -57,8 +58,6 @@ function handleAllErrors(client, message, e) {
     return handleSlackError(client, message, e);
   } else if (e instanceof GratitudeError) {
     return handleGratitudeError(client, message, e);
-  } else if (e instanceof GoldenGratitudeError) {
-    return handleGoldenGratitudeErrors(client, message, e);
   } else {
     return handleGenericError(client, message, e);
   }

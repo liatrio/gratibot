@@ -7,9 +7,7 @@ const { SlackError, GratitudeError } = require("./errors");
 const winston = require("../winston");
 const { userInfo } = require("./apiwrappers");
 const {
-  handleSlackError,
-  handleGratitudeError,
-  handleGenericError,
+  handleAllErrors,
   sendNotificationToReceivers,
   doesUserHoldGoldenRecognition,
   handleGoldenGratitudeErrors,
@@ -355,7 +353,7 @@ async function respondToRecognitionMessage({ message, client }) {
       addReaction(client, message),
     ]);
   } catch (e) {
-    return handleError(client, message, e);
+    return handleAllErrors(client, message, e);
   }
 }
 
@@ -447,16 +445,6 @@ async function buildGratitudeFromReaction({ event, client }) {
   return { gratitude, originalMessage };
 }
 
-function handleError(client, message, e) {
-  if (e instanceof SlackError) {
-    return handleSlackError(client, message, e);
-  } else if (e instanceof GratitudeError) {
-    return handleGratitudeError(client, message, e);
-  } else {
-    return handleGenericError(client, message, e);
-  }
-}
-
 async function sendUserNotification(client, message, gratitude) {
   return client.chat.postEphemeral({
     channel: message.channel,
@@ -534,7 +522,6 @@ module.exports = {
   messageReactedTo,
   buildGratitudeObject,
   buildGratitudeFromReaction,
-  handleError,
   sendUserNotification,
   addReaction,
 };

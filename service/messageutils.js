@@ -52,6 +52,18 @@ async function handleGoldenGratitudeErrors(gratitude) {
   ].filter((x) => x !== "");
 }
 
+function handleAllErrors(client, message, e) {
+  if (e instanceof SlackError) {
+    return handleSlackError(client, message, e);
+  } else if (e instanceof GratitudeError) {
+    return handleGratitudeError(client, message, e);
+  } else if (e instanceof GoldenGratitudeError) {
+    return handleGoldenGratitudeErrors(client, message, e);
+  } else {
+    return handleGenericError(client, message, e);
+  }
+}
+
 async function receiverSlackNotification(gratitude, receiver) {
   const lifetimeTotal = await balance.lifetimeEarnings(receiver);
   const receiverBalance = await balance.currentBalance(receiver);
@@ -147,6 +159,14 @@ async function doesUserHoldGoldenRecognition(userId, rec) {
   return false;
 }
 
+function winstonInfo(info, func, message) {
+  winston.info(info, {
+    func: func,
+    callingUser: message.user,
+    slackMessage: message.text,
+  });
+}
+
 module.exports = {
   handleSlackError,
   handleGratitudeError,
@@ -157,4 +177,6 @@ module.exports = {
   receiverSlackNotification,
   composeReceiverNotificationText,
   doesUserHoldGoldenRecognition,
+  handleAllErrors,
+  winstonInfo,
 };

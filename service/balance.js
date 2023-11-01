@@ -1,6 +1,7 @@
 const config = require("../config");
 const winston = require("../winston");
 const moment = require("moment-timezone");
+const { winstonInfo } = require("./messageutils");
 
 const recognitionCollection = require("../database/recognitionCollection");
 const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
@@ -62,11 +63,11 @@ async function dailyGratitudeRemaining(user, timezone) {
 }
 
 async function respondToBalance({ message, client }) {
-  winston.info("@gratibot balance Called", {
-    func: "service.balance.respondToBalance",
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
+  winstonInfo(
+    "@gratibot balance Called",
+    "service.balance.respondToBalance",
+    message
+  );
 
   const userInfo = await client.users.info({ user: message.user });
   if (!userInfo.ok) {

@@ -5,6 +5,7 @@ const deductionCollection = require("../database/deductionCollection");
 const { userRegex } = require("../regex");
 const { redemptionAdmins } = require("../config");
 const monk = require("monk");
+const { winstonInfo } = require("./messageutils");
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();
@@ -58,10 +59,11 @@ async function isBalanceSufficent(user, deductionValue) {
 }
 
 async function respondToRefund({ message, client, admins = redemptionAdmins }) {
-  winston.info("@gratibot refund Called", {
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
+  winstonInfo(
+    "@gratibot refund Called",
+    "service.deduction.respondToRefund",
+    message
+  );
 
   if (!admins.includes(message.user)) {
     await sendMessage(
@@ -103,11 +105,11 @@ async function respondToRefund({ message, client, admins = redemptionAdmins }) {
 }
 
 async function respondToDeduction({ message, client }) {
-  winston.info("@gratibot deduction Called", {
-    func: "service.deduction.respondToDeduction",
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
+  winstonInfo(
+    "@gratibot deduction Called",
+    "service.deduction.respondToDeduction",
+    message
+  );
 
   const userInfo = await client.users.info({ user: message.user });
   if (!userInfo.ok) {

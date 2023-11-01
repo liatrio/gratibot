@@ -2,11 +2,8 @@ const winston = require("../winston");
 const config = require("../config");
 const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
 const { userInfo } = require("./apiwrappers");
-const { SlackError, GratitudeError } = require("./errors");
 const {
-  handleSlackError,
-  handleGratitudeError,
-  handleGenericError,
+  handleAllErrors,
   sendNotificationToReceivers,
 } = require("./messageutils");
 
@@ -77,13 +74,7 @@ async function respondToGoldenRecognitionMessage({ message, client }) {
 
     await validateAndSendGratitude(gratitude);
   } catch (e) {
-    if (e instanceof SlackError) {
-      return handleSlackError(client, message, e);
-    } else if (e instanceof GratitudeError) {
-      return handleGratitudeError(client, message, e);
-    } else {
-      return handleGenericError(client, message, e);
-    }
+    return handleAllErrors(client, message, e);
   }
 
   return Promise.all([

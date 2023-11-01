@@ -27,13 +27,11 @@ module.exports = function (app) {
   appMessage(app, "deduct", deduction.respondToDeduction);
 
   // Golden Recognition
-  appMessage(app, goldenRecognizeEmoji, respondToGoldenRecognitionMessage);
+  app.message(goldenRecognizeEmoji, respondToGoldenRecognitionMessage);
 
   // Help
   appMessage(app, "help", help.respondToHelp);
-
-  // Easter Eggs
-  appMessage(app, /(thunderfury|Thunderfury)/, help.respondToEasterEgg);
+  app.message(/(thunderfury|Thunderfury)/, help.respondToEasterEgg);
 
   // Auto Join
   app.event("channel_created", join.joinPublicChannel);
@@ -47,7 +45,7 @@ module.exports = function (app) {
   app.action(/metrics-\d+/, metrics.updateMetricsResponse);
 
   // Recognition
-  appMessage(app, recognizeEmoji, recognition.respondToRecognitionMessage);
+  app.message(recognizeEmoji, recognition.respondToRecognitionMessage);
   app.event(
     "reaction_added",
     reactionMatches(reactionEmoji),

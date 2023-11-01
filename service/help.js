@@ -94,6 +94,7 @@ Upon receiving the golden fistbump, the user will receive 20 fistbumps and will 
 `;
 
 async function respondToHelp({ message, client }) {
+  console.log(client)
   winston.info(`@gratibot help Called`, {
     func: "feature.help.respondToHelp",
     callingUser: message.user,
@@ -120,6 +121,9 @@ const thunderfuryResponse = [
 ].join(" ");
 
 async function respondToEasterEgg({ message, say }) {
+  if (message.bot_id) {
+    return
+  }
   winston.info(`Heard reference to thunderfury`, {
     func: "feature.help.respondToEasterEgg",
     callingUser: message.user,

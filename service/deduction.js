@@ -63,40 +63,42 @@ async function respondToRefund({ message, client, admins = redemptionAdmins }) {
     slackMessage: message.text,
   });
 
-  const messageText = message.text.split(" ");
+  if (!admins.includes(message.user)) {
+    await sendMessage(
+      client,
+      message.channel,
+      message.user,
+      "Only `Redemption Admins` can use the refund command"
+    );
+    return;
+  }
 
-  if (admins.includes(message.user)) {
-    try {
-      const result = await refundDeduction(messageText[2]);
+  try {
+    const result = await refundDeduction(message.text.split(" ")[2]);
 
-      if (result) {
-        await client.chat.postMessage({
-          channel: message.channel,
-          user: message.user,
-          text: "Refund Successfully given",
-        });
-      } else {
-        await client.chat.postMessage({
-          channel: message.channel,
-          user: message.user,
-          text: "Deduction not found or refund failed",
-        });
-      }
-    } catch (error) {
-      // Handle any errors that occur during the refund operation
-      console.error("Refund error:", error);
-      await client.chat.postMessage({
-        channel: message.channel,
-        user: message.user,
-        text: "An error occurred while processing the refund",
-      });
+    if (result) {
+      await sendMessage(
+        client,
+        message.channel,
+        message.user,
+        "Refund Successfully given"
+      );
+    } else {
+      await sendMessage(
+        client,
+        message.channel,
+        message.user,
+        "Deduction not found or refund failed"
+      );
     }
-  } else {
-    await client.chat.postMessage({
-      channel: message.channel,
-      user: message.user,
-      text: "Only `Redemption Admins` can use the refund command",
-    });
+  } catch (error) {
+    console.error("Refund error:", error);
+    await sendMessage(
+      client,
+      message.channel,
+      message.user,
+      "An error occurred while processing the refund"
+    );
   }
 }
 
@@ -115,20 +117,22 @@ async function respondToDeduction({ message, client }) {
       slackMessage: message.text,
       error: userInfo.error,
     });
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
-      text: `Something went wrong while creating your deduction. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
-    });
+    await sendEphemeralMessage(
+      client,
+      message.channel,
+      message.user,
+      `Something went wrong while creating your deduction. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`
+    );
     return;
   }
 
   if (!redemptionAdmins.includes(message.user)) {
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
-      text: `You are not allowed to create deductions.`,
-    });
+    await sendEphemeralMessage(
+      client,
+      message.channel,
+      message.user,
+      `You are not allowed to create deductions.`
+    );
     return;
   }
 
@@ -139,11 +143,12 @@ async function respondToDeduction({ message, client }) {
     !userRegex.test(messageText[2]) ||
     isNaN(+messageText[3])
   ) {
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
-      text: `You must specify a user and value to deduct. Example: \`@gratibot deduct @user 5\``,
-    });
+    await sendEphemeralMessage(
+      client,
+      message.channel,
+      message.user,
+      `You must specify a user and value to deduct. Example: \`@gratibot deduct @user 5\``
+    );
     return;
   }
 
@@ -151,20 +156,38 @@ async function respondToDeduction({ message, client }) {
   const value = +messageText[3];
 
   if (!(await isBalanceSufficent(user, value))) {
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
-      text: `<@${user}> does not have a large enough balance to deduct ${value} fistbumps.`,
-    });
+    await sendEphemeralMessage(
+      client,
+      message.channel,
+      message.user,
+      `<@${user}> does not have a large enough balance to deduct ${value} fistbumps.`
+    );
     return;
   }
 
   const deductionInfo = await createDeduction(user, value, message.text);
 
+  await sendMessage(
+    client,
+    message.channel,
+    message.user,
+    `A deduction of ${value} fistbumps has been made for <@${user}>. Deduction ID is \`${deductionInfo._id}\``
+  );
+}
+
+async function sendMessage(client, channel, user, text) {
   await client.chat.postMessage({
-    channel: message.channel,
-    user: message.user,
-    text: `A deduction of ${value} fistbumps has been made for <@${user}>. Deduction ID is \`${deductionInfo._id}\``,
+    channel,
+    user,
+    text,
+  });
+}
+
+async function sendEphemeralMessage(client, channel, user, text) {
+  await client.chat.postEphemeral({
+    channel,
+    user,
+    text,
   });
 }
 
@@ -175,4 +198,6 @@ module.exports = {
   isBalanceSufficent,
   respondToRefund,
   respondToDeduction,
+  sendMessage,
+  sendEphemeralMessage,
 };

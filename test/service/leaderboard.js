@@ -1,3 +1,6 @@
+// FIX: All tests here are currently throwing the following error:
+// Error: Timeout of 2000ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.
+
 // const sinon = require("sinon");
 // const expect = require("chai").expect;
 

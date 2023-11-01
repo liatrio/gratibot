@@ -5,7 +5,7 @@ const goldenRecognitionCollection = require("../database/goldenRecognitionCollec
 const balance = require("./balance");
 const { SlackError, GratitudeError } = require("./errors");
 const winston = require("../winston");
-const { userInfo } = require("./apiwrappers");
+const { userInfo, winstonInfo, winstonDebug } = require("./apiwrappers");
 const {
   handleAllErrors,
   sendNotificationToReceivers,
@@ -330,21 +330,18 @@ async function giverSlackNotification(gratitude) {
 }
 
 async function respondToRecognitionMessage({ message, client }) {
-  winston.info(`Heard reference to ${recognizeEmoji}`, {
-    func: "service.recognition.respondToRecognitionMessage",
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
+  winstonInfo(
+    `Heard reference to ${recognizeEmoji}`,
+    "service.recognition.respondToRecognitionMessage",
+    message
+  );
   try {
     const gratitude = await buildGratitudeObject({ message, client });
     await validateAndSendGratitude(gratitude);
-    winston.debug(
+    winstonDebug(
       `validated and stored message recognitions from ${gratitude.giver}`,
-      {
-        func: "service.recognition.respondToRecognitionMessage",
-        callingUser: message.user,
-        slackMessage: message.text,
-      }
+      "service.recognition.respondToRecognitionMessage",
+      message
     );
 
     return Promise.all([
@@ -358,11 +355,11 @@ async function respondToRecognitionMessage({ message, client }) {
 }
 
 async function respondToRecognitionReaction({ event, client }) {
-  winston.info(`Saw a reaction containing ${reactionEmoji}`, {
-    func: "service.recognition.respondToRecognitionReaction",
-    callingUser: event.user,
-    reactionEmoji: event.reaction,
-  });
+  winstonInfo(
+    `Saw a reaction containing ${reactionEmoji}`,
+    "service.recognition.respondToRecognitionReaction",
+    event
+  );
   try {
     event.channel = event.item.channel;
     const { gratitude, originalMessage } = await buildGratitudeFromReaction({
@@ -375,13 +372,10 @@ async function respondToRecognitionReaction({ event, client }) {
     }
 
     await validateAndSendGratitude(gratitude);
-    winston.debug(
-      `validated and stored reaction recognitions from ${gratitude.giver}`,
-      {
-        func: "service.recognition.respondToRecognitionReaction",
-        callingUser: event.user,
-        slackMessage: event.reactions,
-      }
+    winstonDebug(
+      `validated and stored message recognitions from ${gratitude.giver}`,
+      "service.recognition.respondToRecognitionReaction",
+      event
     );
 
     return Promise.all([

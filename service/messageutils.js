@@ -18,7 +18,7 @@ async function handleSlackError(client, message, error) {
 }
 
 async function handleGratitudeError(client, message, error) {
-  winston.info("Rejected gratitude request as invalid", {
+  winston.error("Rejected gratitude request as invalid", {
     gratitudeErrors: error.gratitudeErrors,
   });
   const errorString = error.gratitudeErrors.join("\n");
@@ -158,24 +158,15 @@ async function doesUserHoldGoldenRecognition(userId, rec) {
   return false;
 }
 
-function winstonInfo(info, func, message) {
-  winston.info(info, {
-    func: func,
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
-}
-
 module.exports = {
   handleSlackError,
   handleGratitudeError,
   handleGenericError,
   handleGoldenGratitudeErrors,
-  sendNotificationToReceivers,
-  getRecieverMessage,
   receiverSlackNotification,
   composeReceiverNotificationText,
+  sendNotificationToReceivers,
+  getRecieverMessage,
   doesUserHoldGoldenRecognition,
   handleAllErrors,
-  winstonInfo,
 };

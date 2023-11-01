@@ -1,7 +1,7 @@
 const config = require("../config");
 const winston = require("../winston");
 const moment = require("moment-timezone");
-const { winstonInfo } = require("./messageutils");
+const { winstonInfo, winstonError } = require("./apiwrappers");
 
 const recognitionCollection = require("../database/recognitionCollection");
 const goldenRecognitionCollection = require("../database/goldenRecognitionCollection");
@@ -71,12 +71,12 @@ async function respondToBalance({ message, client }) {
 
   const userInfo = await client.users.info({ user: message.user });
   if (!userInfo.ok) {
-    winston.error("Slack API returned error from users.info", {
-      func: "service.balance.respondToBalance",
-      callingUser: message.user,
-      slackMessage: message.text,
-      error: userInfo.error,
-    });
+    winstonError(
+      "Slack API returned error from users.info",
+      "service.balance.respondToBalance",
+      message,
+      userInfo
+    );
     await client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,

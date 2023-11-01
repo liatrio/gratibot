@@ -5,7 +5,7 @@ const deductionCollection = require("../database/deductionCollection");
 const { userRegex } = require("../regex");
 const { redemptionAdmins } = require("../config");
 const monk = require("monk");
-const { winstonInfo } = require("./messageutils");
+const { winstonInfo, winstonError } = require("./apiwrappers");
 
 async function createDeduction(user, value, message = "") {
   let timestamp = new Date();
@@ -113,12 +113,12 @@ async function respondToDeduction({ message, client }) {
 
   const userInfo = await client.users.info({ user: message.user });
   if (!userInfo.ok) {
-    winston.error("Slack API returned error from users.info", {
-      func: "service.deduction.respondToDeduction",
-      callingUser: message.user,
-      slackMessage: message.text,
-      error: userInfo.error,
-    });
+    winstonError(
+      "Slack API returned error from users.info",
+      "service.deduction.respondToDeduction",
+      message,
+      userInfo
+    );
     await sendEphemeralMessage(
       client,
       message.channel,

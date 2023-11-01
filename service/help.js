@@ -5,6 +5,7 @@ const {
   goldenRecognizeEmoji,
 } = require("../config");
 const winston = require("../winston");
+const { winstonInfo } = require("./apiwrappers");
 
 const helpMarkdown = `
 :wave: Hi there! Let's take a look at what I can do!
@@ -94,11 +95,8 @@ Upon receiving the golden fistbump, the user will receive 20 fistbumps and will 
 `;
 
 async function respondToHelp({ message, client }) {
-  winston.info("@gratibot help Called", {
-    func: "feature.help.respondToHelp",
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
+  winstonInfo("@gratibot help Called", "feature.help.respondToHelp", message);
+
   await client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
@@ -120,10 +118,11 @@ const thunderfuryResponse = [
 ].join(" ");
 
 async function respondToEasterEgg({ message, say }) {
-  winston.info("heard reference to thunderfury", {
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
+  winstonInfo(
+    "heard reference to thunderfury",
+    "feature.help.respondToEasterEgg",
+    message
+  );
 
   await say(thunderfuryResponse);
 

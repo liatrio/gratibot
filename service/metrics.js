@@ -2,6 +2,7 @@ const winston = require("../winston");
 const moment = require("moment-timezone");
 
 const recognition = require("./recognition");
+const { winstonInfo } = require("./apiwrappers");
 
 async function createMetricsBlocks(timeRange) {
   let blocks = [];
@@ -181,11 +182,11 @@ function aggregateData(response, timeRange) {
 }
 
 async function respondToMetrics({ message, client }) {
-  winston.info("@gratibot metrics Called", {
-    func: "service.metrics.respondToMetrics",
-    callingUser: message.user,
-    slackMessage: message.text,
-  });
+  winstonInfo(
+    "@gratibot metrics Called",
+    "service.metrics.respondToMetrics",
+    message
+  );
   await client.chat.postEphemeral({
     channel: message.channel,
     user: message.user,
@@ -201,10 +202,11 @@ async function respondToMetrics({ message, client }) {
 
 async function updateMetricsResponse({ ack, body, action, respond }) {
   await ack();
-  winston.info("Gratibot interactive metrics button clicked", {
-    func: "service.metrics.updateMetricsResponse",
-    callingUser: body.user.id,
-  });
+  winstonInfo(
+    "Gratibot interactive metrics button clicked",
+    "service.metrics.updateMetricsResponse",
+    body
+  );
 
   await respond({
     blocks: await createMetricsBlocks(action.value),

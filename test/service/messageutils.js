@@ -112,9 +112,7 @@ describe("service/messageutils", () => {
   //     sinon.stub(messageutils, "sendNotificationToReceivers").resolves({}); // Stub the sendNotificationToReceivers function
   //     const receiverMessageStub = sinon.stub().returns('test');
   //     sinon.stub(messageutils, 'getRecieverMessage').callsFake(receiverMessageStub);
-  
   //     await messageutils.sendNotificationToReceivers(testClient, testGratitude);
-  
   //     // Checks that the function passed to it was called twice (specifically 'testClient.chat.postMessage')
   //     // This means sendNotificationToReceivers sent a message to each of the two receivers in the test.
   //     expect(testClient.chat.postMessage.calledTwice).to.be.true;

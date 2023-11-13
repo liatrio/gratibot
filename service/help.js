@@ -139,6 +139,8 @@ async function respondToEasterEgg({ message, say }) {
 }
 
 module.exports = {
+  thunderfuryResponse,
+  helpMarkdown,
   respondToHelp,
   respondToEasterEgg,
 };

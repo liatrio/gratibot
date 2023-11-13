@@ -1,6 +1,6 @@
 const winston = require("../winston");
 const recognition = require("./recognition");
-const { goldenFistbumpHolder } = require("./golden-recognition");
+const golden_recognition = require("./golden-recognition");
 
 const rank = [
   "1st",
@@ -27,7 +27,7 @@ async function createLeaderboardBlocks(timeRange) {
   const { giverScores, receiverScores } = await leaderboardScoreData(timeRange);
 
   blocks.push(leaderboardHeader());
-  blocks.push(await goldenFistbumpHolder());
+  blocks.push(await golden_recognition.goldenFistbumpHolder());
   blocks.push(topGivers(giverScores));
   blocks.push(topReceivers(receiverScores));
   blocks.push(timeRangeInfo(timeRange));

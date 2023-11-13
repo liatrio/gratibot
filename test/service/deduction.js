@@ -106,35 +106,33 @@ describe("service/deduction", () => {
     });
   });
 
-  // FIX: This is currently throwing the following error:
-  // Error: Timeout of 2000ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.
-
   describe("respondToRefund", () => {
-    // it("should return a successful refund message to user", async () => {
-    //   const testMessage = {
-    //     user: "testAdmin",
-    //     channel: "testchannel",
-    //     text: "@gratibot refund 62171d78b5daaa0011771cfd",
-    //   };
-    //   const testClient = {
-    //     chat: {
-    //       postMessage: sinon.stub().resolves({}),
-    //     },
-    //   };
-    //   const testAdmins = ["testAdmin"];
-    //   const testObject = {
-    //     message: testMessage,
-    //     client: testClient,
-    //     admins: testAdmins,
-    //   };
-    //   sinon.stub(deduction, "refundDeduction").resolves(true);
-    //   await deduction.respondToRefund(testObject);
-    //   sinon.assert.calledWith(testClient.chat.postMessage, {
-    //     channel: testMessage.channel,
-    //     user: testMessage.user,
-    //     text: "Refund Successfully given",
-    //   });
-    // });
+    it("should return a successful refund message to user", async () => {
+      const testMessage = {
+        user: "testAdmin",
+        channel: "testchannel",
+        text: "@gratibot refund 62171d78b5daaa0011771cfd",
+      };
+      const testClient = {
+        chat: {
+          postMessage: sinon.stub(),
+        },
+      };
+      const testAdmins = ["testAdmin"];
+      const testObject = {
+        message: testMessage,
+        client: testClient,
+        admins: testAdmins,
+      };
+      sinon.stub(deductionCollection, "findOneAndUpdate").resolves(true);
+
+      await deduction.respondToRefund(testObject);
+      sinon.assert.calledWith(testClient.chat.postMessage, {
+        channel: testMessage.channel,
+        user: testMessage.user,
+        text: "Refund Successfully given",
+      });
+    });
 
     it("should return a message informing user that they must be redemption admin", async () => {
       const testMessage = {

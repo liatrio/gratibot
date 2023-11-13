@@ -91,10 +91,10 @@ describe("service/messageutils", () => {
   // Error: Timeout of 2000ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.
 
   // describe("sendNotificationToReceivers", () => {
-  //   it("should send a message to each receiver", () => {
+  //   it('should send notifications to all receivers', async () => {
   //     const testClient = {
   //       chat: {
-  //         postMessage: sinon.stub(),
+  //         postMessage: sinon.stub().resolves({}),
   //       },
   //     };
   //     const testGratitude = {
@@ -107,25 +107,26 @@ describe("service/messageutils", () => {
   //         },
   //       ],
   //     };
-  //     sinon
-  //       .stub(messageutils, "receiverSlackNotification")
-  //       .returns({ test: "test" });
-  //     return expect(
-  //       messageutils.sendNotificationToReceivers(testClient, testGratitude)
-  //     ).to.eventually.be.fulfilled.then(() => {
-  //       // Checks that the function passed to it was called twice (specifically 'testClient.chat.postMessage')
-  //       // This means sendNotificationToReceivers sent a message to each of the two receivers in the test.
-  //       sinon.assert.calledTwice(testClient.chat.postMessage);
-  //       sinon.assert.calledWith(testClient.chat.postMessage, {
-  //         channel: testGratitude.receivers[0].id,
-  //         text: "You earned a :fistbump:.",
-  //         test: "test",
-  //       });
-  //       sinon.assert.calledWith(testClient.chat.postMessage, {
-  //         channel: testGratitude.receivers[1].id,
-  //         text: "You earned a :fistbump:.",
-  //         test: "test",
-  //       });
+
+  //     sinon.stub(messageutils, "receiverSlackNotification").resolves({}); // Stub the receiverSlackNotification function
+  //     sinon.stub(messageutils, "sendNotificationToReceivers").resolves({}); // Stub the sendNotificationToReceivers function
+  //     const receiverMessageStub = sinon.stub().returns('test');
+  //     sinon.stub(messageutils, 'getRecieverMessage').callsFake(receiverMessageStub);
+  
+  //     await messageutils.sendNotificationToReceivers(testClient, testGratitude);
+  
+  //     // Checks that the function passed to it was called twice (specifically 'testClient.chat.postMessage')
+  //     // This means sendNotificationToReceivers sent a message to each of the two receivers in the test.
+  //     expect(testClient.chat.postMessage.calledTwice).to.be.true;
+  //     expect(testClient.chat.postMessage.getCall(0).args[0]).to.deep.equal({
+  //       channel: testGratitude.receivers[0].id,
+  //       text: "You earned a :fistbump:.",
+  //       test: "test",
+  //     });
+  //     expect(testClient.chat.postMessage.getCall(1).args[0]).to.deep.equal({
+  //       channel: testGratitude.receivers[1].id,
+  //       text: "You earned a :fistbump:.",
+  //       test: "test",
   //     });
   //   });
   // });

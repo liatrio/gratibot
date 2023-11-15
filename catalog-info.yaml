@@ -6,6 +6,8 @@ metadata:
   annotations:
     github.com/project-slug: 'liatrio/gratibot'
     backstage.io/techdocs-ref: 'url:https://github.com/liatrio/gratibot'
+    azure.com/tag-selector: 'backstage-azure-resource/data'
+    
   tags:
     - node
     - javascript

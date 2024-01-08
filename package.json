@@ -34,7 +34,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
-    "mocha-suppress-logs": "^0.3.1",
+    "mocha-suppress-logs": "^0.4.1",
     "nyc": "^15.1.0",
     "prettier": "^2.8.8",
     "semantic-release": "^22.0.5",

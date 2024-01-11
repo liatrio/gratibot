@@ -15,30 +15,30 @@
     "semantic-release": "semantic-release"
   },
   "dependencies": {
-    "@slack/bolt": "^3.14.0",
+    "@slack/bolt": "^3.17.0",
     "express": "^4.18.2",
     "moment-timezone": "^0.5.43",
     "monk": "^7.3.1",
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.8.0",
-    "@commitlint/config-conventional": "^18.0.0",
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "chai": "^4.3.10",
     "chai-as-promised": "^7.1.1",
     "chance": "^1.1.11",
-    "eslint": "^8.51.0",
+    "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
-    "mocha-suppress-logs": "^0.3.1",
+    "mocha-suppress-logs": "^0.4.1",
     "nyc": "^15.1.0",
     "prettier": "^2.8.8",
     "semantic-release": "^22.0.5",
-    "sinon": "^16.1.0"
+    "sinon": "^17.0.1"
   },
   "commitlint": {
     "extends": [

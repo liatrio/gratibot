@@ -37,7 +37,7 @@
     "mocha-suppress-logs": "^0.4.1",
     "nyc": "^15.1.0",
     "prettier": "^2.8.8",
-    "semantic-release": "^22.0.5",
+    "semantic-release": "^23.0.0",
     "sinon": "^17.0.1"
   },
   "commitlint": {

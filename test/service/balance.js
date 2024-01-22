@@ -18,7 +18,7 @@ describe("service/balance", () => {
 
       const result = await balance.dailyGratitudeRemaining(
         "ExemptUser",
-        "America/Los_Angeles"
+        "America/Los_Angeles",
       );
 
       expect(result).to.equal(Infinity);
@@ -29,7 +29,7 @@ describe("service/balance", () => {
 
       const result = await balance.dailyGratitudeRemaining(
         "User",
-        "America/Los_Angeles"
+        "America/Los_Angeles",
       );
 
       expect(result).to.equal(9);

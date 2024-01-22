@@ -24,7 +24,7 @@ describe("service/redeem", () => {
         itemCost: 100,
       };
       const actualSelectedItemDetails = redeem.getSelectedItemDetails(
-        '{"name": "testName", "cost": 100}'
+        '{"name": "testName", "cost": 100}',
       );
       expect(actualSelectedItemDetails).to.deep.eq(expectedItemDetails);
     });

@@ -9,7 +9,7 @@ module.exports = function (app) {
   app.message(
     "redeem",
     anyOf(directMention(), directMessage()),
-    respondToRedeem
+    respondToRedeem,
   );
   app.action({ action_id: "redeem" }, redeemItem);
 };
@@ -41,7 +41,7 @@ async function redeemItem({ ack, body, context, client }) {
       types: "mpim, im",
     });
     const { itemName, itemCost } = redeem.getSelectedItemDetails(
-      body.actions[0].selected_option.value
+      body.actions[0].selected_option.value,
     );
     if (!(await deduction.isBalanceSufficent(userID, itemCost))) {
       return client.chat.postEphemeral({
@@ -59,7 +59,7 @@ async function redeemItem({ ack, body, context, client }) {
       const deductionInfo = await deduction.createDeduction(
         userID,
         itemCost,
-        redemptionMessage
+        redemptionMessage,
       );
       redemptionMessage += ` Deduction ID is \`${deductionInfo._id}\``;
     }

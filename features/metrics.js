@@ -7,7 +7,7 @@ module.exports = function (app) {
   app.message(
     "metrics",
     anyOf(directMessage(), directMention()),
-    respondToMetrics
+    respondToMetrics,
   );
   app.action(/metrics-\d+/, updateMetricsResponse);
 };

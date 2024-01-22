@@ -216,7 +216,7 @@ function leaderboardEntry(entry, index) {
 async function leaderboardScoreData(timeRange) {
   const recognitionData = await recognition.getPreviousXDaysOfRecognition(
     "America/Los_Angeles",
-    timeRange
+    timeRange,
   );
   return aggregateData(recognitionData);
 }

@@ -26,7 +26,7 @@ async function createDeduction(user, value, message = "") {
 async function refundDeduction(id) {
   return await deductionCollection.findOneAndUpdate(
     { _id: monk.id(id) },
-    { $set: { refund: true } }
+    { $set: { refund: true } },
   );
 }
 

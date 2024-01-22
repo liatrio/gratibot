@@ -7,7 +7,7 @@ module.exports = function (app) {
   app.message(
     "leaderboard",
     anyOf(directMessage(), directMention()),
-    respondToLeaderboard
+    respondToLeaderboard,
   );
   app.action(/leaderboard-\d+/, updateLeaderboardResponse);
 };

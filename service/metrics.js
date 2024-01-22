@@ -123,7 +123,7 @@ function timeRangeButtons() {
 async function metricsChartData(timeRange) {
   const recognitionData = await recognition.getPreviousXDaysOfRecognition(
     "America/Los_Angeles",
-    timeRange
+    timeRange,
   );
   const chart = {
     type: "bar",

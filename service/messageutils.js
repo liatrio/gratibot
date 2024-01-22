@@ -46,7 +46,7 @@ async function sendNotificationToReceivers(client, gratitude) {
       text: getRecieverMessage(gratitude),
       ...(await recognition.receiverSlackNotification(
         gratitude,
-        gratitude.receivers[i].id
+        gratitude.receivers[i].id,
       )),
     });
   }

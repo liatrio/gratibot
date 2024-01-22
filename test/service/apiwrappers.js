@@ -12,7 +12,7 @@ describe("service/apiwrappers", () => {
               resolve({
                 ok: true,
                 user: obj.user,
-              })
+              }),
             );
           },
         },
@@ -30,7 +30,7 @@ describe("service/apiwrappers", () => {
               resolve({
                 ok: false,
                 user: obj.user,
-              })
+              }),
             );
           },
         },

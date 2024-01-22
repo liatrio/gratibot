@@ -49,7 +49,7 @@ describe("service/recognition", () => {
       const userHoldsGoldenRecognition =
         await recognition.doesUserHoldGoldenRecognition(
           "Receiver",
-          "recognizee"
+          "recognizee",
         );
       expect(userHoldsGoldenRecognition).to.be.true;
     });
@@ -67,7 +67,7 @@ describe("service/recognition", () => {
       const userHoldsGoldenRecognition =
         await recognition.doesUserHoldGoldenRecognition(
           "Receiver2",
-          "recognizee"
+          "recognizee",
         );
       expect(userHoldsGoldenRecognition).to.be.false;
     });
@@ -78,7 +78,7 @@ describe("service/recognition", () => {
       const userHoldsGoldenRecognition =
         await recognition.doesUserHoldGoldenRecognition(
           "Receiver",
-          "recognizee"
+          "recognizee",
         );
       expect(userHoldsGoldenRecognition).to.be.false;
     });
@@ -113,10 +113,10 @@ describe("service/recognition", () => {
       const message = await recognition.composeReceiverNotificationText(
         gratitude,
         "TestUser",
-        10
+        10,
       );
       expect(message).to.equal(
-        "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890",
       );
     });
 
@@ -148,10 +148,10 @@ describe("service/recognition", () => {
       const message = await recognition.composeReceiverNotificationText(
         gratitude,
         "TestUser",
-        10
+        10,
       );
       expect(message).to.equal(
-        "Congratulations, You just got the :goldenfistbump: from <@Giver> in <#TestChannel>, and are now the holder of the Golden Fistbump! You earned `1` and your new balance is `10`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+        "Congratulations, You just got the :goldenfistbump: from <@Giver> in <#TestChannel>, and are now the holder of the Golden Fistbump! You earned `1` and your new balance is `10`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>:fistbump: <@Receiver> Test Message 1234567890",
       );
     });
 
@@ -190,10 +190,10 @@ describe("service/recognition", () => {
       const message = await recognition.composeReceiverNotificationText(
         gratitude,
         "test",
-        10
+        10,
       );
       expect(message).to.equal(
-        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :goldenfistbump::goldenfistbump::goldenfistbump::goldenfistbump: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890"
+        "You just got a :fistbump: from <@Giver> in <#TestChannel>. With :goldenfistbump::goldenfistbump::goldenfistbump::goldenfistbump: multiplier you earned `2` and your new balance is `10`\n>>>:fistbump: <@Receiver> Test Message 1234567890",
       );
     });
   });
@@ -208,7 +208,7 @@ describe("service/recognition", () => {
         "Receiver",
         "Test Message",
         "Test Channel",
-        ["Test Tag"]
+        ["Test Tag"],
       );
 
       const object = {
@@ -237,7 +237,7 @@ describe("service/recognition", () => {
       await recognition.countRecognitionsReceived(
         "User",
         "America/Los_Angeles",
-        2
+        2,
       );
 
       const filter = {
@@ -265,7 +265,7 @@ describe("service/recognition", () => {
       await recognition.countRecognitionsGiven(
         "User",
         "America/Los_Angeles",
-        2
+        2,
       );
 
       const filter = {
@@ -1342,9 +1342,8 @@ describe("service/recognition", () => {
         ],
       };
 
-      const response = await recognition.giverGoldenSlackNotification(
-        gratitude
-      );
+      const response =
+        await recognition.giverGoldenSlackNotification(gratitude);
 
       expect(response).to.deep.equal(expectedResponse);
     });
@@ -1356,7 +1355,7 @@ describe("service/recognition", () => {
       sinon
         .stub(recognition, "composeReceiverNotificationText")
         .resolves(
-          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message"
+          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `5`\n>>>Test Message",
         );
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
         recognizer: "Giver",
@@ -1395,7 +1394,7 @@ describe("service/recognition", () => {
 
       const response = await recognition.receiverSlackNotification(
         gratitude,
-        "ReceiverX"
+        "ReceiverX",
       );
 
       expect(response).to.deep.equal(expectedResponse);
@@ -1407,7 +1406,7 @@ describe("service/recognition", () => {
       sinon
         .stub(recognition, "composeReceiverNotificationText")
         .resolves(
-          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message"
+          "You just got a :fistbump: from <@Giver> in <#TestChannel>. You earned `1` and your new balance is `1`\n>>>Test Message",
         );
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
         recognizer: "Giver",
@@ -1453,7 +1452,7 @@ describe("service/recognition", () => {
 
       const response = await recognition.receiverSlackNotification(
         gratitude,
-        "ReceiverX"
+        "ReceiverX",
       );
 
       expect(response).to.deep.equal(expectedResponse);

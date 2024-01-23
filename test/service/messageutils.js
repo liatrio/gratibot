@@ -52,7 +52,7 @@ describe("service/messageutils", () => {
       await messageutils.handleGratitudeError(
         testClient,
         testMessage,
-        testError
+        testError,
       );
       sinon.assert.calledWith(testClient.chat.postEphemeral, {
         channel: testMessage.channel,
@@ -107,7 +107,7 @@ describe("service/messageutils", () => {
         .stub(recognition, "receiverSlackNotification")
         .returns({ test: "test" });
       return expect(
-        messageutils.sendNotificationToReceivers(testClient, testGratitude)
+        messageutils.sendNotificationToReceivers(testClient, testGratitude),
       ).to.eventually.be.fulfilled.then(() => {
         // Checks that the function passed to it was called twice (specifically 'testClient.chat.postMessage')
         // This means sendNotificationToReceivers sent a message to each of the two receivers in the test.
@@ -134,7 +134,7 @@ describe("service/messageutils", () => {
       const actualReceiverMessage =
         messageutils.getRecieverMessage(testGratitude);
       expect(actualReceiverMessage).to.eq(
-        `You earned a ${goldenRecognizeEmoji}!!!`
+        `You earned a ${goldenRecognizeEmoji}!!!`,
       );
     });
     it("should get fistbump message", () => {

@@ -7,7 +7,7 @@ module.exports = function (app) {
   app.message(
     "balance",
     anyOf(directMention(), directMessage()),
-    respondToBalance
+    respondToBalance,
   );
 };
 
@@ -39,7 +39,7 @@ async function respondToBalance({ message, client }) {
   const remainingToday = await balance.dailyGratitudeRemaining(
     message.user,
     userInfo.user.tz,
-    1
+    1,
   );
 
   const response = [

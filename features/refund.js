@@ -9,6 +9,6 @@ module.exports = function (app) {
   app.message(
     "refund",
     anyOf(directMention(), directMessage()),
-    refund.respondToRefund
+    refund.respondToRefund,
   );
 };

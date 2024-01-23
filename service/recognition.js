@@ -20,7 +20,7 @@ const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
 const gratitudeEmojiRegex = new RegExp(config.recognizeEmoji, "g");
 const multiplierRegex = new RegExp(
-  `${config.recognizeEmoji}\\s*x([0-9]+)|x([0-9]+)\\s${config.recognizeEmoji}`
+  `${config.recognizeEmoji}\\s*x([0-9]+)|x([0-9]+)\\s${config.recognizeEmoji}`,
 );
 
 // TODO Can we add a 'count' field to the recognition?
@@ -30,7 +30,7 @@ async function giveRecognition(
   message,
   channel,
   values,
-  type = recognizeEmoji
+  type = recognizeEmoji,
 ) {
   let timestamp = new Date();
 
@@ -99,7 +99,7 @@ async function countRecognitionsGiven(user, timezone = null, days = null) {
 async function getGoldenFistbumpHolder() {
   const goldenRecognition = await goldenRecognitionCollection.findOne(
     {},
-    { sort: { timestamp: -1 } }
+    { sort: { timestamp: -1 } },
   );
   if (!goldenRecognition) {
     return {
@@ -118,7 +118,7 @@ async function getGoldenFistbumpHolder() {
 async function doesUserHoldGoldenRecognition(userId, rec) {
   const goldenRecognition = await goldenRecognitionCollection.findOne(
     {},
-    { sort: { timestamp: -1 } }
+    { sort: { timestamp: -1 } },
   );
 
   if (!goldenRecognition) {
@@ -163,19 +163,19 @@ async function groupUsers(client, groupId) {
   throw new SlackError(
     "usergroups.users.list",
     response.error,
-    `Something went wrong while sending recognition. When retreiving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+    `Something went wrong while sending recognition. When retreiving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
   );
 }
 
 async function gratitudeReceiverIdsIn(client, text) {
   let users = (text.match(userRegex) || []).map((userMention) =>
-    userMention.slice(2, -1)
+    userMention.slice(2, -1),
   );
   let groups = (text.match(groupRegex) || []).map((groupMention) =>
     groupMention.substring(
       groupMention.indexOf("^") + 1,
-      groupMention.lastIndexOf("|")
-    )
+      groupMention.lastIndexOf("|"),
+    ),
   );
   for (let i = 0; i < groups.length; i++) {
     users = users.concat(await groupUsers(client, groups[i]));
@@ -209,11 +209,11 @@ async function isGratitudeAffordable(gratitude) {
   }
   const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
     gratitude.giver.id,
-    gratitude.giver.tz
+    gratitude.giver.tz,
   );
   if (gratitude.giver_in_receivers) {
     gratitude.receivers = gratitude.receivers.filter(
-      (x) => x.id !== gratitude.giver.id
+      (x) => x.id !== gratitude.giver.id,
     );
   }
   const gratitudeCost = gratitude.receivers.length * gratitude.count;
@@ -268,7 +268,7 @@ async function giveGratitude(gratitude) {
 
   if (gratitude.giver_in_receivers) {
     gratitude.receivers = gratitude.receivers.filter(
-      (x) => x.id !== gratitude.giver.id
+      (x) => x.id !== gratitude.giver.id,
     );
   }
 
@@ -281,15 +281,15 @@ async function giveGratitude(gratitude) {
           gratitude.trimmedMessage,
           gratitude.channel,
           gratitude.tags,
-          gratitude.type
-        )
+          gratitude.type,
+        ),
       );
     } else {
       let extraRecognitions = 0;
       if (
         await doesUserHoldGoldenRecognition(
           gratitude.receivers[i].id,
-          "recognizee"
+          "recognizee",
         )
       ) {
         extraRecognitions = gratitude.count;
@@ -302,8 +302,8 @@ async function giveGratitude(gratitude) {
             gratitude.receivers[i].id,
             gratitude.trimmedMessage,
             gratitude.channel,
-            gratitude.tags
-          )
+            gratitude.tags,
+          ),
         );
       }
 
@@ -314,8 +314,8 @@ async function giveGratitude(gratitude) {
             gratitude.receivers[i].id,
             gratitude.trimmedMessage,
             gratitude.channel,
-            gratitude.tags
-          )
+            gratitude.tags,
+          ),
         );
       }
     }
@@ -344,7 +344,7 @@ async function validateAndSendGratitude(gratitude) {
 async function giverSlackNotification(gratitude) {
   const gratitudeRemaining = await balance.dailyGratitudeRemaining(
     gratitude.giver.id,
-    gratitude.giver.tz
+    gratitude.giver.tz,
   );
   const totalGratitudeValue = gratitude.count * gratitude.receivers.length;
   let blocks = [];
@@ -391,7 +391,7 @@ async function receiverSlackNotification(gratitude, receiver) {
   const receiverNotificationText = await composeReceiverNotificationText(
     gratitude,
     receiver,
-    receiverBalance
+    receiverBalance,
   );
   blocks.push({
     type: "section",
@@ -416,7 +416,7 @@ async function receiverSlackNotification(gratitude, receiver) {
 async function composeReceiverNotificationText(
   gratitude,
   receiver,
-  receiverBalance
+  receiverBalance,
 ) {
   if (gratitude.type === goldenRecognizeEmoji) {
     return `Congratulations, You just got the ${gratitude.type} from <@${gratitude.giver.id}> in <#${gratitude.channel}>, and are now the holder of the Golden Fistbump! You earned \`${gratitude.count}\` and your new balance is \`${receiverBalance}\`. While you hold the Golden Fistbump you will receive a 2X multiplier on all fistbumps received!\n>>>${gratitude.message}`;
@@ -424,7 +424,7 @@ async function composeReceiverNotificationText(
 
   const goldenRecognitionReceiver = await doesUserHoldGoldenRecognition(
     receiver,
-    "recognizee"
+    "recognizee",
   );
   if (goldenRecognitionReceiver) {
     return `You just got a ${gratitude.type} from <@${

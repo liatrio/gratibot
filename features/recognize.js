@@ -18,7 +18,7 @@ module.exports = function (app) {
   app.event(
     "reaction_added",
     reactionMatches(reactionEmoji),
-    respondToRecognitionReaction
+    respondToRecognitionReaction,
   );
 };
 
@@ -36,7 +36,7 @@ async function respondToRecognitionMessage({ message, client }) {
     gratitude = {
       giver: await userInfo(client, message.user),
       receivers: await Promise.all(
-        allUsers.map(async (id) => userInfo(client, id))
+        allUsers.map(async (id) => userInfo(client, id)),
       ),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,
@@ -60,7 +60,7 @@ async function respondToRecognitionMessage({ message, client }) {
         func: "features.recognize.respondToRecognitionMessage",
         callingUser: message.user,
         slackMessage: message.text,
-      }
+      },
     );
   } catch (e) {
     if (e instanceof SlackError) {
@@ -109,12 +109,12 @@ async function respondToRecognitionReaction({ event, client }) {
 
     allUsers = await recognition.gratitudeReceiverIdsIn(
       client,
-      originalMessage.text
+      originalMessage.text,
     );
     gratitude = {
       giver: await userInfo(client, event.user),
       receivers: await Promise.all(
-        allUsers.map(async (id) => userInfo(client, id))
+        allUsers.map(async (id) => userInfo(client, id)),
       ),
       count: 1,
       message: originalMessage.text,
@@ -138,7 +138,7 @@ async function respondToRecognitionReaction({ event, client }) {
         func: "features.recognize.respondToRecognitionReaction",
         callingUser: event.user,
         slackMessage: event.reactions,
-      }
+      },
     );
   } catch (e) {
     if (e instanceof SlackError) {
@@ -173,6 +173,6 @@ async function messageReactedTo(client, message) {
   throw new SlackError(
     "conversations.replies",
     response.error,
-    `Something went wrong while sending recognition. When retreiving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+    `Something went wrong while sending recognition. When retreiving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
   );
 }

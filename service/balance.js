@@ -14,7 +14,7 @@ async function currentBalance(user) {
     `${user} current earnings are [${earning}] and spendings are [${spending}]`,
     {
       func: "service.balance.currentBalance",
-    }
+    },
   );
 
   return earning - spending;
@@ -55,7 +55,7 @@ async function dailyGratitudeRemaining(user, timezone) {
       func: "service.balance.dailyGratitudeRemaining",
       callingUser: user,
       timezone: timezone,
-    }
+    },
   );
 
   return config.maximum - recognitionGivenToday;

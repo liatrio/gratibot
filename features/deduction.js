@@ -9,7 +9,7 @@ module.exports = function (app) {
   app.message(
     "deduct",
     anyOf(directMention(), directMessage()),
-    respondToDeduction
+    respondToDeduction,
   );
 };
 
@@ -75,7 +75,7 @@ async function respondToDeduction({ message, client }) {
   const deductionInfo = await deduction.createDeduction(
     user,
     value,
-    message.text
+    message.text,
   );
 
   await client.chat.postMessage({

@@ -9,7 +9,7 @@ async function userInfo(client, userId) {
   throw new SlackError(
     "users.info",
     response.error,
-    `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`
+    `Something went wrong while sending recognition. When retreiving user information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
   );
 }
 

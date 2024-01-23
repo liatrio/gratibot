@@ -29,7 +29,7 @@ async function respondToRecognitionMessage({ message, client }) {
     gratitude = {
       giver: await userInfo(client, message.user),
       receivers: await Promise.all(
-        allUsers.map(async (id) => userInfo(client, id))
+        allUsers.map(async (id) => userInfo(client, id)),
       ),
       count: 1,
       message: message.text,

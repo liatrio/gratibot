@@ -75,7 +75,7 @@ class MockController {
         }
 
         return false;
-      })
+      }),
     );
 
     if (response) {
@@ -84,7 +84,7 @@ class MockController {
         this.formatMessage({
           ...message,
           matches,
-        })
+        }),
       );
     }
   }
@@ -92,7 +92,7 @@ class MockController {
   async interactiveMessage(message) {
     const matches = [];
     const response = this.behavior.find(
-      (b) => b.type === "interactive_message"
+      (b) => b.type === "interactive_message",
     );
 
     if (response) {
@@ -101,7 +101,7 @@ class MockController {
         this.formatInteractiveMessage({
           ...message,
           matches,
-        })
+        }),
       );
     }
   }
@@ -113,7 +113,7 @@ class MockController {
         this.bot,
         this.formatEvent({
           ...message,
-        })
+        }),
       );
     }
   }
@@ -168,7 +168,7 @@ class MockController {
     return new Promise((resolve, reject) => {
       if (!file.channels) {
         return reject(
-          new Error("attempted to upload a file without a channel")
+          new Error("attempted to upload a file without a channel"),
         );
       }
 
@@ -213,12 +213,12 @@ class MockController {
     return new Promise((resolve, reject) => {
       if (!message.channel) {
         return reject(
-          new Error("attempted to update message without a channel")
+          new Error("attempted to update message without a channel"),
         );
       }
 
       const messageIndex = this.messages.findIndex(
-        (m) => m.message.ts === message.ts && m.type === type
+        (m) => m.message.ts === message.ts && m.type === type,
       );
 
       if (messageIndex === -1) {

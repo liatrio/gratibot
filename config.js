@@ -28,7 +28,6 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
 config.initialGoldenRecognitionHolder =
   process.env.GOLDEN_RECOGNIZE_HOLDER || "UE1QRFSSY";
 config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
-  "U02KPMFA9DG", // Smith Mize
   "U04666K57CP", // Danielle Johnson
 ];
 

@@ -472,6 +472,20 @@ describe("service/recognition", () => {
       const result = recognition.gratitudeCountIn(text);
       expect(result).to.equal(5);
     });
+
+    it("should count uppercase multiplier", async () => {
+      const text =
+        "uppercase multiplier X5 :fistbump: <@TestUser> Test Message";
+      const result = recognition.gratitudeCountIn(text);
+      expect(result).to.equal(5);
+    });
+
+    it("shouldn't use an uppercase multiplier that's not 'X'", async () => {
+      const text =
+        "uppercase fake multiplier Y5 :fistbump: <@TestUser> Test Message";
+      const result = recognition.gratitudeCountIn(text);
+      expect(result).to.equal(1);
+    });
   });
 
   describe("gratitudeTagsIn", () => {

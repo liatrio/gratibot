@@ -28,6 +28,7 @@ describe("deduction/balance", () => {
       };
       expect(insert.args[0][0]).to.deep.equal(object);
     });
+
     it("should allow for message to be optional", async () => {
       const insert = sinon.stub(deductionCollection, "insert").resolves({});
       sinon.useFakeTimers(new Date(2020, 1, 1));
@@ -44,6 +45,7 @@ describe("deduction/balance", () => {
       expect(insert.args[0][0]).to.deep.equal(object);
     });
   });
+
   describe("refundDeduction", () => {
     it("should call refund deduction", async () => {
       const findOneAndUpdate = sinon
@@ -56,6 +58,7 @@ describe("deduction/balance", () => {
       });
     });
   });
+
   describe("isBalanceSufficent", () => {
     it("should return true if balance is sufficient", async () => {
       sinon.stub(balance, "currentBalance").resolves(20);
@@ -63,6 +66,7 @@ describe("deduction/balance", () => {
       const result = await deduction.isBalanceSufficent("testUser", 10);
       expect(result).to.be.true;
     });
+
     it("should return false if balance is not sufficient", async () => {
       sinon.stub(balance, "currentBalance").resolves(20);
 
@@ -70,6 +74,7 @@ describe("deduction/balance", () => {
       expect(result).to.be.false;
     });
   });
+
   describe("getDeductions", () => {
     it("should return deductions found in db", async () => {
       sinon.stub(deductionCollection, "find").resolves([
@@ -89,6 +94,7 @@ describe("deduction/balance", () => {
       ];
       expect(result).to.deep.equal(object);
     });
+
     it("should filter results if times are specified", async () => {
       const find = sinon.stub(deductionCollection, "find").resolves([]);
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));

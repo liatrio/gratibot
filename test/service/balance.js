@@ -23,6 +23,7 @@ describe("service/balance", () => {
 
       expect(result).to.equal(Infinity);
     });
+
     it("should allow for configurable maximum", async () => {
       sinon.stub(config, "maximum").value(10);
       sinon.stub(recognitionCollection, "count").resolves(1);
@@ -35,6 +36,7 @@ describe("service/balance", () => {
       expect(result).to.equal(9);
     });
   });
+
   describe("currentBalance", () => {
     it("should return total earnings when users have no deductions", async () => {
       sinon.stub(recognitionCollection, "count").resolves(100);
@@ -56,6 +58,7 @@ describe("service/balance", () => {
       expect(result).to.equal(180);
     });
   });
+
   describe("lifetimeSpendings", () => {
     it("should sum the total deduction value returned from the db", async () => {
       sinon.stub(deductionCollection, "find").resolves([

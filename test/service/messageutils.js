@@ -10,7 +10,7 @@ describe("service/messageutils", () => {
     sinon.restore();
   });
 
-  describe("handleSlackError", async () => {
+  describe("handleSlackError", () => {
     it("should return the proper message", async () => {
       const testClient = {
         chat: {
@@ -34,7 +34,7 @@ describe("service/messageutils", () => {
     });
   });
 
-  describe("handleGratitudeError", async () => {
+  describe("handleGratitudeError", () => {
     it("should return the proper message", async () => {
       const testClient = {
         chat: {
@@ -62,7 +62,7 @@ describe("service/messageutils", () => {
     });
   });
 
-  describe("handleGenericError", async () => {
+  describe("handleGenericError", () => {
     it("should return the proper message", async () => {
       const testClient = {
         chat: {
@@ -137,6 +137,7 @@ describe("service/messageutils", () => {
         `You earned a ${goldenRecognizeEmoji}!!!`,
       );
     });
+
     it("should get fistbump message", () => {
       const testGratitude = {
         type: recognizeEmoji,

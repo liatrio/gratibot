@@ -12,6 +12,7 @@ describe("service/leaderboard", () => {
       timestamp: "2022-02-01",
     });
   });
+
   afterEach(() => {
     sinon.restore();
   });

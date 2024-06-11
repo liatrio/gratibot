@@ -33,9 +33,7 @@ describe("service/refund", () => {
         text: "Refund Successfully given",
       });
     });
-  });
 
-  describe("respondToRefund", () => {
     it("should return a message informing user that they must be redemption admin", async () => {
       const testMessage = {
         user: "testUser",

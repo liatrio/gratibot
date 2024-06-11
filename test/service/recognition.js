@@ -222,6 +222,7 @@ describe("service/recognition", () => {
       expect(insert.args[0][0]).to.deep.equal(object);
     });
   });
+
   describe("countRecognitionsReceived", () => {
     it("should return count of recognition in db", async () => {
       sinon.stub(recognitionCollection, "count").resolves(10);
@@ -230,6 +231,7 @@ describe("service/recognition", () => {
 
       expect(result).to.equal(10);
     });
+
     it("should filter results if times are specified", async () => {
       const count = sinon.stub(recognitionCollection, "count").resolves(0);
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
@@ -250,6 +252,7 @@ describe("service/recognition", () => {
       expect(count.args[0][0]).to.deep.equal(filter);
     });
   });
+
   describe("countRecognitionsGiven", () => {
     it("should return count of recognition in db", async () => {
       sinon.stub(recognitionCollection, "count").resolves(10);
@@ -258,6 +261,7 @@ describe("service/recognition", () => {
 
       expect(result).to.equal(10);
     });
+
     it("should filter results if times are specified", async () => {
       const count = sinon.stub(recognitionCollection, "count").resolves(0);
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
@@ -278,6 +282,7 @@ describe("service/recognition", () => {
       expect(count.args[0][0]).to.deep.equal(filter);
     });
   });
+
   describe("getPreviousXDaysOfRecognition", () => {
     it("should return recognition in db", async () => {
       sinon.stub(recognitionCollection, "find").resolves([
@@ -305,6 +310,7 @@ describe("service/recognition", () => {
       ];
       expect(result).to.deep.equal(object);
     });
+
     it("should filter results if times are specified", async () => {
       const find = sinon.stub(recognitionCollection, "find").resolves([]);
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
@@ -1264,6 +1270,7 @@ describe("service/recognition", () => {
       expect(recognition.validateAndSendGratitude(gratitude)).to.be.rejected;
     });
   });
+
   describe("giverSlackNotification", () => {
     it("should generate a markdown response for recognition", async () => {
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
@@ -1329,6 +1336,7 @@ describe("service/recognition", () => {
       expect(response).to.deep.equal(expectedResponse);
     });
   });
+
   describe("giverGoldenSlackNotification", () => {
     it("default path for golden fistbump", async () => {
       const gratitude = {
@@ -1362,6 +1370,7 @@ describe("service/recognition", () => {
       expect(response).to.deep.equal(expectedResponse);
     });
   });
+
   describe("receiverSlackNotification", () => {
     it("should generate a markdown response for recognition", async () => {
       sinon.stub(balance, "lifetimeEarnings").resolves(100);

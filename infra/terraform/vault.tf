@@ -11,7 +11,7 @@ resource "azurerm_role_assignment" "gratibot" {
 
 resource "azurerm_key_vault_secret" "mongo_connection_string" {
   name         = "mongo-connection-string"
-  value        = azurerm_cosmosdb_account.db_account.connection_strings[0]
+  value        = azurerm_cosmosdb_account.db_account.primary_mongodb_connection_string
   key_vault_id = data.azurerm_key_vault.gratibot.id
 }
 

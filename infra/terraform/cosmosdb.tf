@@ -5,7 +5,7 @@ resource "azurerm_cosmosdb_account" "db_account" {
   offer_type          = "Standard"
   kind                = "MongoDB"
 
-  enable_automatic_failover = true
+  automatic_failover_enabled = true
 
   capabilities { # forces replacement
     name = "EnableMongo"

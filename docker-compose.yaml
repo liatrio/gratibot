@@ -6,7 +6,8 @@ services:
     depends_on:
       - mongodb
     ports:
-      - 3000:3000
+      - 3002:3002
+      - 3001:3001
     build: .
     environment:
       - BOT_USER_OAUTH_ACCESS_TOKEN

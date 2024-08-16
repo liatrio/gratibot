@@ -9,11 +9,35 @@ const {
   goldenRecognizeEmoji,
   slashCommand,
 } = require("./config");
+const fs = require('fs');
 
 const app = new App({
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
   socketMode: true,
   appToken: process.env.APP_TOKEN,
+});
+
+// Define a POST route
+webserver.post('/post', async (req, res) => {
+  // Gather the data from the request
+  const data = req;
+
+  console.log('Data received:', data);
+
+  // Send a response back to the client
+  res.json({
+    message: 'Data received successfully',
+    // data: data
+  });
+});
+
+webserver.get('/testGet', async (req, res) => {
+  // res.json([
+  //   { id: 1, name: 'John Doe' },
+  //   { id: 2, name: 'Jane Doe' },
+  // ]);
+  res.send('Hello, this is a plain text response.');
+  console.log('Data sent');
 });
 
 webserver.get("/", (req, res) => {
@@ -112,8 +136,8 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
 });
 
 (async () => {
-  await app.start(3000);
-  webserver.listen(process.env.PORT || 3000);
+  await app.start(3002);
+  webserver.listen(process.env.PORT || 3001);
 
   winston.info("⚡️ Bolt app is running!");
 })();

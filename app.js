@@ -17,26 +17,41 @@ const app = new App({
   appToken: process.env.APP_TOKEN,
 });
 
-// Define a POST route
-webserver.post('/post', async (req, res) => {
-  // Gather the data from the request
-  const data = req;
+// Middleware to parse JSON bodies
+webserver.use(express.json());
 
-  console.log('Data received:', data);
+webserver.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
 
-  // Send a response back to the client
-  res.json({
-    message: 'Data received successfully',
-    // data: data
-  });
+webserver.post('/testPost', async (req, res) => {
+
+  console.log('Data received:', req.body);
+
+  if (req.body.message === 'leaderboard') {
+    // const temp = leaderboard.leaderboardDataRequest(30);
+    res.json({
+      message: 'Leaderboard request received',
+      data: res.body
+    });
+  } else {
+    res.json({
+      message: 'Data received successfully',
+      data: req.body
+    });
+  }
+
 });
 
 webserver.get('/testGet', async (req, res) => {
-  // res.json([
-  //   { id: 1, name: 'John Doe' },
-  //   { id: 2, name: 'Jane Doe' },
-  // ]);
-  res.send('Hello, this is a plain text response.');
+  res.json([
+    { id: 1, name: 'John Doe' },
+    { id: 2, name: 'Jane Doe' },
+  ]);
+  // res.send('Hello, this is a plain text response.');
   console.log('Data sent');
 });
 

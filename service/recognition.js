@@ -15,7 +15,7 @@ const {
 } = config;
 
 const userRegex = /<@([a-zA-Z0-9]+)>/g;
-const groupRegex = /<!subteam\^([a-zA-Z0-9]+)\|@([a-zA-Z0-9]+)>/g;
+const groupRegex = /<!subteam\^([a-zA-Z0-9]+)(\|@([a-zA-Z0-9\-_]+))?>/g;
 const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
 const gratitudeEmojiRegex = new RegExp(config.recognizeEmoji, "g");
@@ -171,14 +171,8 @@ async function gratitudeReceiverIdsIn(client, text) {
   let users = (text.match(userRegex) || []).map((userMention) =>
     userMention.slice(2, -1),
   );
-  let groups = (text.match(groupRegex) || []).map((groupMention) =>
-    groupMention.substring(
-      groupMention.indexOf("^") + 1,
-      groupMention.lastIndexOf("|"),
-    ),
-  );
-  for (let i = 0; i < groups.length; i++) {
-    users = users.concat(await groupUsers(client, groups[i]));
+  for (const groupMatch of text.matchAll(groupRegex)) {
+    users = users.concat(await groupUsers(client, groupMatch[1]));
   }
   return users;
 }

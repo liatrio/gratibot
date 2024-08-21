@@ -387,13 +387,36 @@ describe("service/recognition", () => {
     it("should return the users within the group when a group is mentioned", async () => {
       const group = "<!subteam^S1234567890|@TestGroupOne>";
       const text = ":fistbump: " + group + " Test Message";
+      const listStub = sinon.stub();
+      listStub.resolves({});
+      listStub.withArgs({ usergroup: "S1234567890" }).resolves({
+        ok: true,
+        users: ["TestUserOne", "TestUserTwo"],
+      });
       const client = {
         usergroups: {
           users: {
-            list: sinon.stub().resolves({
-              ok: true,
-              users: ["TestUserOne", "TestUserTwo"],
-            }),
+            list: listStub,
+          },
+        },
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
+      expect(results).to.deep.equal(["TestUserOne", "TestUserTwo"]);
+    });
+
+    it("should return the users within the group when a the short group syntax is used", async () => {
+      const group = "<!subteam^S1234567890>";
+      const text = ":fistbump: " + group + " Test Message";
+      const listStub = sinon.stub();
+      listStub.resolves({});
+      listStub.withArgs({ usergroup: "S1234567890" }).resolves({
+        ok: true,
+        users: ["TestUserOne", "TestUserTwo"],
+      });
+      const client = {
+        usergroups: {
+          users: {
+            list: listStub,
           },
         },
       };
@@ -404,13 +427,16 @@ describe("service/recognition", () => {
     it("should return the users within the group when a group is mentioned and other users", async () => {
       const group = "<!subteam^S1234567890|@TestGroupOne>";
       const text = ":fistbump: " + group + " <@TestUserThree> Test Message";
+      const listStub = sinon.stub();
+      listStub.resolves({});
+      listStub.withArgs({ usergroup: "S1234567890" }).resolves({
+        ok: true,
+        users: ["TestUserOne", "TestUserTwo"],
+      });
       const client = {
         usergroups: {
           users: {
-            list: sinon.stub().resolves({
-              ok: true,
-              users: ["TestUserOne", "TestUserTwo"],
-            }),
+            list: listStub,
           },
         },
       };
@@ -419,6 +445,36 @@ describe("service/recognition", () => {
         "TestUserThree",
         "TestUserOne",
         "TestUserTwo",
+      ]);
+    });
+
+    it("should return the users within all groups mentioned", async () => {
+      const group1 = "<!subteam^S111111111|@TestGroupOne>";
+      const group2 = "<!subteam^S222222222>";
+      const text = ":fistbump: " + group1 + " " + group2 + " Test Message";
+      const listStub = sinon.stub();
+      listStub.resolves({});
+      listStub.withArgs({ usergroup: "S111111111" }).resolves({
+        ok: true,
+        users: ["TestUserOne", "TestUserTwo"],
+      });
+      listStub.withArgs({ usergroup: "S222222222" }).resolves({
+        ok: true,
+        users: ["TestUserThree", "TestUserFour"],
+      });
+      const client = {
+        usergroups: {
+          users: {
+            list: listStub,
+          },
+        },
+      };
+      const results = await recognition.gratitudeReceiverIdsIn(client, text);
+      expect(results).to.deep.equal([
+        "TestUserOne",
+        "TestUserTwo",
+        "TestUserThree",
+        "TestUserFour",
       ]);
     });
   });

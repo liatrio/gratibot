@@ -1,0 +1,153 @@
+name: Publish TechDocs Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "**/*.md"
+  workflow_dispatch:
+
+jobs:
+  check-for-catalog-info-at-root:
+    runs-on: ubuntu-latest
+    outputs:
+      template-present: ${{ steps.check-template.outputs.template-exists }}
+      catalog-present: ${{ steps.check-catalog.outputs.catalog-exists }}
+      mkdocs-present: ${{ steps.check-mkdocs.outputs.mkdocs-exists }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Check if catalog exists
+      id: check-catalog
+      run: |
+        if [ -f "./catalog-info.yaml" ]; then
+          echo "catalog-exists=true" >> $GITHUB_OUTPUT
+          echo "catalog-exists=true"
+        else
+          echo "catalog-exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check if template exists
+      id: check-template
+      run: |
+        if [ -f "./template.yaml" ]; then
+          echo "template-exists=true" >> $GITHUB_OUTPUT
+          echo "template-exists=true"
+        else
+          echo "template-exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check if mkdocs exists
+      id: check-mkdocs
+      run: |
+        if [ -f "./mkdocs.yml" ] || [ -f "./mkdocs.yaml" ]; then
+          echo "mkdocs-exists=true" >> $GITHUB_OUTPUT
+          echo "mkdocs-exists=true"
+        else
+          echo "mkdocs-exists=false" >> $GITHUB_OUTPUT
+        fi
+
+  publish-docs-to-s3:
+    needs: check-for-catalog-info-at-root
+    if: ${{ needs.check-for-catalog-info-at-root.outputs.mkdocs-present == 'true' && (needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' || needs.check-for-catalog-info-at-root.outputs.template-present == 'true') }}
+
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            $(npm config get prefix)/lib/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - uses: actions/setup-node@v3
+
+      - name: Cache Python packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/*.txt', '**/*.pip') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install techdocs-cli
+        run: sudo npm install -g @techdocs/cli
+
+      - name: Install mkdocs and mkdocs plugins
+        run: python -m pip install mkdocs-techdocs-core==1.* neoteroi-mkdocs mkdocs-kroki-plugin
+
+      - name: Get namespace from catalog-info.yaml
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+        id: get_namespace_catalog
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.metadata.namespace // "default"' catalog-info.yaml
+
+      - name: Get name from catalog-info.yaml
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+        id: get_name_catalog
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.metadata.name' catalog-info.yaml
+
+      - name: Get kind from catalog-info.yaml
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+        id: get_kind_catalog
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.kind' catalog-info.yaml
+
+      - name: Get namespace from template.yaml
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+        id: get_namespace_template
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.metadata.namespace // "default"' template.yaml
+
+      - name: Get name from template.yaml
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+        id: get_name_template
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.metadata.name' template.yaml
+
+      - name: Get kind from template.yaml
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+        id: get_kind_template
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.kind' template.yaml
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-session-name: publish-docs
+          role-to-assume: arn:aws:iam::905418481873:role/Github_OIDC_TechDocs_S3
+
+      - name: Generate docs site
+        run: techdocs-cli generate --no-docker --verbose
+
+      - name: Publish docs site
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+        run: techdocs-cli publish --publisher-type awsS3 --storage-name backstage-liatrio-techdocs --entity ${{ steps.get_namespace_catalog.outputs.result }}/${{ steps.get_kind_catalog.outputs.result }}/${{ steps.get_name_catalog.outputs.result }}
+
+      - name: Publish docs site
+        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+        run: techdocs-cli publish --publisher-type awsS3 --storage-name backstage-liatrio-techdocs --entity ${{ steps.get_namespace_template.outputs.result }}/${{ steps.get_kind_template.outputs.result }}/${{ steps.get_name_template.outputs.result }}

@@ -45,6 +45,8 @@ jobs:
   plan:
     name: "Terraform Prod plan"
     runs-on: ubuntu-latest
+    concurrency:
+      group: "tf-prod"
     environment:
       name: "plan"
     needs: build
@@ -70,6 +72,8 @@ jobs:
   apply:
     name: "Terraform Prod Apply"
     runs-on: ubuntu-latest
+    concurrency:
+      group: "tf-prod"
     environment:
       name: "prod"
     needs: [build, plan]

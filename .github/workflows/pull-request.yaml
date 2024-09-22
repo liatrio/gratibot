@@ -5,6 +5,7 @@ on:
     paths-ignore:
       - "README.md"
       - "catalog.yaml"
+
 env:
   IMAGE_PATH: ${{ github.repository_owner }}/gratibot
 
@@ -67,6 +68,8 @@ jobs:
   plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
+    concurrency:
+      group: "tf-nonprod"
     needs: build
     steps:
       - name: Checkout

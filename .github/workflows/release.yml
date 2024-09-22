@@ -49,6 +49,8 @@ jobs:
   apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
+    concurrency:
+      group: "tf-nonprod"
     environment:
       name: "nonprod"
     needs: build

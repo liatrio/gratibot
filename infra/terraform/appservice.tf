@@ -26,9 +26,10 @@ resource "azurerm_linux_web_app" "gratibot_app_service" {
   }
 
   site_config {
-    always_on         = "true"
-    health_check_path = "/health"
-    use_32_bit_worker = false
+    always_on                         = "true"
+    health_check_path                 = "/health"
+    health_check_eviction_time_in_min = 5
+    use_32_bit_worker                 = false
     application_stack {
       docker_image_name   = var.gratibot_image
       docker_registry_url = var.gratibot_image_registry

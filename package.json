@@ -14,7 +14,7 @@
     "semantic-release": "semantic-release"
   },
   "dependencies": {
-    "@slack/bolt": "^3.22.0",
+    "@slack/bolt": "^4.0.1",
     "express": "^4.21.1",
     "moment-timezone": "^0.5.46",
     "monk": "^7.3.1",

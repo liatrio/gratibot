@@ -6,7 +6,7 @@ const { directMessage, anyOf } = require("../middleware");
 module.exports = function (app) {
   app.message(
     "balance",
-    anyOf(directMention(), directMessage()),
+    anyOf(directMention, directMessage()),
     respondToBalance,
   );
 };

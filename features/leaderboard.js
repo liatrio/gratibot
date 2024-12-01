@@ -6,7 +6,7 @@ const { directMessage, anyOf } = require("../middleware");
 module.exports = function (app) {
   app.message(
     "leaderboard",
-    anyOf(directMessage(), directMention()),
+    anyOf(directMessage(), directMention),
     respondToLeaderboard,
   );
   app.action(/leaderboard-\d+/, updateLeaderboardResponse);

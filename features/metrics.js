@@ -6,7 +6,7 @@ const { directMessage, anyOf } = require("../middleware");
 module.exports = function (app) {
   app.message(
     "metrics",
-    anyOf(directMessage(), directMention()),
+    anyOf(directMessage(), directMention),
     respondToMetrics,
   );
   app.action(/metrics-\d+/, updateMetricsResponse);

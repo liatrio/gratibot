@@ -6,11 +6,7 @@ const balance = require("../service/balance");
 const deduction = require("../service/deduction");
 
 module.exports = function (app) {
-  app.message(
-    "redeem",
-    anyOf(directMention(), directMessage()),
-    respondToRedeem,
-  );
+  app.message("redeem", anyOf(directMention, directMessage()), respondToRedeem);
   app.action({ action_id: "redeem" }, redeemItem);
 };
 

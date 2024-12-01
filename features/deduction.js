@@ -8,7 +8,7 @@ const { directMessage, anyOf } = require("../middleware");
 module.exports = function (app) {
   app.message(
     "deduct",
-    anyOf(directMention(), directMessage()),
+    anyOf(directMention, directMessage()),
     respondToDeduction,
   );
 };

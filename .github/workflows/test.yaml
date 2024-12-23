@@ -16,9 +16,9 @@ jobs:
         with:
           node-version: 22
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Test & publish
-        uses: paambaati/codeclimate-action@v9.0.0
+        uses: paambaati/codeclimate-action@f429536ee076d758a24705203199548125a28ca7 # v9.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.code_climate_reporter_id }}
         with:

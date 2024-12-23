@@ -20,7 +20,7 @@ jobs:
     name: Pipeline Setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Generate tag
         id: tag
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Terraform fmt check
         run: terraform fmt -check -recursive
 
@@ -52,7 +52,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Setup Terragrunt
         run: |
           wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.11/terragrunt_linux_amd64
@@ -73,7 +73,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Setup Terragrunt
         run: |
           wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.11/terragrunt_linux_amd64
@@ -93,7 +93,7 @@ jobs:
           ARM_USE_OIDC: true
           TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
 
-      - uses: liatrio/terraform-change-pr-commenter@v1.7.1
+      - uses: liatrio/terraform-change-pr-commenter@3ec253eeac8850d78939ea4914963931ec3d5dc2 # v1.7.1
         with:
           json-file: infra/terragrunt/nonprod/gratibot/plan.json
           expand-comment: 'true'

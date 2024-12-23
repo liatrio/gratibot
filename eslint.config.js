@@ -8,6 +8,7 @@ module.exports = [
   mochaPlugin.configs.flat.recommended,
   eslintPluginPrettierRecommended,
   {
+    ignores: ["test/setup.js"],
     languageOptions: {
       sourceType: "commonjs",
       ecmaVersion: 2020,

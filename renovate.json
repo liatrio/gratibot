@@ -5,5 +5,16 @@
     "helpers:pinGitHubActionDigests"
   ],
   "timezone": "America/Los_Angeles",
-  "schedule": ["* * * * 0,6"]
+  "schedule": ["* * * * 0,6"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    }
+  ]
 }

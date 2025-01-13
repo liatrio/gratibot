@@ -6,6 +6,12 @@
     "cost": 0
   },
   {
+    "name": "Neon Liatrio Sign",
+    "description": "Neon Liatrio sign, 6.5\"x18\"",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Neon_Sign.jpg",
+    "cost": 500
+  },
+  {
     "name": "Custom Nike Air Force 1's",
     "description": "Nike Air Force 1 Shoes",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Nike_Air_Force1.png",

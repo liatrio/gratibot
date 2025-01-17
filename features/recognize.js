@@ -2,9 +2,7 @@ const config = require("../config");
 const recognition = require("../service/recognition");
 const winston = require("../winston");
 const { SlackError, GratitudeError } = require("../service/errors");
-const { reactionMatches } = require("../middleware");
 const { userInfo } = require("../service/apiwrappers");
-const recognitionCollection = require("../database/recognitionCollection");
 const shareReactionCollection = require("../database/shareReactionCollection");
 const {
   handleSlackError,
@@ -13,7 +11,7 @@ const {
   sendNotificationToReceivers,
 } = require("../service/messageutils");
 
-const { recognizeEmoji, reactionEmoji, shareChannel, shareConfirmReaction } = config;
+const { recognizeEmoji, shareChannel, shareConfirmReaction } = config;
 
 module.exports = function (app) {
   app.message(recognizeEmoji, respondToRecognitionMessage);
@@ -22,16 +20,16 @@ module.exports = function (app) {
     async ({ event, client }) => {
       winston.debug("Received reaction event", {
         event: JSON.stringify(event),
-        channel: event.item.channel
+        channel: event.item.channel,
       });
-      
+
       // Handle share confirmation reactions in the share-me-please channel
       if (event.item.channel === shareChannel && event.reaction === shareConfirmReaction) {
         await handleShareConfirmation({ event, client });
         return;
       }
       // Handle regular recognition reactions
-      if (event.reaction === reactionEmoji.slice(1, -1)) {
+      if (event.reaction === config.reactionEmoji.slice(1, -1)) {
         await respondToRecognitionReaction({ event, client });
       }
     }
@@ -52,7 +50,7 @@ async function respondToRecognitionMessage({ message, client }) {
     gratitude = {
       giver: await userInfo(client, message.user),
       receivers: await Promise.all(
-        allUsers.map(async (id) => userInfo(client, id)),
+        allUsers.map(async (id) => userInfo(client, id))
       ),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,
@@ -76,7 +74,7 @@ async function respondToRecognitionMessage({ message, client }) {
         func: "features.recognize.respondToRecognitionMessage",
         callingUser: message.user,
         slackMessage: message.text,
-      },
+      }
     );
   } catch (e) {
     if (e instanceof SlackError) {
@@ -132,7 +130,7 @@ async function messageReactedTo(client, message) {
     winston.error("Error retrieving message details", {
       error: error.message,
       channel: message.channel,
-      ts: message.ts
+      ts: message.ts,
     });
     throw error;
   }
@@ -150,27 +148,29 @@ async function messageReactedTo(client, message) {
 function createShareGratitude({ user, channel, messageTs, timezone }) {
   return {
     giver: {
-      id: 'GRATIBOT',
-      real_name: 'Gratibot',
-      username: 'gratibot',
-      tz: timezone
+      id: "GRATIBOT",
+      real_name: "Gratibot",
+      username: "gratibot",
+      tz: timezone,
     },
-    receivers: [{
-      id: user.id,
-      real_name: user.real_name,
-      username: user.name,
-      tz: timezone
-    }],
+    receivers: [
+      {
+        id: user.id,
+        real_name: user.real_name,
+        username: user.name,
+        tz: timezone,
+      },
+    ],
     count: 1,
     message: `Thank you for sharing this with your network! Here's a ${recognizeEmoji} for helping spread the word!`,
     trimmedMessage: "Reward for sharing content",
-    channel: channel,
-    tags: ['share-confirmation'],
+    channel,
+    tags: ["share-confirmation"],
     type: recognizeEmoji,
     giver_in_receivers: false,
     metadata: {
-      originalMessageTs: messageTs
-    }
+      originalMessageTs: messageTs,
+    },
   };
 }
 
@@ -185,27 +185,31 @@ async function handleShareConfirmation({ event, client }) {
     // Get user info and timezone
     const userInfo = await client.users.info({ user: event.user });
     if (!userInfo.ok) {
-      throw new SlackError("users.info", userInfo.error, "Failed to retrieve user information");
+      throw new SlackError(
+        "users.info",
+        userInfo.error,
+        "Failed to retrieve user information"
+      );
     }
 
     // Check for existing reaction
     const existingReaction = await shareReactionCollection.findOne({
       messageTs: event.item.ts,
-      userId: event.user
+      userId: event.user,
     });
 
     if (existingReaction) {
       return client.chat.postEphemeral({
         channel: event.item.channel,
         user: event.user,
-        text: "You've already confirmed sharing this post. Thank you for your engagement! 🙌"
+        text: "You've already confirmed sharing this post. Thank you for your engagement! 🙌",
       });
     }
 
     // Verify the original message exists
     await messageReactedTo(client, {
       channel: event.item.channel,
-      ts: event.item.ts
+      ts: event.item.ts,
     });
 
     // Record the share reaction
@@ -215,13 +219,13 @@ async function handleShareConfirmation({ event, client }) {
       channel: event.item.channel,
       timestamp: new Date(),
     });
-    
+
     // Create and validate gratitude
     const gratitude = createShareGratitude({
       user: userInfo.user,
       channel: event.item.channel,
       messageTs: event.item.ts,
-      timezone: userInfo.user.tz
+      timezone: userInfo.user.tz,
     });
 
     await recognition.validateAndSendGratitude(gratitude);
@@ -230,39 +234,38 @@ async function handleShareConfirmation({ event, client }) {
     await client.chat.postEphemeral({
       channel: event.item.channel,
       user: event.user,
-      text: `Thank you for sharing! You've received a ${recognizeEmoji} as a reward for your contribution! 🎉`
+      text: `Thank you for sharing! You've received a ${recognizeEmoji} as a reward for your contribution! 🎉`,
     });
 
     winston.debug("Share confirmation processed", {
       func: "handleShareConfirmation",
       user: userInfo.user.real_name,
       messageTs: event.item.ts,
-      channel: event.item.channel
+      channel: event.item.channel,
     });
   } catch (e) {
     winston.error("Share confirmation failed", {
       error: e.message,
       stack: e.stack,
-      event: event
+      event,
     });
 
     const errorMessage = {
       channel: event.item.channel,
-      user: event.user
+      user: event.user,
     };
 
     if (e instanceof SlackError) {
       return handleSlackError(client, errorMessage, e);
     } else if (e instanceof GratitudeError) {
       return handleGratitudeError(client, errorMessage, e);
-    } else {
-      return handleGenericError(client, errorMessage, e);
     }
+    return handleGenericError(client, errorMessage, e);
   }
 }
 
 async function respondToRecognitionReaction({ event, client }) {
-  winston.info(`Saw a reaction containing ${reactionEmoji}`, {
+  winston.info(`Saw a reaction containing ${config.reactionEmoji}`, {
     func: "features.recognize.respondToRecognitionReaction",
     callingUser: event.user,
     reactionEmoji: event.reaction,
@@ -276,7 +279,7 @@ async function respondToRecognitionReaction({ event, client }) {
   try {
     originalMessage = await messageReactedTo(client, {
       channel: event.channel,
-      ts: event.ts
+      ts: event.ts,
     });
 
     if (!originalMessage.text.includes(recognizeEmoji)) {
@@ -285,12 +288,12 @@ async function respondToRecognitionReaction({ event, client }) {
 
     allUsers = await recognition.gratitudeReceiverIdsIn(
       client,
-      originalMessage.text,
+      originalMessage.text
     );
     gratitude = {
       giver: await userInfo(client, event.user),
       receivers: await Promise.all(
-        allUsers.map(async (id) => userInfo(client, id)),
+        allUsers.map(async (id) => userInfo(client, id))
       ),
       count: 1,
       message: originalMessage.text,
@@ -314,7 +317,7 @@ async function respondToRecognitionReaction({ event, client }) {
         func: "features.recognize.respondToRecognitionReaction",
         callingUser: event.user,
         slackMessage: event.reactions,
-      },
+      }
     );
   } catch (e) {
     if (e instanceof SlackError) {

@@ -11,7 +11,8 @@ const {
   sendNotificationToReceivers,
 } = require("../service/messageutils");
 
-const { recognizeEmoji, shareChannel, shareConfirmReaction } = config;
+const { recognizeEmoji, shareChannel, shareConfirmReaction, reactionEmoji } =
+  config;
 
 module.exports = function (app) {
   app.message(recognizeEmoji, respondToRecognitionMessage);
@@ -30,7 +31,7 @@ module.exports = function (app) {
       return;
     }
     // Handle regular recognition reactions
-    if (event.reaction === config.reactionEmoji.slice(1, -1)) {
+    if (event.reaction === reactionEmoji.slice(1, -1)) {
       await respondToRecognitionReaction({ event, client });
     }
   });
@@ -96,7 +97,7 @@ async function respondToRecognitionMessage({ message, client }) {
     }),
     client.reactions.add({
       channel: message.channel,
-      name: config.reactionEmoji.slice(1, -1),
+      name: reactionEmoji.slice(1, -1),
       timestamp: message.ts,
     }),
   ]);
@@ -265,21 +266,20 @@ async function handleShareConfirmation({ event, client }) {
 }
 
 async function respondToRecognitionReaction({ event, client }) {
-  winston.info(`Saw a reaction containing ${config.reactionEmoji}`, {
+  winston.info(`Saw a reaction containing ${reactionEmoji}`, {
     func: "features.recognize.respondToRecognitionReaction",
     callingUser: event.user,
     reactionEmoji: event.reaction,
   });
 
-  event.channel = event.item.channel;
-
+  let originalMessage;
   let allUsers = [];
   let gratitude;
-  let originalMessage;
+
   try {
     originalMessage = await messageReactedTo(client, {
-      channel: event.channel,
-      ts: event.ts,
+      channel: event.item.channel,
+      ts: event.item.ts,
     });
 
     if (!originalMessage.text.includes(recognizeEmoji)) {
@@ -298,7 +298,7 @@ async function respondToRecognitionReaction({ event, client }) {
       count: 1,
       message: originalMessage.text,
       trimmedMessage: recognition.trimmedGratitudeMessage(originalMessage.text),
-      channel: event.channel,
+      channel: event.item.channel,
       tags: recognition.gratitudeTagsIn(originalMessage.text),
       type: recognizeEmoji,
       giver_in_receivers: false,
@@ -311,28 +311,36 @@ async function respondToRecognitionReaction({ event, client }) {
 
     await recognition.validateAndSendGratitude(gratitude);
 
-    winston.debug(
-      `validated and stored reaction recognitions from ${gratitude.giver}`,
-      {
-        func: "features.recognize.respondToRecognitionReaction",
-        callingUser: event.user,
-        slackMessage: event.reactions,
-      },
-    );
+    winston.debug("Validated and stored reaction recognitions", {
+      func: "features.recognize.respondToRecognitionReaction",
+      callingUser: event.user,
+      slackMessage: event.reactions,
+    });
   } catch (e) {
     if (e instanceof SlackError) {
-      return handleSlackError(client, event, e);
+      return handleSlackError(
+        client,
+        { channel: event.item.channel, user: event.user },
+        e,
+      );
     } else if (e instanceof GratitudeError) {
-      return handleGratitudeError(client, event, e);
-    } else {
-      return handleGenericError(client, event, e);
+      return handleGratitudeError(
+        client,
+        { channel: event.item.channel, user: event.user },
+        e,
+      );
     }
+    return handleGenericError(
+      client,
+      { channel: event.item.channel, user: event.user },
+      e,
+    );
   }
 
   return Promise.all([
     sendNotificationToReceivers(client, gratitude),
     client.chat.postEphemeral({
-      channel: event.channel,
+      channel: event.item.channel,
       user: event.user,
       text: `${recognizeEmoji} has been sent.`,
       ...(await recognition.giverSlackNotification(gratitude)),

@@ -12,6 +12,9 @@ config.goldenRecognizeEmoji =
 config.goldenRecognizeChannel =
   process.env.GOLDEN_RECOGNIZE_CHANNEL || "liatrio";
 config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
+config.shareChannel = process.env.SHARE_CHANNEL || "C04RRPC9S1E";
+config.shareConfirmReaction =
+  process.env.SHARE_CONFIRM_REACTION || "white_check_mark";
 config.maximum = process.env.GRATIBOT_LIMIT || 5;
 config.minimumMessageLength = 20;
 config.botName = process.env.BOT_NAME || "gratibot";

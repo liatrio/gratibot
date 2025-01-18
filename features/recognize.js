@@ -15,25 +15,25 @@ const { recognizeEmoji, shareChannel, shareConfirmReaction } = config;
 
 module.exports = function (app) {
   app.message(recognizeEmoji, respondToRecognitionMessage);
-  app.event(
-    "reaction_added",
-    async ({ event, client }) => {
-      winston.debug("Received reaction event", {
-        event: JSON.stringify(event),
-        channel: event.item.channel,
-      });
+  app.event("reaction_added", async ({ event, client }) => {
+    winston.debug("Received reaction event", {
+      event: JSON.stringify(event),
+      channel: event.item.channel,
+    });
 
-      // Handle share confirmation reactions in the share-me-please channel
-      if (event.item.channel === shareChannel && event.reaction === shareConfirmReaction) {
-        await handleShareConfirmation({ event, client });
-        return;
-      }
-      // Handle regular recognition reactions
-      if (event.reaction === config.reactionEmoji.slice(1, -1)) {
-        await respondToRecognitionReaction({ event, client });
-      }
+    // Handle share confirmation reactions in the share-me-please channel
+    if (
+      event.item.channel === shareChannel &&
+      event.reaction === shareConfirmReaction
+    ) {
+      await handleShareConfirmation({ event, client });
+      return;
     }
-  );
+    // Handle regular recognition reactions
+    if (event.reaction === config.reactionEmoji.slice(1, -1)) {
+      await respondToRecognitionReaction({ event, client });
+    }
+  });
 };
 
 async function respondToRecognitionMessage({ message, client }) {
@@ -50,7 +50,7 @@ async function respondToRecognitionMessage({ message, client }) {
     gratitude = {
       giver: await userInfo(client, message.user),
       receivers: await Promise.all(
-        allUsers.map(async (id) => userInfo(client, id))
+        allUsers.map(async (id) => userInfo(client, id)),
       ),
       count: recognition.gratitudeCountIn(message.text),
       message: message.text,
@@ -74,7 +74,7 @@ async function respondToRecognitionMessage({ message, client }) {
         func: "features.recognize.respondToRecognitionMessage",
         callingUser: message.user,
         slackMessage: message.text,
-      }
+      },
     );
   } catch (e) {
     if (e instanceof SlackError) {
@@ -121,7 +121,7 @@ async function messageReactedTo(client, message) {
       throw new SlackError(
         "conversations.replies",
         response.error,
-        `Failed to retrieve message information: ${response.error}`
+        `Failed to retrieve message information: ${response.error}`,
       );
     }
 
@@ -188,7 +188,7 @@ async function handleShareConfirmation({ event, client }) {
       throw new SlackError(
         "users.info",
         userInfo.error,
-        "Failed to retrieve user information"
+        "Failed to retrieve user information",
       );
     }
 
@@ -288,12 +288,12 @@ async function respondToRecognitionReaction({ event, client }) {
 
     allUsers = await recognition.gratitudeReceiverIdsIn(
       client,
-      originalMessage.text
+      originalMessage.text,
     );
     gratitude = {
       giver: await userInfo(client, event.user),
       receivers: await Promise.all(
-        allUsers.map(async (id) => userInfo(client, id))
+        allUsers.map(async (id) => userInfo(client, id)),
       ),
       count: 1,
       message: originalMessage.text,
@@ -317,7 +317,7 @@ async function respondToRecognitionReaction({ event, client }) {
         func: "features.recognize.respondToRecognitionReaction",
         callingUser: event.user,
         slackMessage: event.reactions,
-      }
+      },
     );
   } catch (e) {
     if (e instanceof SlackError) {

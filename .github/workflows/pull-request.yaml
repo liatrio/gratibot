@@ -8,6 +8,8 @@ on:
 
 env:
   IMAGE_PATH: ${{ github.repository_owner }}/gratibot
+  tofu_version: '~1.9'
+  tg_version: '0.72.0'
 
 permissions:
   id-token: write
@@ -43,8 +45,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Tofu
+        uses: opentofu/setup-opentofu@v1.0.5
+        with:
+          tofu_version: ${{ env.tofu_version }}
       - name: Terraform fmt check
-        run: terraform fmt -check -recursive
+        run: tofu fmt -check -recursive
 
   validate:
     name: "Terraform validate check"
@@ -53,9 +59,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Tofu
+        uses: opentofu/setup-opentofu@v1.0.5
+        with:
+          tofu_version: ${{ env.tofu_version }}
       - name: Setup Terragrunt
         run: |
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.11/terragrunt_linux_amd64
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
           sudo chmod +x /usr/local/bin/terragrunt
       - name: Terraform validate check
@@ -74,9 +84,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Setup Tofu
+        uses: opentofu/setup-opentofu@v1.0.5
+        with:
+          tofu_version: ${{ env.tofu_version }}
       - name: Setup Terragrunt
         run: |
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.45.11/terragrunt_linux_amd64
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
           sudo chmod +x /usr/local/bin/terragrunt
       - name: Plan Gratibot staging deployment

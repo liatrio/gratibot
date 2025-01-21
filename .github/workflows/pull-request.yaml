@@ -50,7 +50,7 @@ jobs:
         with:
           tofu_version: ${{ env.tofu_version }}
       - name: Terraform fmt check
-        run: terraform fmt -check -recursive
+        run: tofu fmt -check -recursive
 
   validate:
     name: "Terraform validate check"
@@ -65,7 +65,7 @@ jobs:
           tofu_version: ${{ env.tofu_version }}
       - name: Setup Terragrunt
         run: |
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/${{ env.tg_version }}/terragrunt_linux_amd64
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
           sudo chmod +x /usr/local/bin/terragrunt
       - name: Terraform validate check
@@ -90,7 +90,7 @@ jobs:
           tofu_version: ${{ env.tofu_version }}
       - name: Setup Terragrunt
         run: |
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/${{ env.tg_version }}/terragrunt_linux_amd64
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
           sudo chmod +x /usr/local/bin/terragrunt
       - name: Plan Gratibot staging deployment

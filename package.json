@@ -40,7 +40,7 @@
     "nyc": "^17.1.0",
     "prettier": "^3.4.2",
     "semantic-release": "^24.2.0",
-    "sinon": "^19.0.2"
+    "sinon": "^20.0.0"
   },
   "overrides": {
     "conventional-changelog-conventionalcommits": ">= 8.0.0"

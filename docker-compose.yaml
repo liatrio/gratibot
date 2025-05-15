@@ -14,7 +14,7 @@ services:
       - RECOGNIZE_EMOJI
       - REACTION_EMOJI
       - EXEMPT_USERS
-      - MONGO_URL=mongodb://mongodb:27017/gratibot
+      - MONGO_URL=mongodb://mongodb:27017/test
       - LOG_LEVEL
       - GRATIBOT_LIMIT
       - GOLDEN_RECOGNIZE_EMOJI

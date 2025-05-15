@@ -31,6 +31,7 @@ async function giveRecognition(
   channel,
   values,
   type = recognizeEmoji,
+  recognitionSource = "initial" // Can be "initial" or "reaction"
 ) {
   let timestamp = new Date();
 
@@ -45,6 +46,7 @@ async function giveRecognition(
     message: message,
     channel: channel,
     values: values,
+    recognitionSource: recognitionSource // Store whether this was a message or reaction
   };
   if (type === goldenRecognizeEmoji) {
     return await goldenRecognitionCollection.insert(collectionValues);
@@ -151,6 +153,28 @@ async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
   });
 
   return await recognitionCollection.find(filter);
+}
+
+async function getUserReceivedRecognitions(userId, timezone = null, days = null) {
+  let filter = { recognizee: userId };
+  if (days && timezone) {
+    let userDate = moment(Date.now()).tz(timezone);
+    let midnight = userDate.startOf("day");
+    midnight = midnight.subtract(days - 1, "days");
+    filter.timestamp = {
+      $gte: new Date(midnight),
+    };
+  }
+
+  winston.debug(`retrieving recognitions received by ${userId} for the past ${days} days`, {
+    func: "service.recognition.getUserReceivedRecognitions",
+    userId: userId,
+    timezone: timezone,
+    days: days,
+    filter: filter,
+  });
+
+  return await recognitionCollection.find(filter, { sort: { timestamp: -1 } });
 }
 
 // Get the users in a usergroup
@@ -266,6 +290,9 @@ async function giveGratitude(gratitude) {
     );
   }
 
+  // Get the recognition source (default to "initial" if not specified)
+  const recognitionSource = gratitude.recognitionSource || "initial";
+
   for (let i = 0; i < gratitude.receivers.length; i++) {
     if (gratitude.type === goldenRecognizeEmoji) {
       results.push(
@@ -276,6 +303,7 @@ async function giveGratitude(gratitude) {
           gratitude.channel,
           gratitude.tags,
           gratitude.type,
+          recognitionSource // Pass the recognition source
         ),
       );
     } else {
@@ -297,6 +325,8 @@ async function giveGratitude(gratitude) {
             gratitude.trimmedMessage,
             gratitude.channel,
             gratitude.tags,
+            recognizeEmoji,
+            recognitionSource // Pass the recognition source
           ),
         );
       }
@@ -309,6 +339,8 @@ async function giveGratitude(gratitude) {
             gratitude.trimmedMessage,
             gratitude.channel,
             gratitude.tags,
+            recognizeEmoji,
+            recognitionSource // Pass the recognition source
           ),
         );
       }
@@ -464,6 +496,7 @@ module.exports = {
   countRecognitionsGiven,
   getGoldenFistbumpHolder,
   getPreviousXDaysOfRecognition,
+  getUserReceivedRecognitions,
   gratitudeReceiverIdsIn,
   gratitudeCountIn,
   isGratitudeAffordable,

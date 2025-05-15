@@ -123,6 +123,7 @@ async function respondToRecognitionReaction({ event, client }) {
       tags: recognition.gratitudeTagsIn(originalMessage.text),
       type: recognizeEmoji,
       giver_in_receivers: false,
+      recognitionSource: "reaction" // Set the source as reaction
     };
 
     // Check if the user who reacted is also a receiver
@@ -155,7 +156,7 @@ async function respondToRecognitionReaction({ event, client }) {
     client.chat.postEphemeral({
       channel: event.channel,
       user: event.user,
-      text: `${recognizeEmoji} has been sent.`,
+      text: `${recognizeEmoji} has been sent (via reaction).`,
       ...(await recognition.giverSlackNotification(gratitude)),
     }),
   ]);

@@ -23,6 +23,9 @@ services:
       - REDEMPTION_ADMINS
       - BOT_NAME
       - SLASH_COMMAND
+      # new permission variables for scheduled reports
+      - REPORT_PERMISSION_LEVEL=all
+      - REPORT_ADMINS
   mongodb:
     ports:
       - 27017:27017

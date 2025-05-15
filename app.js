@@ -3,6 +3,16 @@ const express = require("express");
 const webserver = express();
 const winston = require("./winston");
 const mongoose = require("mongoose");
+
+// attempt to connect to mongodb if connection string is provided
+if (process.env.MONGO_URL) {
+  mongoose.connect(process.env.MONGO_URL)
+    .then(() => winston.info("connected to mongodb"))
+    .catch(err => winston.error(`mongodb connection error: ${err.message}`));
+} else {
+  winston.warn("no MONGO_URL provided, database features will be disabled");
+}
+
 const {
   recognizeEmoji,
   maximum,
@@ -11,11 +21,35 @@ const {
   slashCommand,
 } = require("./config");
 
-const app = new App({
-  token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-  socketMode: true,
-  appToken: process.env.APP_TOKEN,
-});
+// check if required environment variables are set
+const token = process.env.BOT_USER_OAUTH_ACCESS_TOKEN;
+const appToken = process.env.APP_TOKEN;
+
+let app;
+
+// create app with appropriate configuration based on available environment variables
+if (token) {
+  try {
+    const appConfig = {
+      token,
+      // only use socket mode if an app token is provided
+      socketMode: !!appToken,
+    };
+    
+    if (appToken) {
+      appConfig.appToken = appToken;
+    }
+    
+    app = new App(appConfig);
+    winston.info("slack app initialized");
+  } catch (error) {
+    winston.error(`failed to initialize slack app: ${error.message}`);
+    process.exit(1);
+  }
+} else {
+  winston.error("BOT_USER_OAUTH_ACCESS_TOKEN environment variable is required");
+  process.exit(1);
+}
 
 webserver.get("/", (req, res) => {
   res.send("Gratibot is running!");
@@ -76,15 +110,39 @@ webserver.get("/health", async (req, res) => {
   winston.debug("Health check passed");
 });
 
-var normalizedPath = require("path").join(__dirname, "features");
-require("fs")
-  .readdirSync(normalizedPath)
-  .forEach(function (file) {
-    require("./features/" + file)(app);
-  });
+// load features with better error handling
+const path = require("path");
+const fs = require("fs");
+const normalizedPath = path.join(__dirname, "features");
 
-winston.info("all features loaded and initialized", {
+// use functional programming approach with map and forEach
+const featureFiles = fs.readdirSync(normalizedPath);
+
+// load each feature and handle errors functionally
+const loadResults = featureFiles.map(file => {
+  try {
+    const featureModule = require("./features/" + file);
+    featureModule(app);
+    return { file, success: true };
+  } catch (error) {
+    winston.error(`failed to load feature: ${file}`, {
+      func: "app.featureLoading",
+      error: error.message,
+      stack: error.stack
+    });
+    return { file, success: false, error: error.message };
+  }
+});
+
+// count successes and failures
+const successCount = loadResults.filter(result => result.success).length;
+const failureCount = loadResults.filter(result => !result.success).length;
+
+winston.info("features loading completed", {
   func: "app.featureLoading",
+  total: featureFiles.length,
+  success: successCount,
+  failed: failureCount
 });
 
 /// ////////////////////////////////////////////////////////////

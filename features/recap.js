@@ -199,7 +199,7 @@ async function respondToRecap({ message, client: botClient }) {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '*📊 Monthly Client Delivery Hype Recap (Most reacted messages) *'
+              text: '*📊 Monthly Client Delivery Hype Recap :hype: *'
             }
           },
           {

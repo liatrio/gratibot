@@ -269,13 +269,13 @@ async function giveGratitude(gratitude) {
   // Analyze sentiment of the message
   let values = { ...gratitude.values };
   try {
-    values.sentiments = await sentiment.analyzeSentiment(gratitude.message);
+    values.values = await sentiment.analyzeSentiment(gratitude.message);
   } catch (error) {
     winston.error('Failed to analyze sentiment', {
       func: "service.recognition.giveGratitude",
       error: error.message,
     });
-    values.sentiments = ['N/A'];
+    values.values = ['N/A'];
   }
 
   if (gratitude.giver_in_receivers) {
@@ -331,7 +331,7 @@ async function giveGratitude(gratitude) {
           gratitude.receivers[0].id,
           gratitude.message,
           gratitude.channel,
-          { ...gratitude.values, sentiments: await sentiment.analyzeSentiment(gratitude.message) },
+          { ...gratitude.values, values: await sentiment.analyzeSentiment(gratitude.message) },
           gratitude.type,
         ),
       );
@@ -344,7 +344,7 @@ async function giveGratitude(gratitude) {
           gratitude.receivers[0].id,
           gratitude.message,
           gratitude.channel,
-          { ...gratitude.values, sentiments: await sentiment.analyzeSentiment(gratitude.message) },
+          { ...gratitude.values, values: await sentiment.analyzeSentiment(gratitude.message) },
           gratitude.type,
         ),
       );

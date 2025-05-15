@@ -41,7 +41,14 @@ async function dailyGratitudeRemaining(user, timezone) {
     });
     return Infinity;
   }
-  const midnight = moment(Date.now()).tz(timezone).startOf("day");
+
+  const userDate = moment(Date.now()).tz(timezone);
+  const midnight = userDate.startOf("day");
+  
+  // Check if it's the first Friday of the month
+  const isFirstFriday = userDate.day() === 5 && // Friday is 5 in moment.js
+                       userDate.date() <= 7;     // First week of the month
+  
   const recognitionGivenToday = await recognitionCollection.count({
     recognizer: user,
     timestamp: {
@@ -49,16 +56,19 @@ async function dailyGratitudeRemaining(user, timezone) {
     },
   });
 
+  const dailyLimit = isFirstFriday ? config.firstFridayMaximum : config.maximum;
+
   winston.debug(
-    `${user} has [${config.maximum - recognitionGivenToday}] recognitions left`,
+    `${user} has [${dailyLimit - recognitionGivenToday}] recognitions left`,
     {
       func: "service.balance.dailyGratitudeRemaining",
       callingUser: user,
       timezone: timezone,
+      isFirstFriday: isFirstFriday,
     },
   );
 
-  return config.maximum - recognitionGivenToday;
+  return dailyLimit - recognitionGivenToday;
 }
 
 module.exports = {

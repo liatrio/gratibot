@@ -290,10 +290,13 @@ async function handleScheduleCommand({ command, ack, respond, client }) {
         });
 
         try {
+          // pass isPreview=true flag to use sample data when no real data exists
           await fistbumpReport.postFistbumpReport(
             client,
             channel_id,
             previewDays,
+            undefined, // use default timezone
+            true // indicate this is a preview request
           );
 
           winston.info("preview report generated", {

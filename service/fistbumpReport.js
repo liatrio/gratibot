@@ -128,6 +128,72 @@ async function getFistbumpChartData(
   return chart;
 }
 
+// pure function to create report blocks with sample data for preview purposes
+async function createFistbumpReportBlocksWithSampleData(timeRange, timezone = DEFAULT_TIMEZONE) {
+  // generate sample data
+  const sampleData = generateSampleData(10);
+  
+  // create chart with sample data
+  const chart = createChartObject(sampleData, timeRange);
+  const encodedChart = encodeURIComponent(JSON.stringify(chart));
+  const imageURL = `https://quickchart.io/chart?c=${encodedChart}`;
+  
+  // create blocks following functional programming principles (immutable data structures)
+  const blocks = [];
+  
+  // start and end dates for the report period (pure function approach with no side effects)
+  const endDate = moment().tz(timezone);
+  const startDate = moment().tz(timezone).subtract(timeRange, "days");
+  const dateRange = `${startDate.format("MMM D")} to ${endDate.format("MMM D, YYYY")}`;
+  
+  // create report blocks - we use push here but in a controlled way that doesn't affect external state
+  blocks.push({
+    type: "header",
+    text: {
+      type: "plain_text",
+      text: "📊 Sample Fistbump Report (Preview)",
+      emoji: true,
+    },
+  });
+  
+  blocks.push({
+    type: "context",
+    elements: [
+      {
+        type: "mrkdwn",
+        text: `*Period:* ${dateRange} (sample data)`,
+      },
+    ],
+  });
+  
+  blocks.push({
+    type: "image",
+    title: {
+      type: "plain_text",
+      text: "Fistbump Leaderboard (Sample)",
+    },
+    image_url: imageURL,
+    alt_text: "Chart showing sample fistbump recipients",
+  });
+  
+  blocks.push({
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `*Sample Data:* This preview uses generated sample data since no actual recognition data was found for the specified time period.`,
+    },
+  });
+  
+  blocks.push({ type: "divider" });
+  
+  winston.debug("sample fistbump report blocks created", {
+    func: "service.fistbumpReport.createFistbumpReportBlocksWithSampleData",
+    block_count: blocks.length,
+  });
+  
+  return blocks;
+}
+
 // create visualization report blocks for slack
 async function createFistbumpReportBlocks(
   timeRange,
@@ -295,5 +361,6 @@ async function postFistbumpReport(client, channelId, timeRange = 7, timezone = D
 module.exports = {
   getFistbumpChartData,
   createFistbumpReportBlocks,
+  createFistbumpReportBlocksWithSampleData, // export the new function
   postFistbumpReport,
 };

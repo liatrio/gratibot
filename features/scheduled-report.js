@@ -10,7 +10,7 @@ module.exports = function (app) {
   initializeWeeklyReport(app.client);
 
   // command to enable weekly reports in a channel
-  app.command("/gratibot-schedule-report", handleScheduleCommand);
+  app.command("gratibot-schedule-report", handleScheduleCommand);
 };
 
 // initialize weekly reports from saved configurations

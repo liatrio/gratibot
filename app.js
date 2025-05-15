@@ -117,55 +117,60 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
 });
 
 // Explicitly handle the schedule report command
-app.command("gratibot-schedule-report", async ({ command, ack, respond, client }) => {
-  await ack();
-  winston.info("received schedule report command", { command_text: command.text });
-  
-  try {
-    const { channel_id, text, user_id } = command;
+app.command(
+  "gratibot-schedule-report",
+  async ({ command, ack, respond, client }) => {
+    await ack();
+    winston.info("received schedule report command", {
+      command_text: command.text,
+    });
 
-    // check if user has the permission to configure reports
-    const userInfo = await client.users.info({ user: user_id });
-    if (!userInfo.user.is_admin) {
-      await respond({
-        text: "You need to be a workspace admin to configure scheduled reports.",
-        response_type: "ephemeral",
-      });
-      return;
-    }
+    try {
+      const { text, user_id } = command;
 
-    // parse command text for configuration
-    const args = text.trim().split(/\s+/);
-    const subCommand = args[0]?.toLowerCase() || "help";
-
-    switch (subCommand) {
-      case "help":
-      default: {
-        // show help info
+      // check if user has the permission to configure reports
+      const userInfo = await client.users.info({ user: user_id });
+      if (!userInfo.user.is_admin) {
         await respond({
-          text:
-            "Available commands:\n" +
-            "• `/gratibot-schedule-report enable [days]` - Enable weekly reports (defaults to 7 days)\n" +
-            "• `/gratibot-schedule-report disable` - Disable weekly reports\n" +
-            "• `/gratibot-schedule-report status` - Check current configuration\n" +
-            "• `/gratibot-schedule-report preview [days]` - Generate a preview report\n" +
-            "• `/gratibot-schedule-report help` - Show this help message",
+          text: "You need to be a workspace admin to configure scheduled reports.",
           response_type: "ephemeral",
         });
-        break;
+        return;
       }
-    }
-  } catch (error) {
-    winston.error("error handling schedule command", {
-      error: error.message,
-    });
 
-    await respond({
-      text: "An error occurred while processing your command. Please try again later.",
-      response_type: "ephemeral",
-    });
-  }
-});
+      // parse command text for configuration
+      const args = text.trim().split(/\s+/);
+      const subCommand = args[0]?.toLowerCase() || "help";
+
+      switch (subCommand) {
+        case "help":
+        default: {
+          // show help info
+          await respond({
+            text:
+              "Available commands:\n" +
+              "• `/gratibot-schedule-report enable [days]` - Enable weekly reports (defaults to 7 days)\n" +
+              "• `/gratibot-schedule-report disable` - Disable weekly reports\n" +
+              "• `/gratibot-schedule-report status` - Check current configuration\n" +
+              "• `/gratibot-schedule-report preview [days]` - Generate a preview report\n" +
+              "• `/gratibot-schedule-report help` - Show this help message",
+            response_type: "ephemeral",
+          });
+          break;
+        }
+      }
+    } catch (error) {
+      winston.error("error handling schedule command", {
+        error: error.message,
+      });
+
+      await respond({
+        text: "An error occurred while processing your command. Please try again later.",
+        response_type: "ephemeral",
+      });
+    }
+  },
+);
 
 (async () => {
   await app.start(3000);

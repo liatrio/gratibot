@@ -2,10 +2,13 @@ const winston = require("../winston");
 const moment = require("moment-timezone");
 const recognition = require("./recognition");
 
+// get timezone from environment variable or use default
+const DEFAULT_TIMEZONE = process.env.DEFAULT_TIMEZONE || "America/Los_Angeles";
+
 // generate chart data for fistbump visualization
 async function getFistbumpChartData(
   timeRange,
-  timezone = "America/Los_Angeles",
+  timezone = DEFAULT_TIMEZONE,
 ) {
   const recognitionData = await recognition.getPreviousXDaysOfRecognition(
     timezone,
@@ -68,7 +71,7 @@ async function getFistbumpChartData(
 // create visualization report blocks for slack
 async function createFistbumpReportBlocks(
   timeRange,
-  timezone = "America/Los_Angeles",
+  timezone = DEFAULT_TIMEZONE,
 ) {
   const blocks = [];
 
@@ -140,9 +143,9 @@ async function createFistbumpReportBlocks(
 }
 
 // post fistbump report to channel
-async function postFistbumpReport(client, channelId, timeRange = 7) {
+async function postFistbumpReport(client, channelId, timeRange = 7, timezone = DEFAULT_TIMEZONE) {
   try {
-    const blocks = await createFistbumpReportBlocks(timeRange);
+    const blocks = await createFistbumpReportBlocks(timeRange, timezone);
 
     await client.chat.postMessage({
       channel: channelId,

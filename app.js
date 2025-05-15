@@ -2,6 +2,7 @@ const { App } = require("@slack/bolt");
 const express = require("express");
 const webserver = express();
 const winston = require("./winston");
+const mongoose = require("mongoose");
 const {
   recognizeEmoji,
   maximum,
@@ -48,9 +49,19 @@ webserver.get("/health", async (req, res) => {
     ? "Connection Failed"
     : "OK";
 
-  // Check Database Connection
-  //
-  // TODO
+  // check database connection
+  try {
+    const dbState = mongoose.connection.readyState;
+    switch (dbState) {
+      case 0: status_checks.database = "Disconnected"; break;
+      case 1: status_checks.database = "OK"; break;
+      case 2: status_checks.database = "Connecting"; break;
+      case 3: status_checks.database = "Disconnecting"; break;
+      default: status_checks.database = `Unknown state: ${dbState}`;
+    }
+  } catch (e) {
+    status_checks.database = e.message;
+  }
 
   for (const i in status_checks) {
     if (status_checks[i] !== "OK") {
@@ -116,61 +127,7 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
   }
 });
 
-// Explicitly handle the schedule report command
-app.command(
-  "gratibot-schedule-report",
-  async ({ command, ack, respond, client }) => {
-    await ack();
-    winston.info("received schedule report command", {
-      command_text: command.text,
-    });
-
-    try {
-      const { text, user_id } = command;
-
-      // check if user has the permission to configure reports
-      const userInfo = await client.users.info({ user: user_id });
-      if (!userInfo.user.is_admin) {
-        await respond({
-          text: "You need to be a workspace admin to configure scheduled reports.",
-          response_type: "ephemeral",
-        });
-        return;
-      }
-
-      // parse command text for configuration
-      const args = text.trim().split(/\s+/);
-      const subCommand = args[0]?.toLowerCase() || "help";
-
-      switch (subCommand) {
-        case "help":
-        default: {
-          // show help info
-          await respond({
-            text:
-              "Available commands:\n" +
-              "• `/gratibot-schedule-report enable [days]` - Enable weekly reports (defaults to 7 days)\n" +
-              "• `/gratibot-schedule-report disable` - Disable weekly reports\n" +
-              "• `/gratibot-schedule-report status` - Check current configuration\n" +
-              "• `/gratibot-schedule-report preview [days]` - Generate a preview report\n" +
-              "• `/gratibot-schedule-report help` - Show this help message",
-            response_type: "ephemeral",
-          });
-          break;
-        }
-      }
-    } catch (error) {
-      winston.error("error handling schedule command", {
-        error: error.message,
-      });
-
-      await respond({
-        text: "An error occurred while processing your command. Please try again later.",
-        response_type: "ephemeral",
-      });
-    }
-  },
-);
+// Schedule report command is handled in features/scheduled-report.js
 
 (async () => {
   await app.start(3000);

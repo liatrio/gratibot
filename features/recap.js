@@ -134,12 +134,17 @@ async function respondToRecap({ message, client: botClient }) {
           topMessage,
           messageLink
         });
-      } else {
-        channelReports.push({
-          name: channel.name,
-          message: 'No recent messages with reactions found.'
-        });
       }
+      // Skip channels without messages in the timeframe
+    }
+    
+    if (channelReports.length === 0) {
+      await botClient.chat.update({
+        channel: message.channel,
+        ts: loadingMessage.ts,
+        text: 'No active client delivery channels found with messages in the past week.'
+      });
+      return;
     }
 
     // Process channel reports in chunks to respect Slack's block limit (50 blocks per message)
@@ -175,59 +180,44 @@ async function respondToRecap({ message, client: botClient }) {
         );
       }
 
-      // Add channel reports for this chunk
+      // Add channel reports for this chunk (we only include channels with messages)
       for (const report of chunk) {
-        if (report.topMessage) {
-          const messagePreview = report.topMessage.text?.length > 100 
-            ? `${report.topMessage.text.substring(0, 100)}...` 
-            : report.topMessage.text || '[No text content]';
-          
-          blocks.push(
-            {
-              type: 'section',
+        const messagePreview = report.topMessage.text?.length > 100 
+          ? `${report.topMessage.text.substring(0, 100)}...` 
+          : report.topMessage.text || '[No text content]';
+        
+        blocks.push(
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*#${report.name}*\n` +
+                    `Top message with ${report.topMessage.totalReactions} reactions:\n` +
+                    `> ${messagePreview}`
+            },
+            accessory: {
+              type: 'button',
               text: {
-                type: 'mrkdwn',
-                text: `*#${report.name}*\n` +
-                      `Top message with ${report.topMessage.totalReactions} reactions:\n` +
-                      `> ${messagePreview}`
+                type: 'plain_text',
+                text: 'View',
+                emoji: true
               },
-              accessory: {
-                type: 'button',
-                text: {
-                  type: 'plain_text',
-                  text: 'View',
-                  emoji: true
-                },
-                url: report.messageLink
-              }
-            },
-            {
-              type: 'context',
-              elements: [
-                {
-                  type: 'mrkdwn',
-                  text: `Posted by <@${report.topMessage.user}> | ${new Date(report.topMessage.ts * 1000).toLocaleDateString()}`
-                }
-              ]
-            },
-            {
-              type: 'divider'
+              url: report.messageLink
             }
-          );
-        } else {
-          blocks.push(
-            {
-              type: 'section',
-              text: {
+          },
+          {
+            type: 'context',
+            elements: [
+              {
                 type: 'mrkdwn',
-                text: `*#${report.name}*\nNo recent messages with reactions found.`
+                text: `Posted by <@${report.topMessage.user}> | ${new Date(report.topMessage.ts * 1000).toLocaleDateString()}`
               }
-            },
-            {
-              type: 'divider'
-            }
-          );
-        }
+            ]
+          },
+          {
+            type: 'divider'
+          }
+        );
       }
 
       // Remove the last divider

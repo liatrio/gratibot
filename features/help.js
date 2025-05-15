@@ -16,6 +16,14 @@ module.exports = function (app) {
 const helpMarkdown = `
 :wave: Hi there! Let's take a look at what I can do!
 
+*View Fistbumps Report*
+
+Generate a visual report of fistbumps received by users:
+> \`@${process.env.BOT_NAME || 'gratibot'} fistbumps [days]\`
+
+Example:
+> \`@${process.env.BOT_NAME || 'gratibot'} fistbumps 30\` - Shows top receivers from the last 30 days
+
 
 
 

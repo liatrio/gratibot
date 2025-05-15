@@ -1,21 +1,21 @@
 var config = {};
 var _ = require("lodash");
 
-config.mongo_url = process.env.MONGO_URL || "mongodb://mongodb:27017/gratibot";
+config.mongo_url = process.env.MONGO_URL || "mongodb://mongodb:27017/takeitforgranted";
 
 config.logLevel = process.env.LOG_LEVEL || "info";
 
 config.recognizeEmoji =
-  _.escapeRegExp(process.env.RECOGNIZE_EMOJI) || ":fistbump:";
+  _.escapeRegExp(process.env.RECOGNIZE_EMOJI) || ":grant:";
 config.goldenRecognizeEmoji =
-  process.env.GOLDEN_RECOGNIZE_EMOJI || ":goldenfistbump:";
+  process.env.GOLDEN_RECOGNIZE_EMOJI || ":graniteesparza:";
 config.goldenRecognizeChannel =
   process.env.GOLDEN_RECOGNIZE_CHANNEL || "liatrio";
 config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
-config.maximum = process.env.GRATIBOT_LIMIT || 5;
+config.maximum = process.env.takeitforgranted_LIMIT || 5;
 config.minimumMessageLength = 20;
-config.botName = process.env.BOT_NAME || "gratibot";
-config.slashCommand = process.env.SLASH_COMMAND || "/gratibot";
+config.botName = process.env.BOT_NAME || "takeitforgranted";
+config.slashCommand = process.env.SLASH_COMMAND || "/takeitforgranted";
 
 config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U037FL37G", // Chris Blackburn

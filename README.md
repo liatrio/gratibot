@@ -8,11 +8,26 @@
 Gratibot is a Slack bot for recognizing the accomplishments of friends and
 colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatrio.com/blog/gratibot-chatbot)
 
+### Features
+
+#### Sentiment Analysis
+Gratibot now includes sentiment analysis for recognition messages. This feature:
+- Analyzes the emotional tone of recognition messages
+- Stores sentiment data alongside each recognition
+- Uses ONNX runtime for efficient model inference
+- Gracefully handles cases where sentiment analysis is unavailable
+
+To enable sentiment analysis:
+1. Place your ONNX model file in the `/models` directory as `sentiment.onnx`
+2. The model will be loaded automatically when needed
+3. If the model is not present, sentiments will be marked as "N/A"
+
 ---
 
 ### Roadmap
 
 - [x] Deploy on Azure
+- [x] Add Sentiment Analysis to Recognitions
 - [ ] Implement Functional Testing
 - [ ] Refactor Logic to Service Module
 - [x] Redeem Fistbumps Through Gratibot

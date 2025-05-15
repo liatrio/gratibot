@@ -5,6 +5,7 @@ const goldenRecognitionCollection = require("../database/goldenRecognitionCollec
 const balance = require("./balance");
 const { SlackError, GratitudeError } = require("./errors");
 const winston = require("../winston");
+const sentiment = require("./sentiment");
 
 const {
   recognizeEmoji,
@@ -258,60 +259,95 @@ async function goldenGratitudeErrors(gratitude) {
 }
 
 async function giveGratitude(gratitude) {
+  const errors = await gratitudeErrors(gratitude);
+  if (errors.length > 0) {
+    throw new GratitudeError(errors);
+  }
+
   let results = [];
 
+  // Analyze sentiment of the message
+  let values = { ...gratitude.values };
+  try {
+    values.sentiments = await sentiment.analyzeSentiment(gratitude.message);
+  } catch (error) {
+    winston.error('Failed to analyze sentiment', {
+      func: "service.recognition.giveGratitude",
+      error: error.message,
+    });
+    values.sentiments = ['N/A'];
+  }
+
   if (gratitude.giver_in_receivers) {
-    gratitude.receivers = gratitude.receivers.filter(
-      (x) => x.id !== gratitude.giver.id,
+    winston.info(
+      `User ${gratitude.giver.id} attempted to give recognition to themselves`,
+      {
+        func: "service.recognition.giveGratitude",
+      },
     );
   }
 
-  for (let i = 0; i < gratitude.receivers.length; i++) {
-    if (gratitude.type === goldenRecognizeEmoji) {
+  const recognitionPromises = gratitude.receivers
+    .filter((receiver) => receiver.id !== gratitude.giver.id)
+    .map((receiver) =>
+      giveRecognition(
+        gratitude.giver.id,
+        receiver.id,
+        gratitude.message,
+        gratitude.channel,
+        values,
+        gratitude.type,
+      ),
+    );
+
+  results = results.concat(recognitionPromises);
+
+  if (gratitude.type === goldenRecognizeEmoji) {
+    results.push(
+      giveRecognition(
+        gratitude.giver.id,
+        gratitude.receivers[0].id,
+        gratitude.message,
+        gratitude.channel,
+        { ...gratitude.values, sentiments: await sentiment.analyzeSentiment(gratitude.message) },
+        gratitude.type,
+      ),
+    );
+  } else {
+    let extraRecognitions = 0;
+    if (
+      await doesUserHoldGoldenRecognition(
+        gratitude.receivers[0].id,
+        "recognizee",
+      )
+    ) {
+      extraRecognitions = gratitude.count;
+    }
+
+    for (let j = 0; j < gratitude.count; j++) {
       results.push(
         giveRecognition(
           gratitude.giver.id,
-          gratitude.receivers[i].id,
-          gratitude.trimmedMessage,
+          gratitude.receivers[0].id,
+          gratitude.message,
           gratitude.channel,
-          gratitude.tags,
+          { ...gratitude.values, sentiments: await sentiment.analyzeSentiment(gratitude.message) },
           gratitude.type,
         ),
       );
-    } else {
-      let extraRecognitions = 0;
-      if (
-        await doesUserHoldGoldenRecognition(
-          gratitude.receivers[i].id,
-          "recognizee",
-        )
-      ) {
-        extraRecognitions = gratitude.count;
-      }
+    }
 
-      for (let j = 0; j < gratitude.count; j++) {
-        results.push(
-          giveRecognition(
-            gratitude.giver.id,
-            gratitude.receivers[i].id,
-            gratitude.trimmedMessage,
-            gratitude.channel,
-            gratitude.tags,
-          ),
-        );
-      }
-
-      for (let j = 0; j < extraRecognitions; j++) {
-        results.push(
-          giveRecognition(
-            "goldenFistbumpMultiplier",
-            gratitude.receivers[i].id,
-            gratitude.trimmedMessage,
-            gratitude.channel,
-            gratitude.tags,
-          ),
-        );
-      }
+    for (let j = 0; j < extraRecognitions; j++) {
+      results.push(
+        giveRecognition(
+          "goldenFistbumpMultiplier",
+          gratitude.receivers[0].id,
+          gratitude.message,
+          gratitude.channel,
+          { ...gratitude.values, sentiments: await sentiment.analyzeSentiment(gratitude.message) },
+          gratitude.type,
+        ),
+      );
     }
   }
   return Promise.all(results);

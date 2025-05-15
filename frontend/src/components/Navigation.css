@@ -1,14 +1,17 @@
 .main-nav {
   width: 100%;
-  padding: 1rem 0;
+  padding: 1rem;
   border-bottom: 1px solid #eee;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+  background-color: white;
 }
 
-.nav-links {
+.navigation {
   display: flex;
   gap: 1rem;
+  width: 100%;
   justify-content: center;
+  margin: 0;
 }
 
 .nav-link {

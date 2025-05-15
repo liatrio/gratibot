@@ -163,10 +163,10 @@ async function respondToRecap({ message, client: botClient }) {
         channel: message.channel,
       });
   
-      // Send initial response to start a thread
-      const threadMessage = await botClient.chat.postMessage({
+      // Send initial header message
+      await botClient.chat.postMessage({
         channel: message.channel,
-        text: '🔝 Top Fistbumped Messages This Month',
+        text: '🔝 *Top Fistbumped Messages This Month* :shut_up_and_take_my_fistbump:',
         blocks: [
           {
             type: 'section',
@@ -189,18 +189,10 @@ async function respondToRecap({ message, client: botClient }) {
       const topMessages = await findTopMessages(3);
   
       if (topMessages.length === 0) {
-        await botClient.chat.update({
+        await botClient.chat.postMessage({
           channel: message.channel,
-          ts: threadMessage.ts,
           text: 'No fistbumped messages found this month.',
           blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: '🔝 *Top Fistbumped Messages This Month* :shut_up_and_take_my_fistbump:'
-              }
-            },
             {
               type: 'section',
               text: {
@@ -213,7 +205,7 @@ async function respondToRecap({ message, client: botClient }) {
         return;
       }
   
-      // Post each top message in the thread
+      // Post each top message as a separate message
       for (const [index, msg] of topMessages.entries()) {
         const messageLink = await formatMessageLink(msg.channelId, msg.ts);
         const messagePreview = msg.text?.length > 200 
@@ -222,7 +214,6 @@ async function respondToRecap({ message, client: botClient }) {
   
         await botClient.chat.postMessage({
           channel: message.channel,
-          thread_ts: threadMessage.ts,
           text: `#${index + 1} (${msg.fistbumpCount} 👊) in #${msg.channelName}\n${messagePreview}\n${messageLink}`,
           blocks: [
             {
@@ -257,47 +248,15 @@ async function respondToRecap({ message, client: botClient }) {
         });
       }
   
-      // Update the initial message to show completion
-      await botClient.chat.update({
-        channel: message.channel,
-        ts: threadMessage.ts,
-        text: '🔝 Top Fistbumped Messages This Month',
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: '🔝 *Top Fistbumped Messages This Month* :shut_up_and_take_my_fistbump:'
-            }
-          },
-          {
-            type: 'context',
-            elements: [{
-              type: 'mrkdwn',
-              text: `Found ${topMessages.length} messages with fistbumps this month.`
-            }]
-          }
-        ]
-      });
-  
     } catch (error) {
       winston.error('Error in respondToRecap:', error);
-      
-      if (threadMessage?.ts) {
-        await botClient.chat.update({
-          channel: message.channel,
-          ts: threadMessage.ts,
-          text: `Sorry, I encountered an error: ${error.message}`
-        });
-      } else {
-        await botClient.chat.postMessage({
-          channel: message.channel,
-          text: `Sorry, I encountered an error: ${error.message}`
-        });
-      }
+      await botClient.chat.postMessage({
+        channel: message.channel,
+        text: `Sorry, I encountered an error: ${error.message}`
+      });
     }
-  }
+}
 
 module.exports = function(app) {
-app.message('recap', anyOf(directMention, directMessage()), respondToRecap);
+app.message(/\b(?:recap)\b/i, anyOf(directMention, directMessage()), respondToRecap);
 };

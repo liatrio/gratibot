@@ -28,8 +28,29 @@ async function listClientDeliveryChannels() {
   }
 }
 
+async function ensureBotInChannel(channelId) {
+  try {
+    // First try to join the channel
+    await client.conversations.join({ channel: channelId });
+    return true;
+  } catch (error) {
+    if (error.data?.error === 'already_in_channel') {
+      return true; // Already in channel
+    }
+    winston.error(`Error joining channel ${channelId}:`, error);
+    return false;
+  }
+}
+
 async function findTopMessageInChannel(channelId) {
   try {
+    // Ensure bot is in the channel before trying to read history
+    const isInChannel = await ensureBotInChannel(channelId);
+    if (!isInChannel) {
+      winston.warn(`Skipping channel ${channelId} - bot cannot join`);
+      return null;
+    }
+
     // Fetch recent messages from the channel (last 100 messages or last week, whichever comes first)
     const messages = await client.conversations.history({
       channel: channelId,
@@ -46,7 +67,7 @@ async function findTopMessageInChannel(channelId) {
     let maxReactions = 0;
 
     for (const message of messages.messages) {
-      if (message.reactions && message.reactions.length > 0) {
+      if (message.reactions?.length > 0) {
         const totalReactions = message.reactions.reduce((sum, reaction) => sum + reaction.count, 0);
         
         if (totalReactions > maxReactions) {
@@ -59,7 +80,6 @@ async function findTopMessageInChannel(channelId) {
         }
       }
     }
-
 
     return topMessage;
   } catch (error) {
@@ -122,84 +142,129 @@ async function respondToRecap({ message, client: botClient }) {
       }
     }
 
-    // Build the response
-    const blocks = [
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*📊 Weekly Client Delivery Recap*'
-        }
-      },
-      {
-        type: 'divider'
-      }
-    ];
-
-    for (const report of channelReports) {
-      if (report.topMessage) {
-        const messagePreview = report.topMessage.text.length > 100 
-          ? `${report.topMessage.text.substring(0, 100)}...` 
-          : report.topMessage.text;
-        
-        blocks.push(
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*#${report.name}*\n` +
-                    `Top message with ${report.topMessage.totalReactions} reactions:\n` +
-                    `> ${messagePreview}`
-            },
-            accessory: {
-              type: 'button',
-              text: {
-                type: 'plain_text',
-                text: 'View Message',
-                emoji: true
-              },
-              url: report.messageLink
-            }
-          },
-          {
-            type: 'context',
-            elements: [
-              {
-                type: 'mrkdwn',
-                text: `Posted by <@${report.topMessage.user}> | ${new Date(report.topMessage.ts * 1000).toLocaleDateString()}`
-              }
-            ]
-          },
-          {
-            type: 'divider'
-          }
-        );
-      } else {
-        blocks.push(
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*#${report.name}*\nNo recent messages with reactions found.`
-            }
-          },
-          {
-            type: 'divider'
-          }
-        );
-      }
+    // Process channel reports in chunks to respect Slack's block limit (50 blocks per message)
+    const CHUNK_SIZE = 8; // Each channel takes ~6 blocks, so 8 channels per message max
+    const chunks = [];
+    
+    for (let i = 0; i < channelReports.length; i += CHUNK_SIZE) {
+      chunks.push(channelReports.slice(i, i + CHUNK_SIZE));
     }
 
-    // Remove the last divider
-    blocks.pop();
+    // Send each chunk as a separate message
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const isFirstChunk = i === 0;
+      const isLastChunk = i === chunks.length - 1;
+      
+      // Build the response blocks for this chunk
+      const blocks = [];
+      
+      // Add header only for first chunk
+      if (isFirstChunk) {
+        blocks.push(
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '*📊 Weekly Client Delivery Recap*'
+            }
+          },
+          {
+            type: 'divider'
+          }
+        );
+      }
 
-    // Update the original loading message with the results
-    await botClient.chat.update({
-      channel: message.channel,
-      ts: loadingMessage.ts,
-      text: 'Here\'s your weekly client delivery recap!',
-      blocks: blocks
-    });
+      // Add channel reports for this chunk
+      for (const report of chunk) {
+        if (report.topMessage) {
+          const messagePreview = report.topMessage.text?.length > 100 
+            ? `${report.topMessage.text.substring(0, 100)}...` 
+            : report.topMessage.text || '[No text content]';
+          
+          blocks.push(
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `*#${report.name}*\n` +
+                      `Top message with ${report.topMessage.totalReactions} reactions:\n` +
+                      `> ${messagePreview}`
+              },
+              accessory: {
+                type: 'button',
+                text: {
+                  type: 'plain_text',
+                  text: 'View',
+                  emoji: true
+                },
+                url: report.messageLink
+              }
+            },
+            {
+              type: 'context',
+              elements: [
+                {
+                  type: 'mrkdwn',
+                  text: `Posted by <@${report.topMessage.user}> | ${new Date(report.topMessage.ts * 1000).toLocaleDateString()}`
+                }
+              ]
+            },
+            {
+              type: 'divider'
+            }
+          );
+        } else {
+          blocks.push(
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `*#${report.name}*\nNo recent messages with reactions found.`
+              }
+            },
+            {
+              type: 'divider'
+            }
+          );
+        }
+      }
+
+      // Remove the last divider
+      if (blocks.length > 0) {
+        blocks.pop();
+      }
+
+      // Add a "Part X of Y" indicator if there are multiple chunks
+      if (chunks.length > 1) {
+        blocks.push({
+          type: 'context',
+          elements: [
+            {
+              type: 'mrkdwn',
+              text: `Part ${i + 1} of ${chunks.length}`
+            }
+          ]
+        });
+      }
+
+      // For the first chunk, update the loading message
+      if (isFirstChunk) {
+        await botClient.chat.update({
+          channel: message.channel,
+          ts: loadingMessage.ts,
+          text: 'Here\'s your weekly client delivery recap!',
+          blocks: blocks
+        });
+      } else {
+        // For subsequent chunks, send as new messages
+        await botClient.chat.postMessage({
+          channel: message.channel,
+          text: `Weekly Client Delivery Recap (continued)`,
+          blocks: blocks
+        });
+      }
+    }
 
   } catch (error) {
     winston.error('Error in respondToRecap:', error);

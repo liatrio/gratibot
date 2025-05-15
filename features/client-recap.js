@@ -67,83 +67,52 @@ async function ensureBotInChannel(channelId) {
   }
 }
 
-async function findTopMessages(limit = 3) {
-    try {
-      let allChannels = [];
-      let cursor = '';
-      const LIMIT = 200;
-      const topMessages = [];
-  
-      // Get all public channels
-      do {
-        const result = await client.conversations.list({
-          types: 'public_channel',
-          limit: LIMIT,
-          cursor: cursor || undefined
-        });
-        allChannels = allChannels.concat(result.channels);
-        cursor = result.response_metadata?.next_cursor || '';
-      } while (cursor);
-  
-      // Process each channel to find messages with fistbump reactions
-      for (const channel of allChannels) {
-        // Skip archived channels
-        if (channel.is_archived) continue;
+async function findTopMessageInChannel(channelId) {
+  try {
+    // Ensure bot is in the channel before trying to read history
+    const isInChannel = await ensureBotInChannel(channelId);
+    if (!isInChannel) {
+      winston.warn(`Skipping channel ${channelId} - bot cannot join`);
+      return null;
+    }
 
-        // Skip channels that don't match our criteria
-        const isLiatrioChannel = channel.name.startsWith('liatrio');
+    // Fetch recent messages from the channel (last 100 messages or last month, whichever comes first)
+    const messages = await client.conversations.history({
+      channel: channelId,
+      limit: 100,
+      oldest: ONE_MONTH_AGO.toString()
+    });
+
+    if (!messages.messages || messages.messages.length === 0) {
+      winston.info(`No messages found in channel ${channelId} in the last month`);
+      return null;
+    }
+
+    // Find message with most :shut_up_and_take_my_fistbump: reactions
+    let topMessage = null;
+    let maxFistbumps = 0;
+
+    for (const message of messages.messages) {
+      if (message.reactions?.length > 0) {
+        // Find the fistbump reaction if it exists
+        const fistbumpReaction = message.reactions.find(
+          r => r.name === 'shut_up_and_take_my_fistbump'
+        );
         
-        if (!isLiatrioChannel) {
-          winston.info(`Skipping channel ${channel.name} - does not match criteria`);
-          continue;
-        }
-  
-        const isInChannel = await ensureBotInChannel(channel.id);
-        if (!isInChannel) {
-          winston.info(`Skipping channel ${channel.name} - bot cannot join`);
-          continue;
-        }
-  
-        try {
-          const messages = await client.conversations.history({
-            channel: channel.id,
-            limit: 100,
-            oldest: ONE_MONTH_AGO.toString()
-          });
-  
-          if (!messages.messages) continue;
-  
-          for (const message of messages.messages) {
-            if (!message.reactions) continue;
-  
-            const fistbumpReaction = message.reactions.find(
-              r => r.name === 'shut_up_and_take_my_fistbump'
-            );
-  
-            if (fistbumpReaction) {
-              topMessages.push({
-                ...message,
-                channelId: channel.id,
-                channelName: channel.name,
-                fistbumpCount: fistbumpReaction.count
-              });
-            }
-          }
-        } catch (error) {
-          winston.error(`Error processing channel ${channel.name}:`, error);
+        if (fistbumpReaction && fistbumpReaction.count > maxFistbumps) {
+          maxFistbumps = fistbumpReaction.count;
+          topMessage = message;
+          topMessage.totalFistbumps = maxFistbumps;
         }
       }
-  
-      // Sort by fistbump count and return top N
-      return topMessages
-        .sort((a, b) => b.fistbumpCount - a.fistbumpCount)
-        .slice(0, limit);
-  
-    } catch (error) {
-      winston.error('Error finding top messages:', error);
-      throw error;
     }
+
+    return topMessage;
+  } catch (error) {
+    winston.error(`Error finding top message in channel ${channelId}:`, error);
+    return null;
   }
+}
 
 async function formatMessageLink(channelId, messageTs) {
   try {
@@ -166,46 +135,45 @@ async function respondToRecap({ message, client: botClient }) {
       // Send initial response to start a thread
       const threadMessage = await botClient.chat.postMessage({
         channel: message.channel,
-        text: '🔝 Top Fistbumped Messages This Month',
+        text: '📊 Monthly Client Delivery Gratitude Recap :fistbump:',
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '🔝 *Top Fistbumped Messages This Month* :shut_up_and_take_my_fistbump:'
+              text: '📊 *Monthly Client Delivery Gratitude Recap* :fistbump:'
             }
           },
           {
             type: 'context',
             elements: [{
               type: 'mrkdwn',
-              text: 'Finding the most fistbumped messages...'
+              text: 'Fetching client delivery channels and analyzing activity...'
             }]
           }
         ]
       });
   
-      // Get top 3 messages across all channels
-      const topMessages = await findTopMessages(3);
-  
-      if (topMessages.length === 0) {
+      const channels = await listClientDeliveryChannels();
+      
+      if (channels.length === 0) {
         await botClient.chat.update({
           channel: message.channel,
           ts: threadMessage.ts,
-          text: 'No fistbumped messages found this month.',
+          text: 'No active client delivery channels found.',
           blocks: [
             {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: '🔝 *Top Fistbumped Messages This Month* :shut_up_and_take_my_fistbump:'
+                text: '📊 *Monthly Client Delivery Gratitude Recap* :fistbump:'
               }
             },
             {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: 'No messages with :shut_up_and_take_my_fistbump: reactions found in the past month.'
+                text: 'No active client delivery channels found with messages in the past month.'
               }
             }
           ]
@@ -213,68 +181,86 @@ async function respondToRecap({ message, client: botClient }) {
         return;
       }
   
-      // Post each top message in the thread
-      for (const [index, msg] of topMessages.entries()) {
-        const messageLink = await formatMessageLink(msg.channelId, msg.ts);
-        const messagePreview = msg.text?.length > 200 
-          ? `${msg.text.substring(0, 200)}...` 
-          : msg.text || '[No text content]';
+      // Process each channel and post as individual thread replies
+      for (const channel of channels) {
+        winston.info(`Processing channel: ${channel.name}`);
+        const topMessage = await findTopMessageInChannel(channel.id);
+        
+        if (topMessage) {
+          const messageLink = await formatMessageLink(channel.id, topMessage.ts);
+          const messagePreview = topMessage.text?.length > 100 
+            ? `${topMessage.text.substring(0, 100)}...` 
+            : topMessage.text || '[No text content]';
+          
+          const reactionsText = topMessage.reactions?.length > 0
+            ? topMessage.reactions.map(r => `:${r.name}: ${r.count}`).join(' ')
+            : 'No reactions';
   
-        await botClient.chat.postMessage({
-          channel: message.channel,
-          thread_ts: threadMessage.ts,
-          text: `#${index + 1} (${msg.fistbumpCount} 👊) in #${msg.channelName}\n${messagePreview}\n${messageLink}`,
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `*#${index + 1}* (${msg.fistbumpCount} :shut_up_and_take_my_fistbump:) in *#${msg.channelName}*`
-              }
-            },
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `> ${messagePreview}`
-              }
-            },
-            {
-              type: 'actions',
-              elements: [
-                {
-                  type: 'button',
-                  text: {
-                    type: 'plain_text',
-                    text: 'View Message',
-                    emoji: true
-                  },
-                  url: messageLink
+          await botClient.chat.postMessage({
+            channel: message.channel,
+            thread_ts: threadMessage.ts,
+            text: `*#${channel.name}*\n${messagePreview}\n${reactionsText}\n${messageLink}`,
+            blocks: [
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: `*#${channel.name}*`
                 }
-              ]
-            }
-          ]
-        });
+              },
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: messagePreview
+                }
+              },
+              {
+                type: 'context',
+                elements: [
+                  {
+                    type: 'mrkdwn',
+                    text: `${reactionsText}`
+                  }
+                ]
+              },
+              {
+                type: 'actions',
+                elements: [
+                  {
+                    type: 'button',
+                    text: {
+                      type: 'plain_text',
+                      text: 'View',
+                      emoji: true
+                    },
+                    url: messageLink
+                  }
+                ]
+              }
+            ]
+          });
+        }
       }
   
       // Update the initial message to show completion
       await botClient.chat.update({
         channel: message.channel,
         ts: threadMessage.ts,
-        text: '🔝 Top Fistbumped Messages This Month',
+        text: '📊 Monthly Client Delivery Gratitude Recap :fistbump:',
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '🔝 *Top Fistbumped Messages This Month* :shut_up_and_take_my_fistbump:'
+              text: '📊 *Monthly Client Delivery Gratitude Recap* :fistbump:'
             }
           },
           {
             type: 'context',
             elements: [{
               type: 'mrkdwn',
-              text: `Found ${topMessages.length} messages with fistbumps this month.`
+              text: `Found ${channels.length} active client delivery channels.`
             }]
           }
         ]
@@ -283,6 +269,7 @@ async function respondToRecap({ message, client: botClient }) {
     } catch (error) {
       winston.error('Error in respondToRecap:', error);
       
+      // Try to update the thread message with the error if possible
       if (threadMessage?.ts) {
         await botClient.chat.update({
           channel: message.channel,
@@ -290,6 +277,7 @@ async function respondToRecap({ message, client: botClient }) {
           text: `Sorry, I encountered an error: ${error.message}`
         });
       } else {
+        // Fallback to a new message if we can't update the thread
         await botClient.chat.postMessage({
           channel: message.channel,
           text: `Sorry, I encountered an error: ${error.message}`
@@ -299,5 +287,5 @@ async function respondToRecap({ message, client: botClient }) {
   }
 
 module.exports = function(app) {
-app.message('recap', anyOf(directMention, directMessage()), respondToRecap);
+  app.message('client-recap', anyOf(directMention, directMessage()), respondToRecap);
 };

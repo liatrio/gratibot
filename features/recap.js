@@ -5,28 +5,48 @@ const { anyOf, directMessage } = require('../middleware');
 
 const client = new WebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 
-// Calculate timestamp for 1 week ago
-const ONE_WEEK_AGO = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
+// Calculate timestamp for 1 month ago
+const ONE_MONTH_AGO = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
 
 async function listClientDeliveryChannels() {
-  try {
-    // First, get all public channels
-    const result = await client.conversations.list({
-      types: 'public_channel',
-      limit: 1000
-    });
-
-    // Filter channels that match 'client-*-delivery' pattern
-    const clientDeliveryChannels = result.channels.filter(channel => 
-      /^client-.+-delivery$/.test(channel.name)
-    );
-
-    return clientDeliveryChannels;
-  } catch (error) {
-    winston.error('Error fetching channels:', error);
-    throw error;
+    try {
+      let allChannels = [];
+      let cursor = '';
+      const LIMIT = 200; // Recommended batch size
+  
+      // Keep fetching until there are no more pages
+      do {
+        const result = await client.conversations.list({
+          types: 'public_channel',
+          limit: LIMIT,
+          cursor: cursor || undefined // Only include cursor if it has a value
+        });
+  
+        // Add the current page of channels to our collection
+        allChannels = allChannels.concat(result.channels);
+  
+        // Get the next cursor for pagination
+        cursor = result.response_metadata?.next_cursor || '';
+  
+      } while (cursor); // Continue until there's no more pages
+  
+      // Debug: Log all channels for inspection
+      winston.info(`Found ${allChannels.length} total channels in workspace`);
+  
+      // Filter channels that match 'client-*-delivery' pattern and are not archived
+      const clientDeliveryChannels = allChannels.filter(channel => {
+        const matchesPattern = /^client-.+-delivery$/.test(channel.name);
+        winston.info(`Channel ${channel.name}: matchesPattern=${matchesPattern}, is_archived=${channel.is_archived}`);
+        return matchesPattern && !channel.is_archived;
+      });
+  
+      winston.info(`Found ${clientDeliveryChannels.length} active client delivery channels: ${clientDeliveryChannels.map(c => c.name).join(', ')}`);
+      return clientDeliveryChannels;
+    } catch (error) {
+      winston.error('Error fetching channels:', error);
+      throw error;
+    }
   }
-}
 
 async function ensureBotInChannel(channelId) {
   try {
@@ -34,8 +54,13 @@ async function ensureBotInChannel(channelId) {
     await client.conversations.join({ channel: channelId });
     return true;
   } catch (error) {
+    // Handle expected error cases
     if (error.data?.error === 'already_in_channel') {
       return true; // Already in channel
+    }
+    if (error.data?.error === 'is_archived') {
+      winston.warn(`Skipping archived channel ${channelId}`);
+      return false;
     }
     winston.error(`Error joining channel ${channelId}:`, error);
     return false;
@@ -55,7 +80,7 @@ async function findTopMessageInChannel(channelId) {
     const messages = await client.conversations.history({
       channel: channelId,
       limit: 100,
-      oldest: ONE_WEEK_AGO.toString()
+      oldest: ONE_MONTH_AGO.toString()
     });
 
     if (!messages.messages || messages.messages.length === 0) {
@@ -124,9 +149,12 @@ async function respondToRecap({ message, client: botClient }) {
 
     // Process each channel to find top messages
     const channelReports = [];
+    winston.info(`Processing ${channels.length} channels: ${channels.map(c => c.name).join(', ')}`);
     
     for (const channel of channels) {
+      winston.info(`Processing channel: ${channel.name}`);
       const topMessage = await findTopMessageInChannel(channel.id);
+      winston.info(`Channel ${channel.name} - found message:`, topMessage ? 'Yes' : 'No');
       if (topMessage) {
         const messageLink = await formatMessageLink(channel.id, topMessage.ts);
         channelReports.push({
@@ -171,7 +199,7 @@ async function respondToRecap({ message, client: botClient }) {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '*📊 Weekly Client Delivery Recap*'
+              text: '*📊 Monthly Client Delivery Hype Recap (Most reacted messages) *'
             }
           },
           {

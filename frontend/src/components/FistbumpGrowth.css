@@ -1,0 +1,127 @@
+.fistbump-growth {
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.growth-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.growth-header h2 {
+  font-size: 1.75rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.growth-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.growth-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 12px;
+  align-items: end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #444;
+}
+
+.form-group select,
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.form-group select:hover,
+.form-group input:hover {
+  border-color: #4CAF50;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.analyze-button {
+  padding: 0.75rem 1.5rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: fit-content;
+}
+
+.analyze-button:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.analyze-button:active {
+  transform: translateY(0);
+}
+
+.growth-loading {
+  text-align: center;
+  color: #666;
+  font-size: 1.1rem;
+  padding: 2rem;
+}
+
+.growth-chart {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-height: 400px;
+}
+
+@media (max-width: 768px) {
+  .fistbump-growth {
+    padding: 1rem;
+  }
+
+  .growth-form {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+
+  .growth-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .growth-header p {
+    font-size: 1rem;
+  }
+
+  .growth-chart {
+    padding: 1rem;
+  }
+}

@@ -47,3 +47,7 @@ settings:
     is_enabled: true
   org_deploy_enabled: false
   socket_mode_enabled: true
+  slash_commands:
+    - command: /gratibot-schedule-report
+      description: Configure and manage scheduled fistbump reports
+      usage_hint: "[enable|disable|status|preview|help] [days]"

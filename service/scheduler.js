@@ -1,5 +1,5 @@
-const schedule = require('node-schedule');
-const winston = require('../winston');
+const schedule = require("node-schedule");
+const winston = require("../winston");
 
 // store active jobs so they can be referenced later
 const activeJobs = {};
@@ -10,7 +10,7 @@ function scheduleJob(name, cronExpression, jobFunction) {
   if (activeJobs[name]) {
     activeJobs[name].cancel();
     winston.info(`cancelled existing scheduled job: ${name}`, {
-      func: 'service.scheduler.scheduleJob',
+      func: "service.scheduler.scheduleJob",
     });
   }
 
@@ -19,7 +19,7 @@ function scheduleJob(name, cronExpression, jobFunction) {
   activeJobs[name] = job;
 
   winston.info(`scheduled new job: ${name} with cron: ${cronExpression}`, {
-    func: 'service.scheduler.scheduleJob',
+    func: "service.scheduler.scheduleJob",
   });
 
   return job;
@@ -32,12 +32,12 @@ function cancelJob(name) {
     delete activeJobs[name];
 
     winston.info(`cancelled scheduled job: ${name}`, {
-      func: 'service.scheduler.cancelJob',
+      func: "service.scheduler.cancelJob",
     });
 
     return result;
   }
-  
+
   return false;
 }
 

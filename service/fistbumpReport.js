@@ -1,12 +1,15 @@
-const winston = require('../winston');
-const moment = require('moment-timezone');
-const recognition = require('./recognition');
+const winston = require("../winston");
+const moment = require("moment-timezone");
+const recognition = require("./recognition");
 
 // generate chart data for fistbump visualization
-async function getFistbumpChartData(timeRange, timezone = 'America/Los_Angeles') {
+async function getFistbumpChartData(
+  timeRange,
+  timezone = "America/Los_Angeles",
+) {
   const recognitionData = await recognition.getPreviousXDaysOfRecognition(
     timezone,
-    timeRange
+    timeRange,
   );
 
   // summarize data by recipient
@@ -24,14 +27,14 @@ async function getFistbumpChartData(timeRange, timezone = 'America/Los_Angeles')
 
   // prepare chart data
   const chart = {
-    type: 'bar',
+    type: "bar",
     data: {
-      labels: sortedData.map(item => `<@${item.user}>`),
+      labels: sortedData.map((item) => `<@${item.user}>`),
       datasets: [
         {
-          label: 'Fistbumps Received',
-          data: sortedData.map(item => item.count),
-          backgroundColor: 'rgba(54, 162, 235, 0.8)',
+          label: "Fistbumps Received",
+          data: sortedData.map((item) => item.count),
+          backgroundColor: "rgba(54, 162, 235, 0.8)",
         },
       ],
     },
@@ -54,8 +57,8 @@ async function getFistbumpChartData(timeRange, timezone = 'America/Los_Angeles')
     },
   };
 
-  winston.debug('fistbump chart data prepared', {
-    func: 'service.fistbumpReport.getFistbumpChartData',
+  winston.debug("fistbump chart data prepared", {
+    func: "service.fistbumpReport.getFistbumpChartData",
     time_range: timeRange,
   });
 
@@ -63,7 +66,10 @@ async function getFistbumpChartData(timeRange, timezone = 'America/Los_Angeles')
 }
 
 // create visualization report blocks for slack
-async function createFistbumpReportBlocks(timeRange, timezone = 'America/Los_Angeles') {
+async function createFistbumpReportBlocks(
+  timeRange,
+  timezone = "America/Los_Angeles",
+) {
   const blocks = [];
 
   // generate chart data
@@ -73,25 +79,25 @@ async function createFistbumpReportBlocks(timeRange, timezone = 'America/Los_Ang
 
   // start and end dates for the report period
   const endDate = moment().tz(timezone);
-  const startDate = moment().tz(timezone).subtract(timeRange, 'days');
-  const dateRange = `${startDate.format('MMM D')} to ${endDate.format('MMM D, YYYY')}`;
+  const startDate = moment().tz(timezone).subtract(timeRange, "days");
+  const dateRange = `${startDate.format("MMM D")} to ${endDate.format("MMM D, YYYY")}`;
 
   // create header
   blocks.push({
-    type: 'header',
+    type: "header",
     text: {
-      type: 'plain_text',
-      text: '📊 Weekly Fistbump Report',
+      type: "plain_text",
+      text: "📊 Weekly Fistbump Report",
       emoji: true,
     },
   });
 
   // add date range context
   blocks.push({
-    type: 'context',
+    type: "context",
     elements: [
       {
-        type: 'mrkdwn',
+        type: "mrkdwn",
         text: `*Period:* ${dateRange}`,
       },
     ],
@@ -99,32 +105,33 @@ async function createFistbumpReportBlocks(timeRange, timezone = 'America/Los_Ang
 
   // add chart image
   blocks.push({
-    type: 'image',
+    type: "image",
     title: {
-      type: 'plain_text',
-      text: 'Fistbump Leaderboard',
+      type: "plain_text",
+      text: "Fistbump Leaderboard",
     },
     image_url: imageURL,
-    alt_text: 'Chart showing fistbump recipients',
+    alt_text: "Chart showing fistbump recipients",
   });
 
   // calculate total recognitions for this period
-  const totalCount = await recognition.getCountOfRecognitionsInPreviousXDays(timeRange);
-  
+  const totalCount =
+    await recognition.getCountOfRecognitionsInPreviousXDays(timeRange);
+
   // add stats section
   blocks.push({
-    type: 'section',
+    type: "section",
     text: {
-      type: 'mrkdwn',
+      type: "mrkdwn",
       text: `*Total Fistbumps:* ${totalCount} in the last ${timeRange} days`,
     },
   });
 
   // add divider
-  blocks.push({ type: 'divider' });
+  blocks.push({ type: "divider" });
 
-  winston.debug('fistbump report blocks created', {
-    func: 'service.fistbumpReport.createFistbumpReportBlocks',
+  winston.debug("fistbump report blocks created", {
+    func: "service.fistbumpReport.createFistbumpReportBlocks",
     block_count: blocks.length,
     time_range: timeRange,
   });
@@ -136,26 +143,26 @@ async function createFistbumpReportBlocks(timeRange, timezone = 'America/Los_Ang
 async function postFistbumpReport(client, channelId, timeRange = 7) {
   try {
     const blocks = await createFistbumpReportBlocks(timeRange);
-    
+
     await client.chat.postMessage({
       channel: channelId,
       blocks: blocks,
       text: `Fistbump Report for the last ${timeRange} days`,
     });
 
-    winston.info('fistbump report posted successfully', {
-      func: 'service.fistbumpReport.postFistbumpReport',
+    winston.info("fistbump report posted successfully", {
+      func: "service.fistbumpReport.postFistbumpReport",
       channel: channelId,
       time_range: timeRange,
     });
-    
+
     return true;
   } catch (error) {
-    winston.error('error posting fistbump report', {
-      func: 'service.fistbumpReport.postFistbumpReport',
+    winston.error("error posting fistbump report", {
+      func: "service.fistbumpReport.postFistbumpReport",
       error: error.message,
     });
-    
+
     return false;
   }
 }

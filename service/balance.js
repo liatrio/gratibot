@@ -34,20 +34,13 @@ async function lifetimeSpendings(user) {
 }
 
 async function dailyGratitudeRemaining(user, timezone) {
-  if (config.usersExemptFromMaximum.includes(user)) {
-    winston.debug("current user is exempt from limits!", {
-      func: "service.balance.dailyGratitudeRemaining",
-      callingUser: user,
-    });
-    return Infinity;
-  }
-
   const userDate = moment(Date.now()).tz(timezone);
   const midnight = userDate.startOf("day");
   
-  // Check if it's the first Friday of the month
-  const isFirstFriday = userDate.day() === 5 && // Friday is 5 in moment.js
-                       userDate.date() <= 7;     // First week of the month
+  // Check if it's either manually enabled or it's the first Friday
+  const isFirstFriday = config.firstFridayEnabled || 
+                       (userDate.day() === 5 && // Friday is 5 in moment.js
+                        userDate.date() <= 7);   // First week of the month
   
   const recognitionGivenToday = await recognitionCollection.count({
     recognizer: user,
@@ -65,6 +58,7 @@ async function dailyGratitudeRemaining(user, timezone) {
       callingUser: user,
       timezone: timezone,
       isFirstFriday: isFirstFriday,
+      firstFridayEnabled: config.firstFridayEnabled,
     },
   );
 

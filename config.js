@@ -6,12 +6,12 @@ config.mongo_url = process.env.MONGO_URL || "mongodb://mongodb:27017/gratibot";
 config.logLevel = process.env.LOG_LEVEL || "info";
 
 config.recognizeEmoji =
-  _.escapeRegExp(process.env.RECOGNIZE_EMOJI) || ":fistbump:";
+  _.escapeRegExp(process.env.RECOGNIZE_EMOJI) || ":toot:";
 config.goldenRecognizeEmoji =
   process.env.GOLDEN_RECOGNIZE_EMOJI || ":goldenfistbump:";
 config.goldenRecognizeChannel =
   process.env.GOLDEN_RECOGNIZE_CHANNEL || "liatrio";
-config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
+config.reactionEmoji = process.env.REACTION_EMOJI || ":toot:";
 config.maximum = process.env.GRATIBOT_LIMIT || 5;
 config.firstFridayMaximum = process.env.GRATIBOT_FIRST_FRIDAY_LIMIT || 10;
 config.minimumMessageLength = 20;
@@ -24,7 +24,6 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U04KTAJRS5T", // Mike Denton
   "U0K32MUSF", // Robert Kelly
   "U05HA77CE5S", //Ryan McClish
-  "U071G57GRMW", //Rich Montbriand
 ];
 
 config.initialGoldenRecognitionHolder =
@@ -32,5 +31,16 @@ config.initialGoldenRecognitionHolder =
 config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
   "U04666K57CP", // Danielle Johnson
 ];
+
+config.firstFridayAdmins = process.env.FIRST_FRIDAY_ADMINS?.split(",") || [
+  "U037FL37G", // Chris Blackburn
+  "U8T585Y8J", // Jeremy Hayes
+  "U04KTAJRS5T", // Mike Denton
+  "U0K32MUSF", // Robert Kelly
+  "U05HA77CE5S", //Ryan McClish
+  "U054SKX2V4L", // Leo Pineiro
+];
+
+config.firstFridayEnabled = false;
 
 module.exports = config;

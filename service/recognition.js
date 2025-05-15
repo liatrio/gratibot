@@ -132,7 +132,7 @@ async function doesUserHoldGoldenRecognition(userId, rec) {
 }
 
 async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
-  //get only the entries from the specifc day from midnight
+  // get entries from the specific day from midnight
   let filter = {};
   if (days && timezone) {
     let userDate = moment(Date.now()).tz(timezone);
@@ -143,7 +143,7 @@ async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
     };
   }
 
-  winston.debug("retrieving total recognitions given", {
+  winston.info("attempting to retrieve recognitions", {
     func: "service.recognition.getPreviousXDaysOfRecognition",
     timezone: timezone,
     days: days,

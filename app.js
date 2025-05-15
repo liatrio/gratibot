@@ -102,6 +102,7 @@ function parseCommand(command) {
   return parsed;
 }
 
+// Handle the original slashCommand from config
 app.command(slashCommand, async ({ command, ack, respond }) => {
   await ack();
   const userCommand = parseCommand(command);
@@ -112,6 +113,57 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
       break;
     default:
       await respond(errorMarkdown);
+  }
+});
+
+// Explicitly handle the schedule report command
+app.command("gratibot-schedule-report", async ({ command, ack, respond, client }) => {
+  await ack();
+  winston.info("received schedule report command", { command_text: command.text });
+  
+  try {
+    const { channel_id, text, user_id } = command;
+
+    // check if user has the permission to configure reports
+    const userInfo = await client.users.info({ user: user_id });
+    if (!userInfo.user.is_admin) {
+      await respond({
+        text: "You need to be a workspace admin to configure scheduled reports.",
+        response_type: "ephemeral",
+      });
+      return;
+    }
+
+    // parse command text for configuration
+    const args = text.trim().split(/\s+/);
+    const subCommand = args[0]?.toLowerCase() || "help";
+
+    switch (subCommand) {
+      case "help":
+      default: {
+        // show help info
+        await respond({
+          text:
+            "Available commands:\n" +
+            "• `/gratibot-schedule-report enable [days]` - Enable weekly reports (defaults to 7 days)\n" +
+            "• `/gratibot-schedule-report disable` - Disable weekly reports\n" +
+            "• `/gratibot-schedule-report status` - Check current configuration\n" +
+            "• `/gratibot-schedule-report preview [days]` - Generate a preview report\n" +
+            "• `/gratibot-schedule-report help` - Show this help message",
+          response_type: "ephemeral",
+        });
+        break;
+      }
+    }
+  } catch (error) {
+    winston.error("error handling schedule command", {
+      error: error.message,
+    });
+
+    await respond({
+      text: "An error occurred while processing your command. Please try again later.",
+      response_type: "ephemeral",
+    });
   }
 });
 
@@ -212,13 +264,13 @@ people have given recognitions over the last month.
 
 *Weekly Fistbump Reports*
 
-Use the slash command \`\/gratibot-schedule-report\` to configure automated weekly visualization reports for fistbumps. This works in any channel!
+Use the slash command \`/gratibot-schedule-report\` to configure automated weekly visualization reports for fistbumps. This works in any channel!
 
-> \`\/gratibot-schedule-report help\` - Show available options
-> \`\/gratibot-schedule-report preview 7\` - Generate a preview report for the last 7 days
-> \`\/gratibot-schedule-report enable 7\` - Schedule weekly reports in this channel
-> \`\/gratibot-schedule-report status\` - Check current configuration
-> \`\/gratibot-schedule-report disable\` - Turn off weekly reports
+> \`/gratibot-schedule-report help\` - Show available options
+> \`/gratibot-schedule-report preview 7\` - Generate a preview report for the last 7 days
+> \`/gratibot-schedule-report enable 7\` - Schedule weekly reports in this channel
+> \`/gratibot-schedule-report status\` - Check current configuration
+> \`/gratibot-schedule-report disable\` - Turn off weekly reports
 
 
 *Give Golden Recognition*

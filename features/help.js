@@ -91,13 +91,13 @@ people have given recognitions over the last month.
 
 *Weekly Fistbump Reports*
 
-Use the slash command \`\/gratibot-schedule-report\` to configure automated weekly visualization reports for fistbumps. This works in any channel!
+Use the slash command \`/gratibot-schedule-report\` to configure automated weekly visualization reports for fistbumps. This works in any channel!
 
-> \`\/gratibot-schedule-report help\` - Show available options
-> \`\/gratibot-schedule-report preview 7\` - Generate a preview report for the last 7 days
-> \`\/gratibot-schedule-report enable 7\` - Schedule weekly reports in this channel
-> \`\/gratibot-schedule-report status\` - Check current configuration
-> \`\/gratibot-schedule-report disable\` - Turn off weekly reports
+> \`/gratibot-schedule-report help\` - Show available options
+> \`/gratibot-schedule-report preview 7\` - Generate a preview report for the last 7 days
+> \`/gratibot-schedule-report enable 7\` - Schedule weekly reports in this channel
+> \`/gratibot-schedule-report status\` - Check current configuration
+> \`/gratibot-schedule-report disable\` - Turn off weekly reports
 
 
 *Give Golden Recognition*

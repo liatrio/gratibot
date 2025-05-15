@@ -9,7 +9,8 @@ const DEFAULT_TIMEZONE = process.env.DEFAULT_TIMEZONE || "America/Los_Angeles";
 const createChartObject = (sortedData, timeRange) => ({
   type: "bar",
   data: {
-    labels: sortedData.map((item) => `<@${item.user}>`),
+    // use userName if available, otherwise use Slack mention format
+    labels: sortedData.map((item) => item.userName || `${item.user}`),
     datasets: [
       {
         label: "Fistbumps Received",
@@ -39,19 +40,25 @@ const createChartObject = (sortedData, timeRange) => ({
 
 // pure function to generate sample recognition data when no real data exists
 const generateSampleData = (count = 5) => {
-  // sample users for demonstration purposes
+  // sample users for demonstration purposes with more descriptive names
   const sampleUsers = [
-    { id: 'U03HW0858AF', name: 'Tim' },
-    { id: 'U04V6Q0BKPH', name: 'Ian' },
-    { id: 'U02T9EL7D7D', name: 'Zach' },
-    { id: 'UABCDEF123', name: 'Alice' },
-    { id: 'UGHIJKL456', name: 'Bob' },
+    { id: 'U03HW0858AF', name: 'Tim', display: 'Tim Johnson' },
+    { id: 'U04V6Q0BKPH', name: 'Ian', display: 'Ian Hundere' },
+    { id: 'U02T9EL7D7D', name: 'Zach', display: 'Zach Smith' },
+    { id: 'UABCDEF123', name: 'Alice', display: 'Alice Chen' },
+    { id: 'UGHIJKL456', name: 'Bob', display: 'Bob Williams' },
+    { id: 'UMNOPQR789', name: 'Carol', display: 'Carol Davis' },
+    { id: 'USTUVWX012', name: 'Dave', display: 'Dave Martinez' },
+    { id: 'UYZABCD345', name: 'Eve', display: 'Eve Wilson' },
+    { id: 'UEFGHIJ678', name: 'Frank', display: 'Frank Taylor' },
+    { id: 'UKLMNOP901', name: 'Grace', display: 'Grace Lee' },
   ];
   
   // generate random counts for each user
   return sampleUsers
     .map(user => ({
       user: user.id,
+      userName: user.display, // include display name for chart labels
       count: Math.floor(Math.random() * 20) + 1 // 1-20 fistbumps per user
     }))
     .sort((a, b) => b.count - a.count) // sort by count descending

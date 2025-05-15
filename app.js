@@ -72,6 +72,10 @@ require("fs")
     require("./features/" + file)(app);
   });
 
+winston.info("all features loaded and initialized", {
+  func: "app.featureLoading",
+});
+
 /// ////////////////////////////////////////////////////////////
 // Slash Command Logic //
 /// ////////////////////////////////////////////////////////////

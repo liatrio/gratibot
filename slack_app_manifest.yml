@@ -13,6 +13,10 @@ features:
   bot_user:
     display_name: ian_hundere-gratibot
     always_online: true
+  slash_commands:
+    - command: /gratibot-schedule-report
+      description: Configure and manage scheduled fistbump reports
+      usage_hint: "[enable|disable|status|preview|help] [days]"
 oauth_config:
   scopes:
     bot:
@@ -21,6 +25,7 @@ oauth_config:
       - channels:read
       - channels:join
       - chat:write
+      - commands
       - groups:history
       - groups:read
       - im:history
@@ -47,7 +52,3 @@ settings:
     is_enabled: true
   org_deploy_enabled: false
   socket_mode_enabled: true
-  commands:
-    - command: /gratibot-schedule-report
-      description: Configure and manage scheduled fistbump reports
-      usage_hint: "[enable|disable|status|preview|help] [days]"

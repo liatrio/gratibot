@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './FistbumpWrapped.css';
 
 const FistbumpWrapped = () => {
-  const [selectedUser, setSelectedUser] = useState('');
+  const [selectedUser, setSelectedUser] = useState('dawn');
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,18 +17,30 @@ const FistbumpWrapped = () => {
       { id: 'calvin', name: 'Calvin' }
     ]);
     setLoading(false);
+    // Fetch stats for Dawn immediately
+    fetchUserStats('dawn').then(data => {
+      setStats(data);
+      setLoading(false);
+    });
   }, []);
 
   const fetchUserStats = async (userId) => {
     // TODO: Replace with actual API call
     return {
       totalFistbumps: 245,
-      monthlyStats: [
-        { month: 'January', count: 15 },
-        { month: 'February', count: 22 },
-        { month: 'March', count: 45 },
-        { month: 'April', count: 30 },
-        { month: 'May', count: 28 }
+      monthlyBreakdown: [
+        { month: 'January', count: 15, topGiver: 'Dawn', tags: ['teamwork', 'innovation'] },
+        { month: 'February', count: 22, topGiver: 'Leo', tags: ['leadership', 'collaboration'] },
+        { month: 'March', count: 18, topGiver: 'Patrick', tags: ['problem-solving', 'mentoring'] },
+        { month: 'April', count: 25, topGiver: 'Calvin', tags: ['excellence', 'support'] },
+        { month: 'May', count: 28, topGiver: 'Dawn', tags: ['innovation', 'dedication'] },
+        { month: 'June', count: 32, topGiver: 'Leo', tags: ['teamwork', 'leadership'] },
+        { month: 'July', count: 24, topGiver: 'Patrick', tags: ['collaboration', 'mentoring'] },
+        { month: 'August', count: 30, topGiver: 'Calvin', tags: ['excellence', 'innovation'] },
+        { month: 'September', count: 35, topGiver: 'Dawn', tags: ['teamwork', 'support'] },
+        { month: 'October', count: 29, topGiver: 'Leo', tags: ['leadership', 'dedication'] },
+        { month: 'November', count: 33, topGiver: 'Patrick', tags: ['problem-solving', 'collaboration'] },
+        { month: 'December', count: 38, topGiver: 'Calvin', tags: ['excellence', 'mentoring'] }
       ],
       topGivers: [
         { name: 'Dawn', count: 20 },
@@ -92,13 +104,16 @@ const FistbumpWrapped = () => {
             {currentSlide === 1 && (
               <div className="wrapped-slide active">
                 <h3>Monthly Breakdown</h3>
-                <div className="monthly-stats">
-                  {stats.monthlyStats.map((stat, index) => (
-                    <div key={index} className="month-stat">
-                      <div className="month-name">{stat.month}</div>
-                      <div className="month-count">{stat.count}</div>
+                <div className="monthly-chart">
+                  <div className="bar-container">
+                    <div 
+                      className="bar" 
+                      style={{ height: `${(stats.monthlyBreakdown.reduce((max, stat) => Math.max(max, stat.count), 0) / 50) * 100}%` }}
+                    >
+                      <span className="bar-value">{stats.monthlyBreakdown.reduce((sum, stat) => sum + stat.count, 0)}</span>
                     </div>
-                  ))}
+                  </div>
+                  <div className="bar-label">Total Monthly Fistbumps</div>
                 </div>
               </div>
             )}

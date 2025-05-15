@@ -210,6 +210,17 @@ Send me a direct message with 'metrics' and I'll show you how many times \
 people have given recognitions over the last month.
 
 
+*Weekly Fistbump Reports*
+
+Use the slash command \`\/gratibot-schedule-report\` to configure automated weekly visualization reports for fistbumps. This works in any channel!
+
+> \`\/gratibot-schedule-report help\` - Show available options
+> \`\/gratibot-schedule-report preview 7\` - Generate a preview report for the last 7 days
+> \`\/gratibot-schedule-report enable 7\` - Schedule weekly reports in this channel
+> \`\/gratibot-schedule-report status\` - Check current configuration
+> \`\/gratibot-schedule-report disable\` - Turn off weekly reports
+
+
 *Give Golden Recognition*
 
 The golden fistbump ${goldenRecognizeEmoji} is a special recognition that can only be held by one user at a time. Only the current holder of the golden recognition can give the golden recognition.

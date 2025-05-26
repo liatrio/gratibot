@@ -146,7 +146,7 @@ async function updateReportTimeRange({ ack, body, client, action, respond }) {
     });
 
     await respond({
-      text: `Something went wrong while updating the report: ${error.message}`,
+      text: "Something went wrong while updating the report. Please try again later.",
       replace_original: false,
     });
   }

@@ -272,7 +272,7 @@ async function giveGratitude(gratitude) {
         giveRecognition(
           gratitude.giver.id,
           gratitude.receivers[i].id,
-          gratitude.trimmedMessage,
+          gratitude.message,
           gratitude.channel,
           gratitude.tags,
           gratitude.type,
@@ -294,7 +294,7 @@ async function giveGratitude(gratitude) {
           giveRecognition(
             gratitude.giver.id,
             gratitude.receivers[i].id,
-            gratitude.trimmedMessage,
+            gratitude.message,
             gratitude.channel,
             gratitude.tags,
           ),
@@ -306,7 +306,7 @@ async function giveGratitude(gratitude) {
           giveRecognition(
             "goldenFistbumpMultiplier",
             gratitude.receivers[i].id,
-            gratitude.trimmedMessage,
+            gratitude.message,
             gratitude.channel,
             gratitude.tags,
           ),

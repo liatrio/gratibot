@@ -84,7 +84,7 @@ async function respondToReport({ message, client }) {
     await client.chat.postEphemeral({
       channel: message.channel,
       user: message.user,
-      text: `Something went wrong while generating the report: ${error.message}`,
+      text: "An unexpected error occurred while generating the report. Please try again later.",
     });
   }
 }

@@ -168,7 +168,7 @@ async function createUserTopMessagesBlocks(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "No ${config.recognizeEmoji} found in the specified time period.",
+        text: `No ${config.recognizeEmoji} found in the specified time period.`,
       },
     });
   } else {

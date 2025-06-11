@@ -73,20 +73,26 @@ recognitions you have left to give and how many you have received.
 give away today
 
 
-
-
 *View Leaderboard*
 
 Send me a direct message with 'leaderboard' and I'll show you who is giving \
 and receiving the most recognition. I'll also show who currently holds the :goldenfistbump:!
 
 
-
-
 *View Metrics*
 
 Send me a direct message with 'metrics' and I'll show you how many times \
 people have given recognitions over the last month.
+
+
+*View Report: Top Reasons for Recognition*
+
+Send me a direct message with 'report' to see the top reasons you've \
+received fistbumps over the past month, six months, or year.
+
+To see a report for someone else, use 'report @example-user'.
+
+Great for remembering accomplishments when writing biannual reviews.
 
 
 *Give Golden Recognition*

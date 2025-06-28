@@ -4,6 +4,7 @@
     "config:recommended",
     "helpers:pinGitHubActionDigests"
   ],
+  "labels": ["renovate"],
   "timezone": "America/Los_Angeles",
   "schedule": ["* * * * 0,6"],
   "packageRules": [
@@ -11,13 +12,8 @@
       "matchUpdateTypes": ["minor", "patch"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "autoApprove": true
-
-    },
-    {
-      "matchDepTypes": ["devDependencies"],
-      "automerge": true,
-      "autoApprove": true
+      "autoApprove": true,
+      "groupName": "Dependencies (non-major)"
     }
   ]
 }

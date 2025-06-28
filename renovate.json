@@ -12,12 +12,8 @@
       "matchUpdateTypes": ["minor", "patch"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "autoApprove": true
-    },
-    {
-      "matchDepTypes": ["devDependencies"],
-      "automerge": true,
-      "autoApprove": true
+      "autoApprove": true,
+      "groupName": "Dependencies (non-major)"
     }
   ]
 }

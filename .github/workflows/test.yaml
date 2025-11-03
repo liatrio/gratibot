@@ -17,11 +17,5 @@ jobs:
           node-version: 22
       - name: Checkout Code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - name: Test & publish
-        uses: paambaati/codeclimate-action@f429536ee076d758a24705203199548125a28ca7 # v9.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.code_climate_reporter_id }}
-        with:
-          coverageCommand: npm run test:ci
-          coverageLocations: |
-            ${{github.workspace}}/*.lcov:lcov
+      - name: Test
+        run: npm run test:ci

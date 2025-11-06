@@ -17,45 +17,51 @@
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Nike_Air_Force1.png",
     "cost": 500
   },
-  {  
+  {
     "name": "Hawaiian Shirt",
-    "description": "Hawaiian Shirt.",  
+    "description": "Hawaiian Shirt.",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/5_HawaiianShirt.png",
     "cost": 80
   },
   {
-    "name": "Visa Gift Card",  
-    "description": "$25 Visa Gift Card",  
+    "name": "Visa Gift Card",
+    "description": "$25 Visa Gift Card",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
     "cost": 100
   },
   {
-    "name": "Donation: Open Source Mental Health",  
-    "description": "Donate $50 to Open Source Mental Health",  
+    "name": "Donation: Feeding America",
+    "description": "Donate $50 to Feeding America",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Feeding_America_Logo.png",
+    "cost": 100
+  },
+  {
+    "name": "Donation: Open Source Mental Health",
+    "description": "Donate $50 to Open Source Mental Health",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/OSMH logo.jpeg",
     "cost": 100
   },
-  {  
-    "name": "Donation: National Alliance to End Homelessness",  
-    "description": "Donate $50 to National Alliance to End Homelessness",  
+  {
+    "name": "Donation: National Alliance to End Homelessness",
+    "description": "Donate $50 to National Alliance to End Homelessness",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/NAEH logo.png",
     "cost": 100
   },
-  {  
-    "name": "Donation: Girls Who Code",  
-    "description": "Donate $50 to Girls Who Code",  
+  {
+    "name": "Donation: Girls Who Code",
+    "description": "Donate $50 to Girls Who Code",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (17).png",
     "cost": 100
   },
-  {  
-    "name": "Donation: Go Climate Neutral",  
-    "description": "Donate $50 to Go Climate Neutral",  
+  {
+    "name": "Donation: Go Climate Neutral",
+    "description": "Donate $50 to Go Climate Neutral",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (16).png",
     "cost": 100
   },
-  {  
-    "name": "Donation: 4ocean",  
-    "description": "Donate $20 to 4ocean",  
+  {
+    "name": "Donation: 4ocean",
+    "description": "Donate $20 to 4ocean",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (15).png",
     "cost": 40
   }

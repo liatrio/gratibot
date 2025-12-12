@@ -22,8 +22,8 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U8T585Y8J", // Jeremy Hayes
   "U04KTAJRS5T", // Mike Denton
   "U0K32MUSF", // Robert Kelly
-  "U05HA77CE5S", //Ryan McClish
-  "U071G57GRMW", //Rich Montbriand
+  "U05HA77CE5S", // Ryan McClish
+  "U08PEV0SCLW", // Avery Green
 ];
 
 config.initialGoldenRecognitionHolder =

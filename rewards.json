@@ -24,6 +24,18 @@
     "cost": 80
   },
   {
+    "name": "Microphone",
+    "description": "<https://www.amazon.com/dp/B0CTJ7PVN1|Shure MV7+ Podcast Dynamic Microphone>",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Microphone.jpg",
+    "cost": 538
+  },
+  {
+    "name": "Microphone Arm",
+    "description": "<https://www.amazon.com/dp/B097376LKF|Elgato Wave Mic Arm>",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Mic_Arm.jpg",
+    "cost": 140
+  },
+  {
     "name": "Visa Gift Card",
     "description": "$25 Visa Gift Card",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",

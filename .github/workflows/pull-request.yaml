@@ -107,7 +107,7 @@ jobs:
           ARM_USE_OIDC: true
           TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
 
-      - uses: liatrio/terraform-change-pr-commenter@0050454ca62e2839dc35022bfbd474a139c2c65d # v1.14.0
+      - uses: liatrio/terraform-change-pr-commenter@9c5e30fc65d87116c6419e74bb93c2d9b6336b2f # v1.14.1
         with:
           json-file: infra/terragrunt/nonprod/gratibot/plan.json
           expand-comment: 'true'

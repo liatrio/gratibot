@@ -42,6 +42,12 @@
     "cost": 100
   },
   {
+    "name": "Donation: Electronic Frontier Foundation",
+    "description": "Donate $50 to the Electronic Frontier Foundation",
+    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/EFF_Logo.png",
+    "cost": 100
+  },
+  {
     "name": "Donation: Feeding America",
     "description": "Donate $50 to Feeding America",
     "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Feeding_America_Logo.png",

@@ -95,42 +95,42 @@ jobs:
       - name: Get namespace from catalog-info.yaml
         if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
         id: get_namespace_catalog
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@17f66dc6c6a177fafd8b71a6abea6d6340aa1e16 # master
         with:
           cmd: yq '.metadata.namespace // "default"' catalog-info.yaml
 
       - name: Get name from catalog-info.yaml
         if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
         id: get_name_catalog
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@17f66dc6c6a177fafd8b71a6abea6d6340aa1e16 # master
         with:
           cmd: yq '.metadata.name' catalog-info.yaml
 
       - name: Get kind from catalog-info.yaml
         if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
         id: get_kind_catalog
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@17f66dc6c6a177fafd8b71a6abea6d6340aa1e16 # master
         with:
           cmd: yq '.kind' catalog-info.yaml
 
       - name: Get namespace from template.yaml
         if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
         id: get_namespace_template
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@17f66dc6c6a177fafd8b71a6abea6d6340aa1e16 # master
         with:
           cmd: yq '.metadata.namespace // "default"' template.yaml
 
       - name: Get name from template.yaml
         if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
         id: get_name_template
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@17f66dc6c6a177fafd8b71a6abea6d6340aa1e16 # master
         with:
           cmd: yq '.metadata.name' template.yaml
 
       - name: Get kind from template.yaml
         if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
         id: get_kind_template
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@17f66dc6c6a177fafd8b71a6abea6d6340aa1e16 # master
         with:
           cmd: yq '.kind' template.yaml
 

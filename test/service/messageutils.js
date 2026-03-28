@@ -10,6 +10,60 @@ describe("service/messageutils", () => {
     sinon.restore();
   });
 
+  describe("respondToUser", () => {
+    let testClient;
+
+    beforeEach(() => {
+      testClient = {
+        chat: {
+          postMessage: sinon.stub(),
+          postEphemeral: sinon.stub(),
+        },
+      };
+    });
+
+    it("should use postMessage when channel_type is im", async () => {
+      const messageContext = { channel: "D123", user: "U123", channel_type: "im" };
+      await messageutils.respondToUser(testClient, messageContext, { text: "hello" });
+      sinon.assert.calledOnce(testClient.chat.postMessage);
+      sinon.assert.notCalled(testClient.chat.postEphemeral);
+      sinon.assert.calledWith(testClient.chat.postMessage, {
+        channel: "D123",
+        text: "hello",
+      });
+    });
+
+    it("should use postEphemeral when channel_type is not im", async () => {
+      const messageContext = { channel: "C123", user: "U123", channel_type: "channel" };
+      await messageutils.respondToUser(testClient, messageContext, { text: "hello" });
+      sinon.assert.calledOnce(testClient.chat.postEphemeral);
+      sinon.assert.notCalled(testClient.chat.postMessage);
+      sinon.assert.calledWith(testClient.chat.postEphemeral, {
+        channel: "C123",
+        user: "U123",
+        text: "hello",
+      });
+    });
+
+    it("should use postEphemeral when channel_type is missing", async () => {
+      const messageContext = { channel: "C123", user: "U123" };
+      await messageutils.respondToUser(testClient, messageContext, { text: "hello" });
+      sinon.assert.calledOnce(testClient.chat.postEphemeral);
+      sinon.assert.notCalled(testClient.chat.postMessage);
+    });
+
+    it("should pass through blocks and extra options", async () => {
+      const messageContext = { channel: "D123", user: "U123", channel_type: "im" };
+      const blocks = [{ type: "section", text: { type: "mrkdwn", text: "hi" } }];
+      await messageutils.respondToUser(testClient, messageContext, { text: "hello", blocks });
+      sinon.assert.calledWith(testClient.chat.postMessage, {
+        channel: "D123",
+        text: "hello",
+        blocks,
+      });
+    });
+  });
+
   describe("handleSlackError", () => {
     it("should return the proper message", async () => {
       const testClient = {

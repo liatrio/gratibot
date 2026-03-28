@@ -3,6 +3,20 @@ const config = require("../config");
 const recognition = require("./recognition");
 const { recognizeEmoji, goldenRecognizeEmoji } = config;
 
+async function respondToUser(client, messageContext, options) {
+  if (messageContext.channel_type === "im") {
+    return client.chat.postMessage({
+      channel: messageContext.channel,
+      ...options,
+    });
+  }
+  return client.chat.postEphemeral({
+    channel: messageContext.channel,
+    user: messageContext.user,
+    ...options,
+  });
+}
+
 async function handleSlackError(client, message, error) {
   winston.error("Slack API returned an error response", {
     apiMethod: error.apiMethod,
@@ -60,6 +74,7 @@ function getRecieverMessage(gratitude) {
 }
 
 module.exports = {
+  respondToUser,
   handleSlackError,
   handleGratitudeError,
   handleGenericError,

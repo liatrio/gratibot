@@ -22,11 +22,7 @@ async function handleSlackError(client, message, error) {
     apiMethod: error.apiMethod,
     apiError: error.apiError,
   });
-  return client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
-    text: error.userMessage,
-  });
+  return respondToUser(client, message, { text: error.userMessage });
 }
 
 async function handleGratitudeError(client, message, error) {
@@ -34,9 +30,7 @@ async function handleGratitudeError(client, message, error) {
     gratitudeErrors: error.gratitudeErrors,
   });
   const errorString = error.gratitudeErrors.join("\n");
-  return client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
+  return respondToUser(client, message, {
     text: `Sending gratitude failed with the following error(s):\n${errorString}`,
   });
 }
@@ -46,11 +40,7 @@ async function handleGenericError(client, message, error) {
     error,
   });
   const userMessage = `An unknown error occured in Gratibot: ${error.message}`;
-  return client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
-    text: userMessage,
-  });
+  return respondToUser(client, message, { text: userMessage });
 }
 
 async function sendNotificationToReceivers(client, gratitude) {

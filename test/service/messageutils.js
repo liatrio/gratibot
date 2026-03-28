@@ -68,6 +68,7 @@ describe("service/messageutils", () => {
     it("should return the proper message", async () => {
       const testClient = {
         chat: {
+          postMessage: sinon.stub(),
           postEphemeral: sinon.stub(),
         },
       };
@@ -92,6 +93,7 @@ describe("service/messageutils", () => {
     it("should return the proper message", async () => {
       const testClient = {
         chat: {
+          postMessage: sinon.stub(),
           postEphemeral: sinon.stub(),
         },
       };
@@ -120,6 +122,7 @@ describe("service/messageutils", () => {
     it("should return the proper message", async () => {
       const testClient = {
         chat: {
+          postMessage: sinon.stub(),
           postEphemeral: sinon.stub(),
         },
       };

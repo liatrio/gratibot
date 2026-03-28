@@ -5,6 +5,7 @@ const { SlackError, GratitudeError } = require("../service/errors");
 const { reactionMatches } = require("../middleware");
 const { userInfo } = require("../service/apiwrappers");
 const {
+  respondToUser,
   handleSlackError,
   handleGratitudeError,
   handleGenericError,
@@ -74,9 +75,7 @@ async function respondToRecognitionMessage({ message, client }) {
 
   return Promise.all([
     sendNotificationToReceivers(client, gratitude),
-    client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
+    respondToUser(client, message, {
       text: `${recognizeEmoji} has been sent.`,
       ...(await recognition.giverSlackNotification(gratitude)),
     }),
@@ -152,9 +151,7 @@ async function respondToRecognitionReaction({ event, client }) {
 
   return Promise.all([
     sendNotificationToReceivers(client, gratitude),
-    client.chat.postEphemeral({
-      channel: event.channel,
-      user: event.user,
+    respondToUser(client, event, {
       text: `${recognizeEmoji} has been sent.`,
       ...(await recognition.giverSlackNotification(gratitude)),
     }),

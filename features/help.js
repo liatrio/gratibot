@@ -7,6 +7,7 @@ const {
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { anyOf, directMessage } = require("../middleware");
+const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
   app.message("help", anyOf(directMention, directMessage()), respondToHelp);
@@ -112,11 +113,7 @@ async function respondToHelp({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
-    text: helpMarkdown,
-  });
+  await respondToUser(client, message, { text: helpMarkdown });
 
   winston.debug("successfully posted ephemeral help message to Slack", {
     func: "feature.help.respondToHelp",

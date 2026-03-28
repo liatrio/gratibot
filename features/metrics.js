@@ -2,6 +2,7 @@ const metrics = require("../service/metrics");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { directMessage, anyOf } = require("../middleware");
+const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
   app.message(
@@ -18,9 +19,7 @@ async function respondToMetrics({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  await client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
+  await respondToUser(client, message, {
     text: "Gratibot Metrics",
     blocks: await metrics.createMetricsBlocks(30),
   });

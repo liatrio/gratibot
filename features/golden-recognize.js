@@ -4,6 +4,7 @@ const winston = require("../winston");
 const { SlackError, GratitudeError } = require("../service/errors");
 const { userInfo } = require("../service/apiwrappers");
 const {
+  respondToUser,
   handleSlackError,
   handleGratitudeError,
   handleGenericError,
@@ -53,10 +54,7 @@ async function respondToRecognitionMessage({ message, client }) {
   return Promise.all([
     //send notification to receivers sends a DM from gratibot to the receiver of the fistbump
     sendNotificationToReceivers(client, gratitude),
-    //this call to postEphemeral sends a message only the giver can see in the channel where the fistbump was given
-    client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
+    respondToUser(client, message, {
       text: `${goldenRecognizeEmoji} has been sent.`,
       ...(await recognition.giverGoldenSlackNotification(gratitude)),
     }),

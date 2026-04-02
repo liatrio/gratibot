@@ -2,6 +2,7 @@ const balance = require("../service/balance");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { directMessage, anyOf } = require("../middleware");
+const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
   app.message(
@@ -26,9 +27,7 @@ async function respondToBalance({ message, client }) {
       slackMessage: message.text,
       error: userInfo.error,
     });
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
+    await respondToUser(client, message, {
       text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
     });
     return;
@@ -48,9 +47,7 @@ async function respondToBalance({ message, client }) {
     `You have \`${remainingToday}\` left to give away today.`,
   ].join("\n");
 
-  await client.chat.postEphemeral({
-    channel: message.channel,
-    user: message.user,
+  await respondToUser(client, message, {
     text: response,
   });
 

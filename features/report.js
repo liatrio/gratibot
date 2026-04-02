@@ -3,6 +3,7 @@ const report = require("../service/report");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { directMessage, anyOf } = require("../middleware");
+const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
   // Handle direct "report" command
@@ -59,10 +60,7 @@ async function respondToReport({ message, client }) {
       timeRange,
     );
 
-    // Send the report as an ephemeral message
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
+    await respondToUser(client, message, {
       text: `Top recognized messages for <@${targetUserId}>`,
       blocks: blocks,
     });
@@ -81,9 +79,7 @@ async function respondToReport({ message, client }) {
       error: error.message,
     });
 
-    await client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user,
+    await respondToUser(client, message, {
       text: "An unexpected error occurred while generating the report. Please try again later.",
     });
   }

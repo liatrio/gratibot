@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node
-        uses: actions/setup-node@master
+        uses: actions/setup-node@60c11408891ef62846c29c28c2374afe5c91fad5 # master
         with:
           node-version: 24
       - name: Checkout Code

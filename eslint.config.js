@@ -5,7 +5,7 @@ const mochaPlugin = require("eslint-plugin-mocha");
 
 module.exports = [
   eslint.configs.recommended,
-  mochaPlugin.configs.flat.recommended,
+  mochaPlugin.default.configs.recommended,
   eslintPluginPrettierRecommended,
   {
     ignores: ["test/setup.js"],

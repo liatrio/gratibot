@@ -65,7 +65,6 @@ via the wrappers in `service/apiwrappers.js`).
 | `metrics.js` | Compute recognition counts over time windows |
 | `report.js` | Generate formatted recognition reports |
 | `messageutils.js` | Compose and send Slack messages; Block Kit helpers |
-| `report.js` | Generate formatted recognition reports |
 | `apiwrappers.js` | Thin wrappers around Slack Web API calls |
 | `errors.js` | Custom error types: `SlackError`, `GratitudeError` |
 

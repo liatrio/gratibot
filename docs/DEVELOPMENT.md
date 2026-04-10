@@ -163,7 +163,7 @@ test: add edge cases for maximum recognition validation
 3. **Open a PR** — CI runs tests, lint, and (for infra changes) terraform plan
 4. **Merge to `main`** after approval
 5. **Nonprod deploy** — automatic after merge; validates in the `gratibotdev` Slack app
-6. **Prod deploy** — triggered manually after nonprod validation; see [deployment.md](deployment.md)
+6. **Prod deploy** — triggered by a GitHub Release event (created automatically by semantic-release) and gated by a manual approval step; see [deployment.md](deployment.md)
 
 ## Useful MongoDB Commands
 
@@ -208,5 +208,5 @@ db.deductions.find()
 - Check MongoDB to verify the record was written: `db.recognitions.find()`
 
 **Tests fail locally but pass in CI:**
-- Ensure you're on Node.js 22: `node --version`
+- Ensure you're on Node.js 24: `node --version`
 - Run `npm ci` (not `npm install`) to get a clean, lockfile-pinned install

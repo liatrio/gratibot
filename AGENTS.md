@@ -76,6 +76,18 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed breakdown of eac
 
 ## Critical Requirements
 
+### Never Commit Directly to `main`
+
+**Direct pushes to `main` are rejected by branch protection rules.**
+
+Always work on a feature or fix branch and open a pull request:
+
+```bash
+git checkout -b feat/your-feature-name   # or fix/, chore/, docs/, etc.
+```
+
+Use the conventional commit type as the branch prefix to match the commit convention.
+
 ### Tests With Every Implementation Change
 
 All changes to business logic in `service/` or event handlers in `features/` must include

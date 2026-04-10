@@ -156,7 +156,9 @@ test: add edge cases for maximum recognition validation
 
 ## Git Workflow
 
-1. **Branch from `main`** — use a descriptive branch name: `feat/tag-filtering`, `fix/utc-offset`
+> **Direct pushes to `main` are rejected.** Always work on a branch and open a pull request.
+
+1. **Branch from `main`** — use a descriptive branch name prefixed with the commit type: `feat/tag-filtering`, `fix/utc-offset`, `chore/bump-deps`
 2. **Develop and test locally** — `npm run test-n-lint` before committing
 3. **Open a PR** — CI runs tests, lint, and (for infra changes) terraform plan
 4. **Merge to `main`** after approval

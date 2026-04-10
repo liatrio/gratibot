@@ -8,9 +8,9 @@ Merging to main will automatically kick off a deployment to Gratibot's
 non-prod environment, which corresponds to the 'gratibotdev' bot inside of
 Liatrio's Slack workspace.
 
-After validating in non-prod, a new release can be initiated by pushing a
-[Semantic Version](https://semver.org/) tag to GitHub. This will initiate the
-production workflow which will require a code owner to review the deployment's
-Terraform plan. After the workflow is approved, it will automatically deploy
-to Gratibot's prod environment, which corresponds to the 'gratibot' bot inside
-of Liatrio's Slack workspace.
+After validating in non-prod, semantic-release automatically creates a GitHub
+Release (with changelog) based on the conventional commit history. That release
+creation event triggers the production workflow, which requires a code owner to
+review the Terraform plan. After approval, it automatically deploys to
+Gratibot's prod environment, which corresponds to the 'gratibot' bot inside of
+Liatrio's Slack workspace.

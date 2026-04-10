@@ -19,7 +19,7 @@ Gratibot is a Slack bot that enables peer recognition at Liatrio. Core capabilit
 - Balances, leaderboards, and metrics are queryable via DM
 - Users can redeem earned points for physical rewards; admins can issue deductions and refunds
 
-**Stack:** Node.js 22, Slack Bolt v4 (socket mode), Express, MongoDB (via Monk), Winston logging
+**Stack:** Node.js 24 (CI) / 22.12 (runtime container), Slack Bolt v4 (socket mode), Express, MongoDB (via Monk), Winston logging
 
 ## Documentation Structure
 

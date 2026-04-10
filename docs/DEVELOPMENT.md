@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js 22** (matches the Docker base image: `node:22-alpine`)
+- **Node.js 24** (matches CI — see workflows). The runtime Docker image uses `node:22.12-alpine3.19`; if running tests natively, use Node 24 to match CI behaviour.
 - **Docker & Docker Compose** — for running the full local stack
 - **A Slack workspace** where you have permission to install apps
 
@@ -91,7 +91,7 @@ DMing the bot with `balance` or `help`.
 |---|---|---|
 | `npm start` | `node app.js` | Start the bot |
 | `npm test` | `mocha` + `nyc` | Run tests with coverage |
-| `npm run test:ci` | `npm ci && npm test && report-coverage` | Full CI test pipeline |
+| `npm run test:ci` | `npm ci && npm test && npm run report-coverage` | Full CI test pipeline |
 | `npm run lint` | `eslint` | Lint all JS files |
 | `npm run lint-fix` | `eslint --fix` | Auto-fix lint issues |
 | `npm run test-n-lint` | `npm test && npm run lint` | Tests + lint (use before committing) |

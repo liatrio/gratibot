@@ -31,12 +31,15 @@ Tests live in `test/` and mirror the source structure:
 test/
 ├── setup.js                  # Global setup: chai plugins, log suppression
 ├── service/
-│   ├── recognition.js        # Tests for service/recognition.js
+│   ├── apiwrappers.js        # Tests for service/apiwrappers.js
 │   ├── balance.js
-│   ├── redeem.js
+│   ├── deduction.js
 │   ├── leaderboard.js
+│   ├── messageutils.js
 │   ├── metrics.js
-│   └── messageutils.js
+│   ├── recognition.js
+│   ├── redeem.js
+│   └── refund.js
 ├── middleware/
 │   └── index.js
 └── mocks/                    # Shared test fixtures

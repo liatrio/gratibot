@@ -10,7 +10,10 @@
    installing, copy the **_Bot User OAuth Token_** value, and save it for later.
 3. In your cloned copy of the repo, create a file called `.env`, it should look
    something like:
-   `APP_TOKEN=SECRET GOES HERE BOT_USER_OAUTH_ACCESS_TOKEN=SECRET GOES HERE`
+   ```
+   APP_TOKEN=SECRET GOES HERE
+   BOT_USER_OAUTH_ACCESS_TOKEN=SECRET GOES HERE
+   ```
    Replace the values after the equals sign with the values you saved before.
    There is no need for quotes. **_Make sure to not share these values, and to
    not publish them online such as by pushing them to GitHub._**

@@ -3,7 +3,6 @@
 
 [![Prod](https://github.com/liatrio/gratibot/actions/workflows/apply-prod.yml/badge.svg)](https://github.com/liatrio/gratibot/actions/workflows/apply-prod.yml)
 [![Release](https://github.com/liatrio/gratibot/actions/workflows/release.yml/badge.svg)](https://github.com/liatrio/gratibot/actions/workflows/release.yml)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/49996ee68b94348ee16b/test_coverage)](https://codeclimate.com/github/liatrio/gratibot/test_coverage)
 
 Gratibot is a Slack bot for recognizing the accomplishments of friends and
 colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatrio.com/blog/gratibot-chatbot)

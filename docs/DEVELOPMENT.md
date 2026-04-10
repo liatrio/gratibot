@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js 24** (matches CI — see workflows). The runtime Docker image uses `node:22.12-alpine3.19`; if running tests natively, use Node 24 to match CI behaviour.
+- **Node.js 24** (matches CI and the Docker base image)
 - **Docker & Docker Compose** — for running the full local stack
 - **A Slack workspace** where you have permission to install apps
 

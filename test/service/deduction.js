@@ -14,7 +14,9 @@ describe("deduction/balance", () => {
 
   describe("createDeduction", () => {
     it("should insert data into db", async () => {
-      const insert = sinon.stub(deductionCollection, "insertOne").resolves({ acknowledged: true, insertedId: new ObjectId() });
+      const insert = sinon
+        .stub(deductionCollection, "insertOne")
+        .resolves({ acknowledged: true, insertedId: new ObjectId() });
       sinon.useFakeTimers(new Date(2020, 1, 1));
 
       await deduction.createDeduction("User", 10, "Test Message");
@@ -30,7 +32,9 @@ describe("deduction/balance", () => {
     });
 
     it("should allow for message to be optional", async () => {
-      const insert = sinon.stub(deductionCollection, "insertOne").resolves({ acknowledged: true, insertedId: new ObjectId() });
+      const insert = sinon
+        .stub(deductionCollection, "insertOne")
+        .resolves({ acknowledged: true, insertedId: new ObjectId() });
       sinon.useFakeTimers(new Date(2020, 1, 1));
 
       await deduction.createDeduction("User", 10);

@@ -1,5 +1,5 @@
 const sinon = require("sinon");
-const monk = require("monk");
+const { ObjectId } = require("mongodb");
 const expect = require("chai").expect;
 
 const deduction = require("../../service/deduction");
@@ -14,7 +14,7 @@ describe("deduction/balance", () => {
 
   describe("createDeduction", () => {
     it("should insert data into db", async () => {
-      const insert = sinon.stub(deductionCollection, "insert").resolves({});
+      const insert = sinon.stub(deductionCollection, "insertOne").resolves({});
       sinon.useFakeTimers(new Date(2020, 1, 1));
 
       await deduction.createDeduction("User", 10, "Test Message");
@@ -30,7 +30,7 @@ describe("deduction/balance", () => {
     });
 
     it("should allow for message to be optional", async () => {
-      const insert = sinon.stub(deductionCollection, "insert").resolves({});
+      const insert = sinon.stub(deductionCollection, "insertOne").resolves({});
       sinon.useFakeTimers(new Date(2020, 1, 1));
 
       await deduction.createDeduction("User", 10);
@@ -54,7 +54,7 @@ describe("deduction/balance", () => {
 
       await deduction.refundDeduction("62171d78b5daaa0011771cfd");
       sinon.assert.calledWith(findOneAndUpdate, {
-        _id: monk.id("62171d78b5daaa0011771cfd"),
+        _id: new ObjectId("62171d78b5daaa0011771cfd"),
       });
     });
   });
@@ -77,12 +77,14 @@ describe("deduction/balance", () => {
 
   describe("getDeductions", () => {
     it("should return deductions found in db", async () => {
-      sinon.stub(deductionCollection, "find").resolves([
-        {
-          user: "User",
-          value: 100,
-        },
-      ]);
+      sinon.stub(deductionCollection, "find").returns({
+        toArray: sinon.stub().resolves([
+          {
+            user: "User",
+            value: 100,
+          },
+        ]),
+      });
 
       const result = await deduction.getDeductions("User");
 
@@ -96,7 +98,9 @@ describe("deduction/balance", () => {
     });
 
     it("should filter results if times are specified", async () => {
-      const find = sinon.stub(deductionCollection, "find").resolves([]);
+      const find = sinon
+        .stub(deductionCollection, "find")
+        .returns({ toArray: sinon.stub().resolves([]) });
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
 
       await deduction.getDeductions("User", "America/Los_Angeles", 2);

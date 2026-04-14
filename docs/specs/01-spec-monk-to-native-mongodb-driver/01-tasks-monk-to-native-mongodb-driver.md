@@ -64,7 +64,7 @@ directory.
 
 ---
 
-### [ ] 2.0 Update All Query and Write Call Sites in the Service Layer
+### [x] 2.0 Update All Query and Write Call Sites in the Service Layer
 
 **Goal:** Replace every Monk-specific method call (`find`, `count`, `insert`,
 `monk.id()`, `aggregate`) in `service/` with the native driver equivalents, and
@@ -82,41 +82,41 @@ update all corresponding test stubs to match the new cursor-based `find()` and
 
 #### 2.0 Tasks
 
-- [ ] 2.1 Update `service/recognition.js`:
+- [x] 2.1 Update `service/recognition.js`:
   - Line 50: `goldenRecognitionCollection.insert(collectionValues)` → `goldenRecognitionCollection.insertOne(collectionValues)`
   - Line 52: `recognitionCollection.insert(collectionValues)` → `recognitionCollection.insertOne(collectionValues)`
   - Line 74: `recognitionCollection.count(filter)` → `recognitionCollection.countDocuments(filter)`
   - Line 96: `recognitionCollection.count(filter)` → `recognitionCollection.countDocuments(filter)`
   - Line 153: `recognitionCollection.find(filter)` → `recognitionCollection.find(filter).toArray()`
-- [ ] 2.2 Update `service/balance.js`:
+- [x] 2.2 Update `service/balance.js`:
   - Line 25: `recognitionCollection.count({ recognizee: user })` → `recognitionCollection.countDocuments({ recognizee: user })`
   - Line 26: `goldenRecognitionCollection.count({ recognizee: user })` → `goldenRecognitionCollection.countDocuments({ recognizee: user })`
   - Line 31: `deductionCollection.find({ user, refund: false })` → `deductionCollection.find({ user, refund: false }).toArray()`
   - Line 45: `recognitionCollection.count({...})` → `recognitionCollection.countDocuments({...})`
-- [ ] 2.3 Update `service/deduction.js`:
+- [x] 2.3 Update `service/deduction.js`:
   - Remove `const monk = require('monk')` (line 5).
   - Add `const { ObjectId } = require('mongodb')` at the top of the file.
   - Line 17: `deductionCollection.insert({...})` → `deductionCollection.insertOne({...})`
   - Line 28: `{ _id: monk.id(id) }` → `{ _id: new ObjectId(id) }`
   - Line 51: `deductionCollection.find(filter)` → `deductionCollection.find(filter).toArray()`
-- [ ] 2.4 Update `service/report.js`:
+- [x] 2.4 Update `service/report.js`:
   - Line 43: `recognitionCollection.aggregate([...])` → `recognitionCollection.aggregate([...]).toArray()` (the native driver returns a cursor from `aggregate()`; Monk resolved it to an array directly)
   - Line 114: `recognitionCollection.count(filter)` → `recognitionCollection.countDocuments(filter)`
-- [ ] 2.5 Update `test/service/balance.js`:
+- [x] 2.5 Update `test/service/balance.js`:
   - All `sinon.stub(deductionCollection, "find").resolves([...])` → `.returns({ toArray: sinon.stub().resolves([...]) })`
   - All `sinon.stub(recognitionCollection, "count")` → `sinon.stub(recognitionCollection, "countDocuments")`
   - All `sinon.stub(goldenRecognitionCollection, "count")` → `sinon.stub(goldenRecognitionCollection, "countDocuments")`
-- [ ] 2.6 Update `test/service/deduction.js`:
+- [x] 2.6 Update `test/service/deduction.js`:
   - Remove `const monk = require('monk')` import (line 2).
   - Add `const { ObjectId } = require('mongodb')` import.
   - All `sinon.stub(deductionCollection, "insert")` → `sinon.stub(deductionCollection, "insertOne")`
   - All `sinon.stub(deductionCollection, "find").resolves([...])` → `.returns({ toArray: sinon.stub().resolves([...]) })`
   - In the `refundDeduction` test, update the `calledWith` assertion: replace `monk.id("62171d78b5daaa0011771cfd")` with `new ObjectId("62171d78b5daaa0011771cfd")`.
-- [ ] 2.7 Update `test/service/recognition.js`:
+- [x] 2.7 Update `test/service/recognition.js`:
   - Any `sinon.stub(goldenRecognitionCollection, "insert")` (e.g., line 77) → `sinon.stub(goldenRecognitionCollection, "insertOne")`
   - Any `sinon.stub(recognitionCollection, "count")` → `sinon.stub(recognitionCollection, "countDocuments")`
   - Any `sinon.stub(recognitionCollection, "find").resolves([...])` → `.returns({ toArray: sinon.stub().resolves([...]) })`
-- [ ] 2.8 Run `npm test` and confirm all tests pass; confirm `grep -r "monk" service/` returns no matches.
+- [x] 2.8 Run `npm test` and confirm all tests pass; confirm `grep -r "monk" service/` returns no matches.
 
 ---
 

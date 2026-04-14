@@ -22,13 +22,16 @@ async function currentBalance(user) {
 
 async function lifetimeEarnings(user) {
   const earnings =
-    (await recognitionCollection.count({ recognizee: user })) +
-    (await goldenRecognitionCollection.count({ recognizee: user })) * 20;
+    (await recognitionCollection.countDocuments({ recognizee: user })) +
+    (await goldenRecognitionCollection.countDocuments({ recognizee: user })) *
+      20;
   return earnings;
 }
 
 async function lifetimeSpendings(user) {
-  const deductions = await deductionCollection.find({ user, refund: false });
+  const deductions = await deductionCollection
+    .find({ user, refund: false })
+    .toArray();
   const deductionAmounts = deductions.map((x) => x.value);
   return deductionAmounts.reduce((total, num) => total + num, 0);
 }
@@ -42,7 +45,7 @@ async function dailyGratitudeRemaining(user, timezone) {
     return Infinity;
   }
   const midnight = moment(Date.now()).tz(timezone).startOf("day");
-  const recognitionGivenToday = await recognitionCollection.count({
+  const recognitionGivenToday = await recognitionCollection.countDocuments({
     recognizer: user,
     timestamp: {
       $gte: new Date(midnight),

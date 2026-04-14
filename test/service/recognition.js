@@ -74,7 +74,7 @@ describe("service/recognition", () => {
 
     it("should return false if golden recognition doesn't exist", async () => {
       sinon.stub(goldenRecognitionCollection, "findOne").resolves(null);
-      sinon.stub(goldenRecognitionCollection, "insert").resolves({});
+      sinon.stub(goldenRecognitionCollection, "insertOne").resolves({});
       const userHoldsGoldenRecognition =
         await recognition.doesUserHoldGoldenRecognition(
           "Receiver",
@@ -200,7 +200,9 @@ describe("service/recognition", () => {
 
   describe("giveRecognition", () => {
     it("should insert data into db", async () => {
-      const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      const insert = sinon
+        .stub(recognitionCollection, "insertOne")
+        .resolves({});
       sinon.useFakeTimers(new Date(2020, 1, 1));
 
       await recognition.giveRecognition(
@@ -225,7 +227,7 @@ describe("service/recognition", () => {
 
   describe("countRecognitionsReceived", () => {
     it("should return count of recognition in db", async () => {
-      sinon.stub(recognitionCollection, "count").resolves(10);
+      sinon.stub(recognitionCollection, "countDocuments").resolves(10);
 
       const result = await recognition.countRecognitionsReceived("User");
 
@@ -233,7 +235,9 @@ describe("service/recognition", () => {
     });
 
     it("should filter results if times are specified", async () => {
-      const count = sinon.stub(recognitionCollection, "count").resolves(0);
+      const count = sinon
+        .stub(recognitionCollection, "countDocuments")
+        .resolves(0);
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
 
       await recognition.countRecognitionsReceived(
@@ -255,7 +259,7 @@ describe("service/recognition", () => {
 
   describe("countRecognitionsGiven", () => {
     it("should return count of recognition in db", async () => {
-      sinon.stub(recognitionCollection, "count").resolves(10);
+      sinon.stub(recognitionCollection, "countDocuments").resolves(10);
 
       const result = await recognition.countRecognitionsGiven("User");
 
@@ -263,7 +267,9 @@ describe("service/recognition", () => {
     });
 
     it("should filter results if times are specified", async () => {
-      const count = sinon.stub(recognitionCollection, "count").resolves(0);
+      const count = sinon
+        .stub(recognitionCollection, "countDocuments")
+        .resolves(0);
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
 
       await recognition.countRecognitionsGiven(
@@ -285,16 +291,18 @@ describe("service/recognition", () => {
 
   describe("getPreviousXDaysOfRecognition", () => {
     it("should return recognition in db", async () => {
-      sinon.stub(recognitionCollection, "find").resolves([
-        {
-          recognizer: "Giver",
-          recognizee: "Receiver",
-          timestamp: new Date(2020, 1, 1),
-          message: "Test Message",
-          channel: "Test Channel",
-          values: ["Test Tag"],
-        },
-      ]);
+      sinon.stub(recognitionCollection, "find").returns({
+        toArray: sinon.stub().resolves([
+          {
+            recognizer: "Giver",
+            recognizee: "Receiver",
+            timestamp: new Date(2020, 1, 1),
+            message: "Test Message",
+            channel: "Test Channel",
+            values: ["Test Tag"],
+          },
+        ]),
+      });
 
       const result = await recognition.getPreviousXDaysOfRecognition();
 
@@ -312,7 +320,9 @@ describe("service/recognition", () => {
     });
 
     it("should filter results if times are specified", async () => {
-      const find = sinon.stub(recognitionCollection, "find").resolves([]);
+      const find = sinon
+        .stub(recognitionCollection, "find")
+        .returns({ toArray: sinon.stub().resolves([]) });
       sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
 
       await recognition.getPreviousXDaysOfRecognition("America/Los_Angeles", 2);
@@ -1132,7 +1142,9 @@ describe("service/recognition", () => {
 
   describe("giveGratitude", () => {
     it("should add gratitude to database", async () => {
-      const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      const insert = sinon
+        .stub(recognitionCollection, "insertOne")
+        .resolves({});
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const gratitude = {
         giver: {
@@ -1161,7 +1173,9 @@ describe("service/recognition", () => {
     });
 
     it("should add multiple gratitude to database", async () => {
-      const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      const insert = sinon
+        .stub(recognitionCollection, "insertOne")
+        .resolves({});
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
       const gratitude = {
         giver: {
@@ -1190,7 +1204,9 @@ describe("service/recognition", () => {
     });
 
     it("should give 2 fistbumps to the golden fistbump user if they receive one fistbump", async () => {
-      const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      const insert = sinon
+        .stub(recognitionCollection, "insertOne")
+        .resolves({});
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
         recognizer: "Giver",
         recognizee: "Receiver",
@@ -1227,7 +1243,7 @@ describe("service/recognition", () => {
 
     it("should create a golden recognition if a golden fistbump was given", async () => {
       const insertGoldenRecognition = sinon
-        .stub(goldenRecognitionCollection, "insert")
+        .stub(goldenRecognitionCollection, "insertOne")
         .resolves({});
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({
         recognizer: "Giver",
@@ -1269,7 +1285,9 @@ describe("service/recognition", () => {
 
   describe("validateAndSendGratitude", () => {
     it("should add gratitude to database if okay", async () => {
-      const insert = sinon.stub(recognitionCollection, "insert").resolves({});
+      const insert = sinon
+        .stub(recognitionCollection, "insertOne")
+        .resolves({});
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
       sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
       sinon.stub(goldenRecognitionCollection, "findOne").resolves({});

@@ -2,6 +2,7 @@ const { App } = require("@slack/bolt");
 const express = require("express");
 const webserver = express();
 const winston = require("./winston");
+const client = require("./database/db");
 const {
   recognizeEmoji,
   maximum,
@@ -49,8 +50,12 @@ webserver.get("/health", async (req, res) => {
     : "OK";
 
   // Check Database Connection
-  //
-  // TODO
+  try {
+    await client.db().command({ ping: 1 });
+    status_checks.database = "OK";
+  } catch (e) {
+    status_checks.database = e.message;
+  }
 
   for (const i in status_checks) {
     if (status_checks[i] !== "OK") {
@@ -64,13 +69,6 @@ webserver.get("/health", async (req, res) => {
   res.send(status_checks);
   winston.debug("Health check passed");
 });
-
-var normalizedPath = require("path").join(__dirname, "features");
-require("fs")
-  .readdirSync(normalizedPath)
-  .forEach(function (file) {
-    require("./features/" + file)(app);
-  });
 
 /// ////////////////////////////////////////////////////////////
 // Slash Command Logic //
@@ -112,10 +110,24 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
 });
 
 (async () => {
-  await app.start(3000);
-  webserver.listen(process.env.PORT || 3000);
+  try {
+    await client.connect();
 
-  winston.info("⚡️ Bolt app is running!");
+    var normalizedPath = require("path").join(__dirname, "features");
+    require("fs")
+      .readdirSync(normalizedPath)
+      .forEach(function (file) {
+        require("./features/" + file)(app);
+      });
+
+    await app.start();
+    webserver.listen(process.env.PORT || 3000);
+
+    winston.info("⚡️ Bolt app is running!");
+  } catch (e) {
+    winston.error("Startup failed", { error: e.message });
+    process.exit(1);
+  }
 })();
 
 /// ////////////////////////////////////////////////////////////

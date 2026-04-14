@@ -120,7 +120,7 @@ update all corresponding test stubs to match the new cursor-based `find()` and
 
 ---
 
-### [ ] 3.0 Wire App Startup, Database Health Check, and Infrastructure
+### [x] 3.0 Wire App Startup, Database Health Check, and Infrastructure
 
 **Goal:** Add explicit connection management to `app.js`, implement the
 `/health` database check (resolving the `// TODO` at lines 51–53), and pin the
@@ -140,11 +140,11 @@ CosmosDB MongoDB API version in Terraform.
 
 #### 3.0 Tasks
 
-- [ ] 3.1 In `app.js`, import the `client` exported from `database/db.js` (add `const client = require('./database/db')`).
-- [ ] 3.2 Wrap the startup IIFE body in `try { ... } catch (e) { winston.error("Startup failed", { error: e.message }); process.exit(1); }`.
-- [ ] 3.3 At the very top of the IIFE's `try` block — before features are loaded and before `app.start()` — add `await client.connect()`.
-- [ ] 3.4 Change `await app.start(3000)` to `await app.start()` (remove the vestigial port argument; socket mode does not bind an HTTP port).
-- [ ] 3.5 Replace the `// Check Database Connection` TODO block in the `/health` handler (lines 51–53) with:
+- [x] 3.1 In `app.js`, import the `client` exported from `database/db.js` (add `const client = require('./database/db')`).
+- [x] 3.2 Wrap the startup IIFE body in `try { ... } catch (e) { winston.error("Startup failed", { error: e.message }); process.exit(1); }`.
+- [x] 3.3 At the very top of the IIFE's `try` block — before features are loaded and before `app.start()` — add `await client.connect()`.
+- [x] 3.4 Change `await app.start(3000)` to `await app.start()` (remove the vestigial port argument; socket mode does not bind an HTTP port).
+- [x] 3.5 Replace the `// Check Database Connection` TODO block in the `/health` handler (lines 51–53) with:
   ```javascript
   try {
     await client.db().command({ ping: 1 });
@@ -153,8 +153,8 @@ CosmosDB MongoDB API version in Terraform.
     status_checks.database = e.message;
   }
   ```
-- [ ] 3.6 In `infra/terraform/cosmosdb.tf`, add `mongo_server_version = "4.2"` inside the `azurerm_cosmosdb_account "db_account"` resource block (before the `automatic_failover_enabled` line is fine; keep it visually grouped with the other account-level settings).
-- [ ] 3.7 Run `npm test` and confirm all tests pass.
+- [x] 3.6 In `infra/terraform/cosmosdb.tf`, add `mongo_server_version = "4.2"` inside the `azurerm_cosmosdb_account "db_account"` resource block (before the `automatic_failover_enabled` line is fine; keep it visually grouped with the other account-level settings).
+- [x] 3.7 Run `npm test` and confirm all tests pass.
 - [ ] 3.8 Open a pull request from the feature branch. Confirm the CI `terraform plan` step reports 0 resources to add, change, or destroy for the `mongo_server_version` addition.
 
 ---

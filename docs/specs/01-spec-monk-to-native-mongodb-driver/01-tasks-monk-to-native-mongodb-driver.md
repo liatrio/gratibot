@@ -159,7 +159,7 @@ CosmosDB MongoDB API version in Terraform.
 
 ---
 
-### [ ] 4.0 Update Repository Documentation to Reflect the Native Driver
+### [x] 4.0 Update Repository Documentation to Reflect the Native Driver
 
 **Goal:** Remove all stale Monk references from checked-in documentation so that
 `AGENTS.md`, `docs/ARCHITECTURE.md`, and `docs/TESTING.md` accurately describe
@@ -173,18 +173,18 @@ as resolved.
 
 #### 4.0 Tasks
 
-- [ ] 4.1 Update `AGENTS.md`:
+- [x] 4.1 Update `AGENTS.md`:
   - Line 22: `MongoDB (via Monk), Winston logging` → `MongoDB (native driver), Winston logging`
   - Line 68 comment: `# Monk collection definitions and MongoDB connection` → `# MongoDB collection definitions and connection`
-- [ ] 4.2 Update `docs/ARCHITECTURE.md`:
+- [x] 4.2 Update `docs/ARCHITECTURE.md`:
   - Line 11: `MongoDB (via Monk) is the only datastore.` → `MongoDB (native \`mongodb\` driver) is the only datastore.`
   - Lines 73–74: Replace `Monk collection definitions and the MongoDB connection. Each collection file exports a Monk collection object used directly by services.` with `MongoDB collection definitions and the connection. Each collection file exports a native Collection object used directly by services.`
   - Line 78 table row for `db.js`: change the description from `Connection singleton (\`monk(config.mongo_url)\`)` to `Connection singleton (\`new MongoClient(config.mongo_url)\`)`
-- [ ] 4.3 Update `docs/TESTING.md`:
+- [x] 4.3 Update `docs/TESTING.md`:
   - Line 103: Change `stub the Monk method you need:` to `stub the collection method you need:`
   - Lines 111–112: Update the `find` stub example from `.resolves([...])` to the cursor pattern: `sinon.stub(recognitionCollection, "find").returns({ toArray: sinon.stub().resolves([{ recognizer: "U001", ... }]) })`
   - Line 127: Change `sinon.stub(goldenRecognitionCollection, "insert").resolves({})` to `sinon.stub(goldenRecognitionCollection, "insertOne").resolves({})`
   - Line 130: Change `sinon.stub(recognitionCollection, "insert").resolves({ _id: "fake-id" })` to `sinon.stub(recognitionCollection, "insertOne").resolves({ acknowledged: true, insertedId: "fake-id" })`
   - Lines 140–142: Update the `.onCall()` `find` stub example to use the cursor pattern: `.returns({ toArray: sinon.stub().resolves([...]) })` for each call
-- [ ] 4.4 Update `AUDIT_ISSUES.md`: locate the two unchecked M5 checklist items (lines 542–543) and mark them as complete (`- [x]`).
-- [ ] 4.5 Run `npm run lint` to confirm no lint issues were introduced by the doc changes (ESLint targets `*.js` only, so this is a quick sanity check that nothing else was accidentally edited).
+- [x] 4.4 Update `AUDIT_ISSUES.md`: locate the two unchecked M5 checklist items (lines 542–543) and mark them as complete (`- [x]`).
+- [x] 4.5 Run `npm run lint` to confirm no lint issues were introduced by the doc changes (ESLint targets `*.js` only, so this is a quick sanity check that nothing else was accidentally edited).

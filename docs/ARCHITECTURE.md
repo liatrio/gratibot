@@ -8,7 +8,7 @@ Gratibot is a Node.js application with two servers running in the same process:
   WebSocket connection. No inbound HTTP required from Slack.
 - **Express HTTP server** — serves a health check endpoint (`/health`) and a root probe (`/`).
 
-MongoDB (via Monk) is the only datastore. There is no cache layer.
+MongoDB (native `mongodb` driver) is the only datastore. There is no cache layer.
 
 ```
 Slack API ──WebSocket──► Bolt App ──► Features ──► Services ──► MongoDB
@@ -70,12 +70,12 @@ via the wrappers in `service/apiwrappers.js`).
 
 ### Layer 3: Database (`database/`)
 
-Monk collection definitions and the MongoDB connection. Each collection file exports a
-Monk collection object used directly by services.
+MongoDB collection definitions and the connection. Each collection file exports a
+native Collection object used directly by services.
 
 | File | MongoDB Collection | Contents |
 |---|---|---|
-| `db.js` | — | Connection singleton (`monk(config.mongo_url)`) |
+| `db.js` | — | Connection singleton (`new MongoClient(config.mongo_url)`) |
 | `recognitionCollection.js` | `recognitions` | All `:fistbump:` recognition records |
 | `goldenRecognitionCollection.js` | `goldenrecognitions` | Golden fistbump transfer history |
 | `deductionCollection.js` | `deductions` | Reward redemption and deduction records |

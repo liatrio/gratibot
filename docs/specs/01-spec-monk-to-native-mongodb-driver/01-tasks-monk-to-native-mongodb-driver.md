@@ -155,7 +155,7 @@ CosmosDB MongoDB API version in Terraform.
   ```
 - [x] 3.6 In `infra/terraform/cosmosdb.tf`, add `mongo_server_version = "4.2"` inside the `azurerm_cosmosdb_account "db_account"` resource block (before the `automatic_failover_enabled` line is fine; keep it visually grouped with the other account-level settings).
 - [x] 3.7 Run `npm test` and confirm all tests pass.
-- [ ] 3.8 Open a pull request from the feature branch. Confirm the CI `terraform plan` step reports 0 resources to add, change, or destroy for the `mongo_server_version` addition.
+- [x] 3.8 Open a pull request from the feature branch. Confirm the CI `terraform plan` step reports 0 resources to add, change, or destroy for the `mongo_server_version` addition.
 
 ---
 

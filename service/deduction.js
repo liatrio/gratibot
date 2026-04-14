@@ -14,13 +14,14 @@ async function createDeduction(user, value, message = "") {
     deductionValue: value,
   });
 
-  return await deductionCollection.insertOne({
+  const result = await deductionCollection.insertOne({
     user,
     timestamp,
     refund,
     value: Number(value),
     message,
   });
+  return result.insertedId;
 }
 
 async function refundDeduction(id) {

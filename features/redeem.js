@@ -38,6 +38,7 @@ async function redeemItem({ ack, body, context, client }) {
     const { itemName, itemCost } = redeem.getSelectedItemDetails(
       body.actions[0].selected_option.value,
     );
+
     if (!(await deduction.isBalanceSufficent(userID, itemCost))) {
       return client.chat.postEphemeral({
         channel: body.channel.id,
@@ -51,12 +52,12 @@ async function redeemItem({ ack, body, context, client }) {
       redemptionMessage += `. Please provide the link of the item from the <https://liatrio.axomo.com/|Liatrio Store>.`;
     } else {
       redemptionMessage += ` for ${itemCost} fistbumps.`;
-      const deductionInfo = await deduction.createDeduction(
+      const deductionID = await deduction.createDeduction(
         userID,
         itemCost,
         redemptionMessage,
       );
-      redemptionMessage += ` Deduction ID is \`${deductionInfo._id}\``;
+      redemptionMessage += ` Deduction ID is \`${deductionID}\``;
     }
     await client.chat.postMessage({
       channel: result.channel.id,

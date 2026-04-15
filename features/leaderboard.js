@@ -6,7 +6,7 @@ const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
   app.message(
-    "leaderboard",
+    /leaderboard/i,
     anyOf(directMessage(), directMention),
     respondToLeaderboard,
   );

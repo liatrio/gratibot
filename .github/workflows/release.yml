@@ -93,10 +93,10 @@ jobs:
           node-version: 24
 
       - name: Install devDependencies
-        run: npm install
+        run: npm ci
 
       - name: Create Release
-        run: npm run semantic-release
+        run: npm run release
         env:
           GITHUB_TOKEN: ${{ secrets.GRATIBOT_RELEASE_TOKEN }}
 

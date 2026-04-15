@@ -34,13 +34,10 @@ Gratibot is a Slack bot that enables peer recognition at Liatrio. Core capabilit
 npm test
 
 # Fix lint issues automatically (also runs as a pre-commit hook)
-npm run lint-fix
+npm run lint:fix
 
 # Run lint only (no fix)
 npm run lint
-
-# Run tests and lint together (run before committing)
-npm run test-n-lint
 
 # Start the bot (requires .env with Slack tokens)
 npm start
@@ -182,7 +179,7 @@ nonprod and prod Azure deployments. Changes here:
 
 1. Create a feature branch from `main`
 2. Implement changes with accompanying tests
-3. Run `npm run test-n-lint` before committing
+3. Run `npm test` and `npm run lint` before committing
 4. Use a conventional commit message
 5. Open a PR — CI will run tests, lint, and terraform plan (for infra changes)
 6. After merge to `main`, changes auto-deploy to nonprod
@@ -193,7 +190,7 @@ nonprod and prod Azure deployments. Changes here:
 Before considering work complete:
 
 - [ ] Tests added or updated for all changed service/feature logic
-- [ ] `npm run test-n-lint` passes locally
+- [ ] `npm test` and `npm run lint` pass locally
 - [ ] Commit message follows Conventional Commits format
 - [ ] No secrets, tokens, or credentials in code or comments
 - [ ] `config.js` user ID entries retain their name comments

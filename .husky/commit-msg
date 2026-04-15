@@ -1,4 +1,12 @@
 # dont run on CI
 [ -n "$CI" ] && exit 0
 
-npx --no -- commitlint --edit ${1}
+printf "\033[1mPre-Commit: Validating Commit Message\033[0m\n\n"
+NODE_OPTIONS=--no-deprecation ./node_modules/.bin/commitlint --edit ${1} || {
+  printf "\n\033[0;33mCommit message must follow Conventional Commits format.\033[0m\n"
+  printf "\033[0;33mExamples:\033[0m\n"
+  printf "\033[0;33m  feat: add leaderboard filtering\033[0m\n"
+  printf "\033[0;33m  fix: correct daily limit calculation\033[0m\n"
+  printf "\033[0;33m  chore(deps): bump lodash to 4.18.1\033[0m\n"
+  exit 1
+}

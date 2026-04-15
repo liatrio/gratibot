@@ -1,8 +1,8 @@
-const db = require('./db')
-const deductionCollection = db.get('deduction')
+const client = require('./db')
+const deductionCollection = client.db().collection('deduction')
 
-deductionCollection.createIndex('user')
-deductionCollection.createIndex('timestamp')
-deductionCollection.createIndex('refund')
+deductionCollection.createIndex({ user: 1 })
+deductionCollection.createIndex({ timestamp: 1 })
+deductionCollection.createIndex({ refund: 1 })
 
 module.exports = deductionCollection

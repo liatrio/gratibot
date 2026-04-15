@@ -1,5 +1,6 @@
 const { mongo_url } = require('../config')
+const { MongoClient } = require('mongodb')
 
-const monk = require('monk')
+const client = new MongoClient(mongo_url)
 
-module.exports = monk(mongo_url)
+module.exports = client

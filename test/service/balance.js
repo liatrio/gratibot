@@ -26,7 +26,7 @@ describe("service/balance", () => {
 
     it("should allow for configurable maximum", async () => {
       sinon.stub(config, "maximum").value(10);
-      sinon.stub(recognitionCollection, "count").resolves(1);
+      sinon.stub(recognitionCollection, "countDocuments").resolves(1);
 
       const result = await balance.dailyGratitudeRemaining(
         "User",
@@ -39,9 +39,11 @@ describe("service/balance", () => {
 
   describe("currentBalance", () => {
     it("should return total earnings when users have no deductions", async () => {
-      sinon.stub(recognitionCollection, "count").resolves(100);
-      sinon.stub(goldenRecognitionCollection, "count").resolves(0);
-      sinon.stub(deductionCollection, "find").resolves([]);
+      sinon.stub(recognitionCollection, "countDocuments").resolves(100);
+      sinon.stub(goldenRecognitionCollection, "countDocuments").resolves(0);
+      sinon
+        .stub(deductionCollection, "find")
+        .returns({ toArray: sinon.stub().resolves([]) });
 
       const result = await balance.currentBalance("User");
 
@@ -49,9 +51,11 @@ describe("service/balance", () => {
     });
 
     it("should return total earnings when users have no deductions and has received golden fistbumps", async () => {
-      sinon.stub(recognitionCollection, "count").resolves(100);
-      sinon.stub(goldenRecognitionCollection, "count").resolves(4);
-      sinon.stub(deductionCollection, "find").resolves([]);
+      sinon.stub(recognitionCollection, "countDocuments").resolves(100);
+      sinon.stub(goldenRecognitionCollection, "countDocuments").resolves(4);
+      sinon
+        .stub(deductionCollection, "find")
+        .returns({ toArray: sinon.stub().resolves([]) });
 
       const result = await balance.currentBalance("User");
 
@@ -61,16 +65,18 @@ describe("service/balance", () => {
 
   describe("lifetimeSpendings", () => {
     it("should sum the total deduction value returned from the db", async () => {
-      sinon.stub(deductionCollection, "find").resolves([
-        {
-          user: "User",
-          value: 10,
-        },
-        {
-          user: "User",
-          value: 10,
-        },
-      ]);
+      sinon.stub(deductionCollection, "find").returns({
+        toArray: sinon.stub().resolves([
+          {
+            user: "User",
+            value: 10,
+          },
+          {
+            user: "User",
+            value: 10,
+          },
+        ]),
+      });
 
       const result = await balance.lifetimeSpendings("User");
 

@@ -1,8 +1,8 @@
-const db = require('./db')
-const recognitionCollection = db.get('recognition')
+const client = require('./db')
+const recognitionCollection = client.db().collection('recognition')
 
-recognitionCollection.createIndex('recognizer')
-recognitionCollection.createIndex('recognizee')
-recognitionCollection.createIndex('timestamp')
+recognitionCollection.createIndex({ recognizer: 1 })
+recognitionCollection.createIndex({ recognizee: 1 })
+recognitionCollection.createIndex({ timestamp: 1 })
 
 module.exports = recognitionCollection

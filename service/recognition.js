@@ -47,9 +47,9 @@ async function giveRecognition(
     values: values,
   };
   if (type === goldenRecognizeEmoji) {
-    return await goldenRecognitionCollection.insert(collectionValues);
+    return await goldenRecognitionCollection.insertOne(collectionValues);
   }
-  return await recognitionCollection.insert(collectionValues);
+  return await recognitionCollection.insertOne(collectionValues);
 }
 
 async function countRecognitionsReceived(user, timezone = null, days = null) {
@@ -71,7 +71,7 @@ async function countRecognitionsReceived(user, timezone = null, days = null) {
     filter: filter,
   });
 
-  return await recognitionCollection.count(filter);
+  return await recognitionCollection.countDocuments(filter);
 }
 
 async function countRecognitionsGiven(user, timezone = null, days = null) {
@@ -93,7 +93,7 @@ async function countRecognitionsGiven(user, timezone = null, days = null) {
     filter: filter,
   });
 
-  return await recognitionCollection.count(filter);
+  return await recognitionCollection.countDocuments(filter);
 }
 
 async function getGoldenFistbumpHolder() {
@@ -150,7 +150,7 @@ async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
     filter: filter,
   });
 
-  return await recognitionCollection.find(filter);
+  return await recognitionCollection.find(filter).toArray();
 }
 
 // Get the users in a usergroup

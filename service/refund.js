@@ -11,7 +11,8 @@ async function respondToRefund({ message, client, admins = redemptionAdmins }) {
 
   if (admins.includes(message.user)) {
     const messageText = message.text.split(" ");
-    await deduction.refundDeduction(messageText[2]);
+    const deductionId = messageText[messageText.indexOf("refund") + 1];
+    await deduction.refundDeduction(deductionId);
 
     await client.chat.postMessage({
       channel: message.channel,

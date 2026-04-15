@@ -40,27 +40,29 @@ async function getTopMessagesForUser(
 
   try {
     // Get top 10 messages for this user using MongoDB aggregation
-    const topMessages = await recognitionCollection.aggregate([
-      // Match only recognitions for this user in the time period
-      { $match: filter },
-      // Group by message and count occurrences
-      {
-        $group: {
-          _id: "$message",
-          count: { $sum: 1 },
-          // Keep the first timestamp for reference
-          firstTimestamp: { $first: "$timestamp" },
-          // Keep a sample channel for reference
-          channel: { $first: "$channel" },
-          // Collect all recognizers who gave this recognition
-          recognizers: { $addToSet: "$recognizer" },
+    const topMessages = await recognitionCollection
+      .aggregate([
+        // Match only recognitions for this user in the time period
+        { $match: filter },
+        // Group by message and count occurrences
+        {
+          $group: {
+            _id: "$message",
+            count: { $sum: 1 },
+            // Keep the first timestamp for reference
+            firstTimestamp: { $first: "$timestamp" },
+            // Keep a sample channel for reference
+            channel: { $first: "$channel" },
+            // Collect all recognizers who gave this recognition
+            recognizers: { $addToSet: "$recognizer" },
+          },
         },
-      },
-      // Sort by count in descending order
-      { $sort: { count: -1 } },
-      // Limit to top 10
-      { $limit: 10 },
-    ]);
+        // Sort by count in descending order
+        { $sort: { count: -1 } },
+        // Limit to top 10
+        { $limit: 10 },
+      ])
+      .toArray();
 
     // Format the results
     return topMessages.map((msg) => {
@@ -111,7 +113,7 @@ async function getTotalRecognitionsForUser(
   };
 
   try {
-    return await recognitionCollection.count(filter);
+    return await recognitionCollection.countDocuments(filter);
   } catch (error) {
     winston.error("Error getting total recognitions for user", {
       func: "service.report.getTotalRecognitionsForUser",

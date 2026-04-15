@@ -100,7 +100,7 @@ describe("service/my-service", () => {
 ### Stubbing Database Collections
 
 Database collections are the primary thing to stub. Import the collection and stub the
-Monk method you need:
+collection method you need:
 
 ```javascript
 const recognitionCollection = require("../../database/recognitionCollection");
@@ -108,9 +108,9 @@ const goldenRecognitionCollection = require("../../database/goldenRecognitionCol
 const deductionCollection = require("../../database/deductionCollection");
 
 // Stub a find query
-sinon.stub(recognitionCollection, "find").resolves([
+sinon.stub(recognitionCollection, "find").returns({ toArray: sinon.stub().resolves([
   { recognizer: "U001", recognizee: "U002", timestamp: new Date(), message: "great work!", values: [] }
-]);
+]) });
 
 // Stub a findOne query
 sinon.stub(goldenRecognitionCollection, "findOne").resolves({
@@ -124,10 +124,10 @@ sinon.stub(goldenRecognitionCollection, "findOne").resolves({
 
 // Stub a findOne that returns nothing (e.g., no golden holder seeded yet)
 sinon.stub(goldenRecognitionCollection, "findOne").resolves(null);
-sinon.stub(goldenRecognitionCollection, "insert").resolves({});
+sinon.stub(goldenRecognitionCollection, "insertOne").resolves({});
 
 // Stub an insert
-sinon.stub(recognitionCollection, "insert").resolves({ _id: "fake-id" });
+sinon.stub(recognitionCollection, "insertOne").resolves({ acknowledged: true, insertedId: "fake-id" });
 ```
 
 Always call `sinon.restore()` in `afterEach` to prevent stub leakage between tests.
@@ -138,8 +138,8 @@ Use `.onCall()` when a collection method is called multiple times with different
 
 ```javascript
 const stub = sinon.stub(recognitionCollection, "find");
-stub.onFirstCall().resolves([/* recognitions given */]);
-stub.onSecondCall().resolves([/* recognitions received */]);
+stub.onFirstCall().returns({ toArray: sinon.stub().resolves([/* recognitions given */]) });
+stub.onSecondCall().returns({ toArray: sinon.stub().resolves([/* recognitions received */]) });
 ```
 
 ### Testing with Fake Time

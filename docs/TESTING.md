@@ -20,8 +20,8 @@ When implementing a change, include tests that cover:
 | [Chai](https://www.chaijs.com/) | Assertion library (`expect` style) |
 | [chai-as-promised](https://github.com/domenic/chai-as-promised) | Promise-aware assertions (`eventually`, `rejectedWith`) |
 | [Sinon](https://sinonjs.org/) | Stubs, spies, and fake timers |
-| [nyc](https://github.com/istanbuljs/nyc) | Code coverage (wraps Mocha) |
-| [mocha-suppress-logs](https://github.com/Xalanq/mocha-suppress-logs) | Silences console output during tests |
+| [c8](https://github.com/bcoe/c8) | Code coverage |
+| [mocha-suppress-logs](https://github.com/AleG94/mocha-suppress-logs) | Silences console output during tests |
 
 ## Test Structure
 
@@ -205,7 +205,7 @@ sinon.stub(config, "maximum").value(3);
 
 ## Coverage
 
-Code coverage is measured by nyc. Coverage is tracked but there is no hard enforcement
+Code coverage is measured by c8. Coverage is tracked but there is no hard enforcement
 gate in CI currently. Aim to cover all branches in service-layer code, especially
 validation logic and error paths.
 

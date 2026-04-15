@@ -110,7 +110,7 @@ environment variable pass-throughs, and port mappings must remain unchanged.
 
 ---
 
-### [ ] 4.0 Branch, lint check, and open pull request
+### [x] 4.0 Branch, lint check, and open pull request
 
 Create a feature branch, run `npm run lint` to satisfy the Husky pre-commit hook, commit
 all three changed files with a `chore:` conventional commit message, and open a pull
@@ -125,12 +125,12 @@ request targeting `main`.
 
 #### 4.0 Tasks
 
-- [ ] 4.1 Create a new branch from `main`:
+- [x] 4.1 Create a new branch from `main`:
   `git checkout -b chore/docker-hardening`.
-- [ ] 4.2 Run `npm run lint` and confirm it exits with code 0 before staging any files.
-- [ ] 4.3 Stage the three changed files:
+- [x] 4.2 Run `npm run lint` and confirm it exits with code 0 before staging any files.
+- [x] 4.3 Stage the three changed files:
   `git add Dockerfile .dockerignore docker-compose.yaml`.
-- [ ] 4.4 Commit with a conventional commit message, for example:
+- [x] 4.4 Commit with a conventional commit message, for example:
   `chore: harden Dockerfile, .dockerignore, and docker-compose.yaml`.
-- [ ] 4.5 Push the branch and open a pull request targeting `main`.
-- [ ] 4.6 Confirm CI checks (lint and test) pass on the pull request before requesting review.
+- [x] 4.5 Push the branch and open a pull request targeting `main`.
+- [x] 4.6 Confirm CI checks (lint and test) pass on the pull request before requesting review.

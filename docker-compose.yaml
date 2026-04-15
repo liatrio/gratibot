@@ -1,8 +1,6 @@
-version: "2.2"
 services:
   gratibot:
     container_name: gratibot
-    entrypoint: npm start
     depends_on:
       - mongodb
     ports:

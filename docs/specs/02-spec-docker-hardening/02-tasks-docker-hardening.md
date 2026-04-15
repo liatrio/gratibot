@@ -82,7 +82,7 @@ with `infra/` to match the current repository layout. All existing entries (`.en
 
 ---
 
-### [ ] 3.0 Clean up `docker-compose.yaml`
+### [x] 3.0 Clean up `docker-compose.yaml`
 
 Remove the deprecated top-level `version: "2.2"` field (silences Compose v2 deprecation
 warnings) and remove the `entrypoint: npm start` override on the `gratibot` service so
@@ -98,14 +98,14 @@ environment variable pass-throughs, and port mappings must remain unchanged.
 
 #### 3.0 Tasks
 
-- [ ] 3.1 In `docker-compose.yaml`, delete the `version: "2.2"` line at the top of the
+- [x] 3.1 In `docker-compose.yaml`, delete the `version: "2.2"` line at the top of the
   file.
-- [ ] 3.2 In `docker-compose.yaml`, delete the `entrypoint: npm start` line from the
+- [x] 3.2 In `docker-compose.yaml`, delete the `entrypoint: npm start` line from the
   `gratibot` service block.
-- [ ] 3.3 Verify all other fields in `docker-compose.yaml` are unchanged: `container_name`,
+- [x] 3.3 Verify all other fields in `docker-compose.yaml` are unchanged: `container_name`,
   `depends_on`, `ports`, `build`, `environment` entries, and the `mongodb` service
   definition.
-- [ ] 3.4 Run `docker compose config` and confirm the command exits without warnings or
+- [x] 3.4 Run `docker compose config` and confirm the command exits without warnings or
   errors.
 
 ---

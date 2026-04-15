@@ -55,7 +55,7 @@ is PID 1 and receives SIGTERM directly, add `USER node` before `ENTRYPOINT`, and
 
 ---
 
-### [ ] 2.0 Clean up `.dockerignore`
+### [x] 2.0 Clean up `.dockerignore`
 
 Reduce the Docker build context by adding the five directories that have no runtime role
 (`test/`, `docs/`, `infra/`, `.github/`, `.husky/`) and replace the stale `tf/` entry
@@ -71,13 +71,13 @@ with `infra/` to match the current repository layout. All existing entries (`.en
 
 #### 2.0 Tasks
 
-- [ ] 2.1 In `.dockerignore`, replace the `tf/` line with `infra/` to match the current
+- [x] 2.1 In `.dockerignore`, replace the `tf/` line with `infra/` to match the current
   repository directory name.
-- [ ] 2.2 In `.dockerignore`, add the following entries (one per line) after the existing
+- [x] 2.2 In `.dockerignore`, add the following entries (one per line) after the existing
   content: `test/`, `docs/`, `.github/`, `.husky/`.
-- [ ] 2.3 Verify the final `.dockerignore` still contains `.env`, `node_modules/`,
+- [x] 2.3 Verify the final `.dockerignore` still contains `.env`, `node_modules/`,
   `README.md`, and `Dockerfile` — these must not be removed.
-- [ ] 2.4 Run `docker build --no-cache --progress=plain .` and confirm it completes
+- [x] 2.4 Run `docker build --no-cache --progress=plain .` and confirm it completes
   successfully and the "sending build context" size is smaller than before.
 
 ---

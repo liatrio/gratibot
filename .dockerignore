@@ -1,5 +1,9 @@
-tf/
+infra/
 .env
 node_modules/
 README.md
 Dockerfile
+test/
+docs/
+.github/
+.husky/

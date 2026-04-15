@@ -6,7 +6,7 @@ const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
   app.message(
-    "metrics",
+    /metrics/i,
     anyOf(directMessage(), directMention),
     respondToMetrics,
   );

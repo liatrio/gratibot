@@ -1,17 +1,16 @@
-const client = require('./db')
+const client = require("./db");
 const winston = require("../winston");
-const goldenRecognitionCollection = client.db().collection('goldenrecognition')
-const {initialGoldenRecognitionHolder} = require('../config');
+const goldenRecognitionCollection = client.db().collection("goldenrecognition");
+const { initialGoldenRecognitionHolder } = require("../config");
 
+goldenRecognitionCollection.createIndex({ recognizer: 1 });
+goldenRecognitionCollection.createIndex({ recognizee: 1 });
+goldenRecognitionCollection.createIndex({ timestamp: 1 });
 
-goldenRecognitionCollection.createIndex({ recognizer: 1 })
-goldenRecognitionCollection.createIndex({ recognizee: 1 })
-goldenRecognitionCollection.createIndex({ timestamp: 1 })
-
-async function initializeGoldenRecognitionCollection () {
+async function initializeGoldenRecognitionCollection() {
   const goldenRecognition = await goldenRecognitionCollection.findOne(
     {},
-    { sort: { timestamp: -1 } }
+    { sort: { timestamp: -1 } },
   );
   if (!goldenRecognition) {
     const collectionValues = {
@@ -24,11 +23,15 @@ async function initializeGoldenRecognitionCollection () {
     };
 
     winston.info("Creating initial golden recognition holder");
-    await goldenRecognitionCollection.insertOne(collectionValues)
+    await goldenRecognitionCollection.insertOne(collectionValues);
   }
 }
 
+initializeGoldenRecognitionCollection().catch((e) =>
+  winston.error("Failed to initialize golden recognition collection", {
+    func: "initializeGoldenRecognitionCollection",
+    error: e.message,
+  }),
+);
 
-initializeGoldenRecognitionCollection().catch((e) => winston.error("Failed to initialize golden recognition collection", { func: "initializeGoldenRecognitionCollection", error: e.message }));
-
-module.exports = goldenRecognitionCollection
+module.exports = goldenRecognitionCollection;

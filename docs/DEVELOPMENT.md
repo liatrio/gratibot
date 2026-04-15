@@ -17,7 +17,7 @@ npm install
 ```
 
 Husky git hooks are installed automatically as part of `npm install`. The pre-commit hook
-runs `npm run lint-fix` before each commit.
+runs `npm run lint` before each commit and fails if there are lint errors.
 
 ### 2. Create a Development Slack App
 
@@ -90,12 +90,9 @@ DMing the bot with `balance` or `help`.
 | Script | Command | Description |
 |---|---|---|
 | `npm start` | `node app.js` | Start the bot |
-| `npm test` | `mocha` + `nyc` | Run tests with coverage |
-| `npm run test:ci` | `npm ci && npm test && npm run report-coverage` | Full CI test pipeline |
+| `npm test` | `mocha` + `c8` | Run tests with coverage (text + lcov) |
 | `npm run lint` | `eslint` | Lint all JS files |
-| `npm run lint-fix` | `eslint --fix` | Auto-fix lint issues |
-| `npm run test-n-lint` | `npm test && npm run lint` | Tests + lint (use before committing) |
-| `npm run report-coverage` | `nyc report --reporter=text-lcov` | Generate LCOV coverage file |
+| `npm run lint:fix` | `eslint --fix` | Auto-fix lint issues |
 
 ## Environment Variables Reference
 
@@ -159,7 +156,7 @@ test: add edge cases for maximum recognition validation
 > **Direct pushes to `main` are rejected.** Always work on a branch and open a pull request.
 
 1. **Branch from `main`** — use a descriptive branch name prefixed with the commit type: `feat/tag-filtering`, `fix/utc-offset`, `chore/bump-deps`
-2. **Develop and test locally** — `npm run test-n-lint` before committing
+2. **Develop and test locally** — `npm test` and `npm run lint` before committing
 3. **Open a PR** — CI runs tests, lint, and (for infra changes) terraform plan
 4. **Merge to `main`** after approval
 5. **Nonprod deploy** — automatic after merge; validates in the `gratibotdev` Slack app

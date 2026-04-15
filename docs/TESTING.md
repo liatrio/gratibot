@@ -54,11 +54,8 @@ under `test/service/`.
 # Full test run with coverage report (use this most of the time)
 npm test
 
-# Tests + lint together (run before committing)
-npm run test-n-lint
-
-# Generate LCOV coverage file
-npm run report-coverage
+# Run lint (before committing)
+npm run lint
 ```
 
 ## Writing Tests

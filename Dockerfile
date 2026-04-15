@@ -1,10 +1,11 @@
 FROM node:24-alpine
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+COPY --chown=node:node package*.json ./
+RUN npm ci --omit=dev --ignore-scripts
 
-COPY . .
+COPY --chown=node:node . .
 
 EXPOSE 3000
-ENTRYPOINT ["npm", "start"]
+USER node
+ENTRYPOINT ["node", "app.js"]

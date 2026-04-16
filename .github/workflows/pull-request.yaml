@@ -17,6 +17,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   setup:
     name: Pipeline Setup
@@ -55,7 +59,7 @@ jobs:
   validate:
     name: "Terraform validate check"
     runs-on: ubuntu-latest
-    needs: build
+    needs: setup
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -74,7 +78,7 @@ jobs:
           terragrunt validate --terragrunt-no-auto-init
         working-directory: infra/terragrunt/nonprod/gratibot/
         env:
-          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
+          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.setup.outputs.docker-tag }}"
   plan:
     name: "Terraform Nonprod plan"
     runs-on: ubuntu-latest
@@ -102,10 +106,10 @@ jobs:
         continue-on-error: true
         env:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
+          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
           ARM_USE_OIDC: true
-          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
+          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.setup.outputs.docker-tag }}"
 
       - uses: liatrio/terraform-change-pr-commenter@c8ccafe4ce3ed9547b2d3517dde0f97be56893f8 # v1.14.2
         with:

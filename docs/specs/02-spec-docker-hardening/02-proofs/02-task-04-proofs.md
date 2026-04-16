@@ -65,7 +65,7 @@ d2c9f50 chore: harden Dockerfile with npm ci, non-root user, and exec-form ENTRY
 
 **What it proves:** The branch is pushed and a PR is open targeting `main` for review.
 
-**PR URL:** [see below — populated after push]
+**PR URL:** https://github.com/liatrio/gratibot/pull/878
 
 ## Reviewer Conclusion
 

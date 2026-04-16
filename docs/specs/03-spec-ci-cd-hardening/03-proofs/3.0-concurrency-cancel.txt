@@ -1,9 +1,12 @@
-Concurrency cancel-in-progress demonstration
-=============================================
+Concurrency cancel-in-progress demonstration (ci.yaml)
+=======================================================
 
 Two commits were pushed in rapid succession to branch ci/03-cicd-hardening to
-trigger the `cancel-in-progress` behavior configured in .github/workflows/ci.yaml
-and .github/workflows/pull-request.yaml.
+trigger the `cancel-in-progress` behavior configured in .github/workflows/ci.yaml.
+(pull-request.yaml intentionally does NOT have workflow-level cancel-in-progress
+because its `plan` job holds an Azure TF state lock and cancelling mid-plan would
+orphan the lock — see the spec's "Concurrency semantics" note and the fix commit
+`fix(ci): drop workflow-level cancel-in-progress from pull-request.yaml`.)
 
 Commit 1 (sha 83ff017) — "chore(ci): trigger concurrency demo run 1"
   CI run:              https://github.com/liatrio/gratibot/actions/runs/24534019480
@@ -15,6 +18,8 @@ Commit 2 (sha 8e520aa) — "chore(ci): trigger concurrency demo run 2"
   status:              in_progress / completed (see PR checks)
 
 Result: the second push arrived while the first run was still executing and
-GitHub Actions cancelled the earlier run, exactly as intended by the
-`concurrency` block with `cancel-in-progress: true`. This confirms the
-concurrency guard is active and prevents redundant runs from piling up.
+GitHub Actions cancelled the earlier run, exactly as intended by the `ci.yaml`
+workflow's `concurrency` block with `cancel-in-progress: true`. This confirms
+the concurrency guard is active on stateless validation workflows and prevents
+redundant runs from piling up, while deploy-adjacent workflows that hold
+external locks keep queued (non-cancelling) behavior.

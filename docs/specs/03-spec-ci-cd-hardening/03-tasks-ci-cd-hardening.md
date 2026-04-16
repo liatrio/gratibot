@@ -6,7 +6,7 @@
 |---|---|
 | `.github/workflows/release.yml` | Unit 1: remove dead `if:` gate, `workflow_dispatch`, `TF_VAR_gratibot_limit`, and inlined tenant ID. Unit 2: migrate tool install to `gruntwork-io/terragrunt-action`. Unit 5: replace `GRATIBOT_RELEASE_TOKEN` with `actions/create-github-app-token`. |
 | `.github/workflows/apply-prod.yml` | Unit 1: remove dead `if:` gate, `workflow_dispatch`, typo'd `GRATIBOT_LIMIT`, inlined tenant ID, add `plan` environment clarifying comment. Unit 2: migrate tool install. Unit 4: replace `build` job with `promote` (image retag, no rebuild). |
-| `.github/workflows/pull-request.yaml` | Unit 1: fix `needs.build.outputs.docker_tag` → `needs.setup.outputs.docker-tag`, drop `needs: build` from `validate`, replace inlined tenant ID, add top-level `concurrency` block. Unit 2: migrate tool install. |
+| `.github/workflows/pull-request.yaml` | Unit 1: fix `needs.build.outputs.docker_tag` → `needs.setup.outputs.docker-tag`, drop `needs: build` from `validate`, replace inlined tenant ID. Workflow-level `concurrency` with `cancel-in-progress: true` is explicitly **not** added — the `plan` job holds an Azure TF state lock and cancelling mid-run would orphan it. Unit 2: migrate tool install. |
 | `.github/workflows/ci.yaml` | Unit 3: new consolidated workflow containing `lint`, `test`, `codeql` jobs with schedule-aware guards, shared concurrency, and Node caching. |
 | `.github/workflows/test.yaml` | Unit 3: deleted after `ci.yaml` lands. |
 | `.github/workflows/lint.yaml` | Unit 3: deleted after `ci.yaml` lands. |
@@ -61,13 +61,16 @@ Fix latent bugs in `release.yml`, `apply-prod.yml`, and `pull-request.yaml` so t
 subsequent structural changes (Units 2 and 4) land on a correct baseline. Removes the
 dead actor allow-list `if:` gate, the typo'd `GRATIBOT_LIMIT` env entry and unused
 `workflow_dispatch` inputs, the broken `needs.build.outputs.docker_tag` reference in
-the PR workflow, and the inlined Azure tenant ID. Adds a top-level `concurrency` block
-to `pull-request.yaml` and a clarifying comment above the `plan` environment in
-`apply-prod.yml`. Lands first per the spec's Key Ordering and Dependencies (§7).
+the PR workflow, and the inlined Azure tenant ID. Adds a clarifying comment above the
+`plan` environment in `apply-prod.yml`. No workflow-level `concurrency` block is added
+to `pull-request.yaml` — the `plan` job holds an Azure TF state lock and cancelling an
+in-flight run would orphan the lock; the `plan` job's own `tf-nonprod` job-level
+concurrency group already serializes TF operations correctly. Lands first per the spec's
+Key Ordering and Dependencies (§7).
 
 #### 1.0 Proof Artifact(s)
 
-- Diff: `git diff main..ci/03-cicd-hardening -- .github/workflows/release.yml .github/workflows/apply-prod.yml .github/workflows/pull-request.yaml` at the Unit 1 commit boundary shows the dead `if:` gate removed, `workflow_dispatch` + `gratibot_limit` block gone, hardcoded tenant ID replaced with `${{ vars.AZURE_TENANT_ID }}`, the PR workflow's top-level `concurrency` block added, and the `needs.setup.outputs.docker-tag` reference correct — demonstrates each FR-1 requirement is encoded. Captured as `03-proofs/1.0-diff.patch` by Task 7.11.
+- Diff: `git diff main..ci/03-cicd-hardening -- .github/workflows/release.yml .github/workflows/apply-prod.yml .github/workflows/pull-request.yaml` at the Unit 1 commit boundary shows the dead `if:` gate removed, `workflow_dispatch` + `gratibot_limit` block gone, hardcoded tenant ID replaced with `${{ vars.AZURE_TENANT_ID }}`, and the `needs.setup.outputs.docker-tag` reference correct — demonstrates each FR-1 requirement is encoded. Captured as `03-proofs/1.0-diff.patch` by Task 7.11.
 - CI run (PR-level): PR-triggered run of `pull-request.yaml` under Unit 7's PR shows `validate` and `plan` jobs interpolating the `setup.outputs.docker-tag` value into `TF_VAR_gratibot_image` and completing successfully — demonstrates the `needs` fix works end-to-end. Captured as `03-proofs/1.0-pr-run.txt` by Task 7.2.
 - CI run (post-merge): Post-merge `release.yml` run shows the nonprod `apply` job succeeded without referencing `inputs.gratibot_limit` — demonstrates trigger simplification did not break the push path. Captured as `03-proofs/1.0-release-run.txt` by Task 7.6.
 - Human gate evidence: Screenshot of the repo's Settings → Secrets and variables → Actions → Variables tab showing the `AZURE_TENANT_ID` repository variable present. Captured as `03-proofs/1.0-azure-tenant-id-variable.png` by Task 1.1 (pre-flight). Confirms Out-of-Repo Prerequisite #2 was completed before the PR was opened.
@@ -89,7 +92,7 @@ to `pull-request.yaml` and a clarifying comment above the `plan` environment in
 - [x] 1.13 In `.github/workflows/pull-request.yaml`, replace `${{ needs.build.outputs.docker_tag }}` with `${{ needs.setup.outputs.docker-tag }}` in both the `validate` job's `TF_VAR_gratibot_image` value and the `plan` job's `TF_VAR_gratibot_image` value.
 - [x] 1.14 In `.github/workflows/pull-request.yaml`'s `validate` job, change `needs: build` to `needs: setup` (the job only consumes the `setup` output, not any `build` output).
 - [x] 1.15 In `.github/workflows/pull-request.yaml`'s `plan` job, change `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
-- [x] 1.16 In `.github/workflows/pull-request.yaml`, add a top-level `concurrency:` block (sibling to `on:`, `env:`, `permissions:`, `jobs:`) with `group: ${{ github.workflow }}-${{ github.ref }}` and `cancel-in-progress: true`.
+- [x] 1.16 **Do not** add a top-level `concurrency:` block with `cancel-in-progress: true` to `.github/workflows/pull-request.yaml`. The `plan` job runs `terragrunt plan` against the Azure backend and holds a state lock; a workflow-level cancel triggered by a later push would kill the plan mid-execution and orphan the lock. The `plan` job's existing job-level `concurrency: group: "tf-nonprod"` (no `cancel-in-progress`) already serializes TF operations correctly. (This task reverses an earlier intent in the spec — see the "Concurrency semantics" note in §Technical Notes.)
 - [x] 1.17 Run `npm run lint` locally, stage the three workflow files, and create the Unit 1 commit on `ci/03-cicd-hardening` with a message starting `fix(ci):` (e.g., `fix(ci): remove dead gates, typo'd env, and broken refs from deploy workflows`). Do **not** push yet — Unit 7 handles the push.
 
 ---

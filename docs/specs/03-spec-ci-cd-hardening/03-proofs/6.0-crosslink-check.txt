@@ -1,0 +1,6 @@
+./docs/specs/03-spec-ci-cd-hardening/03-spec-ci-cd-hardening.md:315:- The system shall delete `docs/index.md` (its role was a TechDocs
+./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:20:| `docs/index.md` | Unit 6: deleted (TechDocs landing page; no remaining cross-links point at it). |
+./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:240:`mkdocs.yml` (repo root), and `docs/index.md`. Leave the rest of `docs/` and all
+./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:249:- Cross-link check: `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` returns no matches (or only spec-self-references) — demonstrates no surviving link points at the deleted landing page. Captured as `03-proofs/6.0-crosslink-check.txt` by Task 6.8.
+./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:257:- [ ] 6.5 Delete `docs/index.md`.
+./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:260:- [ ] 6.8 Run `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` and confirm no matches outside the `docs/specs/03-spec-ci-cd-hardening/` directory. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt`.

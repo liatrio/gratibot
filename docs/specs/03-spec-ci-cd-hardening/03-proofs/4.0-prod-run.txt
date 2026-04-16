@@ -1,0 +1,23 @@
+https://github.com/liatrio/gratibot/actions/runs/24535082982
+
+Task 7.7 verification
+---------------------
+
+Post-merge apply-prod.yml run triggered by the GitHub Release `v3.36.2`
+(created by semantic-release during the preceding release.yml run on commit
+5141d72326e4838965045cd256fe7df9f40a4fba). All three jobs completed
+successfully:
+
+  - Promote image from nonprod  : success
+  - Terraform Prod plan          : success
+  - Terraform Prod Apply         : success (after manual prod environment approval)
+
+Promote-don't-rebuild verification:
+  gh run view 24535082982 --log --job <promote-job-id> \
+    | grep -E '\bdocker build[^x]|\bdocker push|Build image'
+  -> 0 matches.
+
+Confirms the promote job retagged the existing nonprod image via
+`docker buildx imagetools create` rather than rebuilding. The companion
+digest evidence in 4.0-imagetools-inspect.txt shows both tags reference
+the same image content (sha256:4e57ec44...).

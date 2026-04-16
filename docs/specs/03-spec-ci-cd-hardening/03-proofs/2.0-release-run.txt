@@ -1,0 +1,17 @@
+https://github.com/liatrio/gratibot/actions/runs/24534829560
+
+Task 7.6 secondary check (Unit 2 evidence): scanned the "Terraform Apply"
+(Deploy Gratibot to Nonprod) step log for Terragrunt-specific deprecation
+warnings using:
+
+  gh run view 24534829560 --log --job 71727240874 \
+    | grep -iE 'terragrunt.*deprecat|unlabeled include|--terragrunt-non-interactive|--terragrunt-log-level'
+
+Result: 0 matches. The previously-observed "unlabeled include" and
+"--terragrunt-*" deprecation warnings are gone, confirming Unit 2's
+relabel of include blocks and the flag rename (--terragrunt-non-interactive
+→ --non-interactive) took effect end-to-end.
+
+Note: a provider-level deprecation ("metric has been deprecated in favour of
+enabled_metric") appears in the log but originates from the AzureRM Terraform
+provider, not Terragrunt itself. It is unrelated to Spec 03.

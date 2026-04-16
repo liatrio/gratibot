@@ -1,0 +1,1971 @@
+diff --git a/.github/workflows/apply-prod.yml b/.github/workflows/apply-prod.yml
+index 2be139f..7cb04f4 100644
+--- a/.github/workflows/apply-prod.yml
++++ b/.github/workflows/apply-prod.yml
+@@ -3,19 +3,9 @@ on:
+   release:
+     types: [created]
+ 
+-  workflow_dispatch:
+-    inputs:
+-      gratibot_limit:
+-        description: "The amount of fistbumps that a user can give for one day."
+-        required: false
+-        default: "5"
+-        type: string
+-
+ env:
+   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
+   IMAGE_PATH: ${{ github.repository_owner }}/gratibot
+-  tofu_version: '~1.9'
+-  tg_version: '0.72.0'
+ 
+ permissions:
+   id-token: write
+@@ -23,58 +13,52 @@ permissions:
+   packages: write
+ 
+ jobs:
+-  build:
+-    name: Tag image
++  promote:
++    name: "Promote image from nonprod"
+     runs-on: ubuntu-latest
+-    if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+ 
++      - name: Resolve nonprod sha_short
++        id: source
++        run: echo "sha_short=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_OUTPUT
++
+       - name: Generate tag
+         id: tag
+         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+ 
+-      - name: Build image
+-        run: docker build . --file Dockerfile --tag $IMAGE_NAME:${{ steps.tag.outputs.tag }} --label "runnumber=${GITHUB_RUN_ID}"
+-
+       - name: Log into registry
+         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+ 
+-      - name: Push image
+-        run: docker push $IMAGE_NAME:${{ steps.tag.outputs.tag }}
++      - name: Promote image
++        run: docker buildx imagetools create -t $IMAGE_NAME:${{ steps.tag.outputs.tag }} $IMAGE_NAME:${{ steps.source.outputs.sha_short }}
+     outputs:
+       docker_tag: ${{ steps.tag.outputs.tag }}
++      source_tag: ${{ steps.source.outputs.sha_short }}
+   plan:
+     name: "Terraform Prod plan"
+     runs-on: ubuntu-latest
+     concurrency:
+       group: "tf-prod"
++    # 'plan' scopes OIDC to a read-only Azure identity, distinct from the elevated identity used by the 'prod' environment.
+     environment:
+       name: "plan"
+-    needs: build
++    needs: promote
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-      - name: Setup Tofu
+-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+-        with:
+-          tofu_version: ${{ env.tofu_version }}
+-      - name: Setup Terragrunt
+-        run: |
+-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
+-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+-          sudo chmod +x /usr/local/bin/terragrunt
++      - name: Install OpenTofu and Terragrunt
++        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
+       - name: Plan Gratibot prod deployment
+         working-directory: infra/terragrunt/prod/gratibot/
+         run: |
+           terragrunt plan
+         env:
+           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
++          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
+           ARM_USE_OIDC: true
+-          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
+-          TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
++          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.promote.outputs.docker_tag }}"
+   apply:
+     name: "Terraform Prod Apply"
+     runs-on: ubuntu-latest
+@@ -82,27 +66,19 @@ jobs:
+       group: "tf-prod"
+     environment:
+       name: "prod"
+-    needs: [build, plan]
++    needs: [promote, plan]
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-      - name: Setup Tofu
+-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+-        with:
+-          tofu_version: ${{ env.tofu_version }}
+-      - name: Setup Terragrunt
+-        run: |
+-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
+-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+-          sudo chmod +x /usr/local/bin/terragrunt
++      - name: Install OpenTofu and Terragrunt
++        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
+       - name: Deploy Gratibot to Prod
+         working-directory: infra/terragrunt/prod/gratibot/
+         run: |
+-          terragrunt apply --terragrunt-non-interactive -auto-approve
++          terragrunt apply --non-interactive -auto-approve
+         env:
+           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
++          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_PROD_SUBSCRIPTION_ID }}
+           ARM_USE_OIDC: true
+-          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
+-          GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}
++          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.promote.outputs.docker_tag }}"
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+new file mode 100644
+index 0000000..005ef3e
+--- /dev/null
++++ b/.github/workflows/ci.yaml
+@@ -0,0 +1,74 @@
++name: CI
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++    branches: [main]
++  schedule:
++    - cron: '15 11 * * 5'
++
++permissions:
++  contents: read
++
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
++jobs:
++  lint:
++    name: lint
++    runs-on: ubuntu-latest
++    if: github.event_name != 'schedule'
++    steps:
++      - name: Checkout
++        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++      - name: Setup Node
++        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
++        with:
++          node-version: 24
++          cache: 'npm'
++      - name: Install Dependencies
++        run: npm ci
++      - name: Run Linter
++        run: npm run lint
++
++  test:
++    name: test
++    runs-on: ubuntu-latest
++    if: github.event_name != 'schedule'
++    steps:
++      - name: Checkout
++        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++      - name: Setup Node
++        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
++        with:
++          node-version: 24
++          cache: 'npm'
++      - name: Install Dependencies
++        run: npm ci
++      - name: Test
++        run: npm test
++
++  codeql:
++    name: codeql
++    runs-on: ubuntu-latest
++    permissions:
++      actions: read
++      contents: read
++      security-events: write
++    strategy:
++      fail-fast: false
++      matrix:
++        language: ['javascript']
++    steps:
++      - name: Checkout repository
++        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++      - name: Initialize CodeQL
++        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
++        with:
++          languages: ${{ matrix.language }}
++      - name: Autobuild
++        uses: github/codeql-action/autobuild@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
++      - name: Perform CodeQL Analysis
++        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+diff --git a/.github/workflows/codeql-analysis.yml b/.github/workflows/codeql-analysis.yml
+deleted file mode 100644
+index c7638e3..0000000
+--- a/.github/workflows/codeql-analysis.yml
++++ /dev/null
+@@ -1,69 +0,0 @@
+-# For most projects, this workflow file will not need changing; you simply need
+-# to commit it to your repository.
+-#
+-# You may wish to alter this file to override the set of languages analyzed,
+-# or to provide custom queries or build logic.
+-#
+-# ******** NOTE ********
+-# We have attempted to detect the languages in your repository. Please check
+-# the `language` matrix defined below to confirm you have the correct set of
+-# supported CodeQL languages.
+-#
+-name: "CodeQL"
+-
+-on:
+-  push:
+-  schedule:
+-    - cron: '15 11 * * 5'
+-
+-jobs:
+-  analyze:
+-    name: Analyze
+-    runs-on: ubuntu-latest
+-    permissions:
+-      actions: read
+-      contents: read
+-      security-events: write
+-
+-    strategy:
+-      fail-fast: false
+-      matrix:
+-        language: [ 'javascript' ]
+-        pathsIgnore: [ "**/middleware" ]
+-        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
+-        # Learn more:
+-        # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#changing-the-languages-that-are-analyzed
+-
+-    steps:
+-    - name: Checkout repository
+-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-
+-    # Initializes the CodeQL tools for scanning.
+-    - name: Initialize CodeQL
+-      uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+-      with:
+-        languages: ${{ matrix.language }}
+-
+-        # If you wish to specify custom queries, you can do so here or in a config file.
+-        # By default, queries listed here will override any specified in a config file.
+-        # Prefix the list here with "+" to use these queries and those in the config file.
+-        # queries: ./path/to/local/query, your-org/your-repo/queries@main
+-
+-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
+-    # If this step fails, then you should remove it and run the build manually (see below)
+-    - name: Autobuild
+-      uses: github/codeql-action/autobuild@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+-
+-    # ℹ️ Command-line programs to run using the OS shell.
+-    # 📚 https://git.io/JvXDl
+-
+-    # ✏️ If the Autobuild fails above, remove it and uncomment the following three lines
+-    #    and modify them (or add more) to build your code if your project
+-    #    uses a compiled language
+-
+-    #- run: |
+-    #   make bootstrap
+-    #   make release
+-
+-    - name: Perform CodeQL Analysis
+-      uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+diff --git a/.github/workflows/lint.yaml b/.github/workflows/lint.yaml
+deleted file mode 100644
+index 4cc1247..0000000
+--- a/.github/workflows/lint.yaml
++++ /dev/null
+@@ -1,20 +0,0 @@
+-name: lint
+-
+-on:
+-  push:
+-
+-jobs:
+-  lint:
+-    runs-on: ubuntu-latest
+-    steps:
+-      - name: Setup Node
+-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+-        with:
+-          node-version: 24
+-      - name: Checkout Code
+-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-
+-      - name: Run Linter
+-        run: |
+-          npm ci
+-          npm run lint
+diff --git a/.github/workflows/publish-techdocs-to-s3.yaml b/.github/workflows/publish-techdocs-to-s3.yaml
+deleted file mode 100644
+index e54dea2..0000000
+--- a/.github/workflows/publish-techdocs-to-s3.yaml
++++ /dev/null
+@@ -1,153 +0,0 @@
+-name: Publish TechDocs Site
+-
+-on:
+-  push:
+-    branches: [main]
+-    paths:
+-      - "docs/**"
+-      - "mkdocs.yml"
+-      - "**/*.md"
+-  workflow_dispatch:
+-
+-jobs:
+-  check-for-catalog-info-at-root:
+-    runs-on: ubuntu-latest
+-    outputs:
+-      template-present: ${{ steps.check-template.outputs.template-exists }}
+-      catalog-present: ${{ steps.check-catalog.outputs.catalog-exists }}
+-      mkdocs-present: ${{ steps.check-mkdocs.outputs.mkdocs-exists }}
+-    steps:
+-    - name: Checkout repository
+-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-
+-    - name: Check if catalog exists
+-      id: check-catalog
+-      run: |
+-        if [ -f "./catalog-info.yaml" ]; then
+-          echo "catalog-exists=true" >> $GITHUB_OUTPUT
+-          echo "catalog-exists=true"
+-        else
+-          echo "catalog-exists=false" >> $GITHUB_OUTPUT
+-        fi
+-
+-    - name: Check if template exists
+-      id: check-template
+-      run: |
+-        if [ -f "./template.yaml" ]; then
+-          echo "template-exists=true" >> $GITHUB_OUTPUT
+-          echo "template-exists=true"
+-        else
+-          echo "template-exists=false" >> $GITHUB_OUTPUT
+-        fi
+-
+-    - name: Check if mkdocs exists
+-      id: check-mkdocs
+-      run: |
+-        if [ -f "./mkdocs.yml" ] || [ -f "./mkdocs.yaml" ]; then
+-          echo "mkdocs-exists=true" >> $GITHUB_OUTPUT
+-          echo "mkdocs-exists=true"
+-        else
+-          echo "mkdocs-exists=false" >> $GITHUB_OUTPUT
+-        fi
+-
+-  publish-docs-to-s3:
+-    needs: check-for-catalog-info-at-root
+-    if: ${{ needs.check-for-catalog-info-at-root.outputs.mkdocs-present == 'true' && (needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' || needs.check-for-catalog-info-at-root.outputs.template-present == 'true') }}
+-
+-    runs-on: ubuntu-latest
+-    permissions:
+-      id-token: write
+-      contents: read
+-
+-    steps:
+-      - name: Checkout code
+-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-
+-      - name: Cache Node.js modules
+-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+-        with:
+-          path: |
+-            $(npm config get prefix)/lib/node_modules
+-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+-          restore-keys: |
+-            ${{ runner.os }}-node-
+-
+-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+-
+-      - name: Cache Python packages
+-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+-        with:
+-          path: ~/.cache/pip
+-          key: ${{ runner.os }}-pip-${{ hashFiles('**/*.txt', '**/*.pip') }}
+-          restore-keys: |
+-            ${{ runner.os }}-pip-
+-
+-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+-        with:
+-          python-version: '3.14'
+-
+-      - name: Install techdocs-cli
+-        run: sudo npm install -g @techdocs/cli
+-
+-      - name: Install mkdocs and mkdocs plugins
+-        run: python -m pip install mkdocs-techdocs-core==1.* neoteroi-mkdocs mkdocs-kroki-plugin
+-
+-      - name: Get namespace from catalog-info.yaml
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+-        id: get_namespace_catalog
+-        uses: mikefarah/yq@0f4fb8d35ec1a939d78dd6862f494d19ec589f19 # v4.52.5
+-        with:
+-          cmd: yq '.metadata.namespace // "default"' catalog-info.yaml
+-
+-      - name: Get name from catalog-info.yaml
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+-        id: get_name_catalog
+-        uses: mikefarah/yq@0f4fb8d35ec1a939d78dd6862f494d19ec589f19 # v4.52.5
+-        with:
+-          cmd: yq '.metadata.name' catalog-info.yaml
+-
+-      - name: Get kind from catalog-info.yaml
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+-        id: get_kind_catalog
+-        uses: mikefarah/yq@0f4fb8d35ec1a939d78dd6862f494d19ec589f19 # v4.52.5
+-        with:
+-          cmd: yq '.kind' catalog-info.yaml
+-
+-      - name: Get namespace from template.yaml
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+-        id: get_namespace_template
+-        uses: mikefarah/yq@0f4fb8d35ec1a939d78dd6862f494d19ec589f19 # v4.52.5
+-        with:
+-          cmd: yq '.metadata.namespace // "default"' template.yaml
+-
+-      - name: Get name from template.yaml
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+-        id: get_name_template
+-        uses: mikefarah/yq@0f4fb8d35ec1a939d78dd6862f494d19ec589f19 # v4.52.5
+-        with:
+-          cmd: yq '.metadata.name' template.yaml
+-
+-      - name: Get kind from template.yaml
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+-        id: get_kind_template
+-        uses: mikefarah/yq@0f4fb8d35ec1a939d78dd6862f494d19ec589f19 # v4.52.5
+-        with:
+-          cmd: yq '.kind' template.yaml
+-
+-      - name: Configure AWS Credentials
+-        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
+-        with:
+-          aws-region: us-east-1
+-          role-session-name: publish-docs
+-          role-to-assume: arn:aws:iam::905418481873:role/Github_OIDC_TechDocs_S3
+-
+-      - name: Generate docs site
+-        run: techdocs-cli generate --no-docker --verbose
+-
+-      - name: Publish docs site
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.catalog-present == 'true' }}
+-        run: techdocs-cli publish --publisher-type awsS3 --storage-name backstage-liatrio-techdocs --entity ${{ steps.get_namespace_catalog.outputs.result }}/${{ steps.get_kind_catalog.outputs.result }}/${{ steps.get_name_catalog.outputs.result }}
+-
+-      - name: Publish docs site
+-        if: ${{ needs.check-for-catalog-info-at-root.outputs.template-present == 'true' }}
+-        run: techdocs-cli publish --publisher-type awsS3 --storage-name backstage-liatrio-techdocs --entity ${{ steps.get_namespace_template.outputs.result }}/${{ steps.get_kind_template.outputs.result }}/${{ steps.get_name_template.outputs.result }}
+diff --git a/.github/workflows/pull-request.yaml b/.github/workflows/pull-request.yaml
+index e7c9621..1cee3fc 100644
+--- a/.github/workflows/pull-request.yaml
++++ b/.github/workflows/pull-request.yaml
+@@ -8,8 +8,6 @@ on:
+ 
+ env:
+   IMAGE_PATH: ${{ github.repository_owner }}/gratibot
+-  tofu_version: '~1.9'
+-  tg_version: '0.72.0'
+ 
+ permissions:
+   id-token: write
+@@ -45,36 +43,27 @@ jobs:
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-      - name: Setup Tofu
+-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+-        with:
+-          tofu_version: ${{ env.tofu_version }}
++      - name: Install OpenTofu and Terragrunt
++        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
+       - name: Terraform fmt check
+         run: tofu fmt -check -recursive
+ 
+   validate:
+     name: "Terraform validate check"
+     runs-on: ubuntu-latest
+-    needs: build
++    needs: setup
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-      - name: Setup Tofu
+-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+-        with:
+-          tofu_version: ${{ env.tofu_version }}
+-      - name: Setup Terragrunt
+-        run: |
+-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
+-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+-          sudo chmod +x /usr/local/bin/terragrunt
++      - name: Install OpenTofu and Terragrunt
++        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
+       - name: Terraform validate check
+         run: |
+           terragrunt init -backend=false
+-          terragrunt validate --terragrunt-no-auto-init
++          terragrunt validate --no-auto-init
+         working-directory: infra/terragrunt/nonprod/gratibot/
+         env:
+-          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
++          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.setup.outputs.docker-tag }}"
+   plan:
+     name: "Terraform Nonprod plan"
+     runs-on: ubuntu-latest
+@@ -84,15 +73,8 @@ jobs:
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-      - name: Setup Tofu
+-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+-        with:
+-          tofu_version: ${{ env.tofu_version }}
+-      - name: Setup Terragrunt
+-        run: |
+-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
+-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+-          sudo chmod +x /usr/local/bin/terragrunt
++      - name: Install OpenTofu and Terragrunt
++        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
+       - name: Plan Gratibot staging deployment
+         id: plan_gratibot_staging_deployment
+         working-directory: infra/terragrunt/nonprod/gratibot/
+@@ -102,10 +84,10 @@ jobs:
+         continue-on-error: true
+         env:
+           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
++          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
+           ARM_USE_OIDC: true
+-          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
++          TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.setup.outputs.docker-tag }}"
+ 
+       - uses: liatrio/terraform-change-pr-commenter@c8ccafe4ce3ed9547b2d3517dde0f97be56893f8 # v1.14.2
+         with:
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 5d049cd..5e0b039 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -7,19 +7,9 @@ on:
+       - "README.md"
+       - "catalog.yaml"
+ 
+-  workflow_dispatch:
+-    inputs:
+-      gratibot_limit:
+-        description: "The amount of fistbumps that a user can give for one day."
+-        required: false
+-        default: "5"
+-        type: string
+-
+ env:
+   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gratibot
+   IMAGE_PATH: ${{ github.repository_owner }}/gratibot
+-  tofu_version: '~1.9'
+-  tg_version: '0.72.0'
+ 
+ permissions:
+   id-token: write
+@@ -29,7 +19,6 @@ permissions:
+ jobs:
+   build:
+     name: Build and Publish Image
+-    if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+@@ -59,26 +48,18 @@ jobs:
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-      - name: Setup Tofu
+-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+-        with:
+-          tofu_version: ${{ env.tofu_version }}
+-      - name: Setup Terragrunt
+-        run: |
+-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
+-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+-          sudo chmod +x /usr/local/bin/terragrunt
++      - name: Install OpenTofu and Terragrunt
++        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
+       - name: Deploy Gratibot to Nonprod
+         working-directory: infra/terragrunt/nonprod/gratibot/
+         run: |
+-          terragrunt apply --terragrunt-non-interactive -auto-approve
++          terragrunt apply --non-interactive -auto-approve
+         env:
+           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+-          ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"
++          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_NONPROD_SUBSCRIPTION_ID }}
+           ARM_USE_OIDC: true
+           TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.build.outputs.docker_tag }}"
+-          TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}
+   release:
+     name: "Create Release"
+     runs-on: ubuntu-latest
+@@ -95,8 +76,15 @@ jobs:
+       - name: Install devDependencies
+         run: npm ci
+ 
++      - name: Generate release token
++        id: app-token
++        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
++        with:
++          app-id: ${{ vars.RELEASE_APP_ID }}
++          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
++
+       - name: Create Release
+         run: npm run release
+         env:
+-          GITHUB_TOKEN: ${{ secrets.GRATIBOT_RELEASE_TOKEN }}
++          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+ 
+diff --git a/.github/workflows/test.yaml b/.github/workflows/test.yaml
+deleted file mode 100644
+index 9c891dd..0000000
+--- a/.github/workflows/test.yaml
++++ /dev/null
+@@ -1,23 +0,0 @@
+-name: test
+-
+-on:
+-  push:
+-    branches:
+-      - "*"
+-  pull_request:
+-    branches: [main]
+-
+-jobs:
+-  test:
+-    runs-on: ubuntu-latest
+-    steps:
+-      - name: Setup Node
+-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+-        with:
+-          node-version: 24
+-      - name: Checkout Code
+-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+-      - name: Install Dependencies
+-        run: npm ci
+-      - name: Test
+-        run: npm test
+diff --git a/catalog-info.yaml b/catalog-info.yaml
+deleted file mode 100644
+index 6c51ee5..0000000
+--- a/catalog-info.yaml
++++ /dev/null
+@@ -1,27 +0,0 @@
+-apiVersion: backstage.io/v1alpha1
+-kind: Component
+-metadata:
+-  name: Gratibot
+-  description: Slack bot used to recognize one another’s accomplishments and give shoutouts
+-  annotations:
+-    github.com/project-slug: 'liatrio/gratibot'
+-    backstage.io/techdocs-ref: 'url:https://github.com/liatrio/gratibot'
+-    azure.com/tag-selector: 'backstage-azure-resource/data'
+-    
+-  tags:
+-    - node
+-    - javascript
+-    - azure
+-    - bolt
+-  links:
+-    - url: https://portal.azure.com/#@liatrio.com/resource/subscriptions/761bf739-12c3-43cb-bec9-d87c1d7fa459/resourceGroups/gratibot-azure-data/overview
+-      title: Non-Prod Azure Resources
+-      icon: dashboard
+-    - url: https://portal.azure.com/#@liatrio.com/resource/subscriptions/06c2c5d0-9228-446c-83e2-ead8d530914e/resourceGroups/gratibot-azure-data/overview
+-      title: Prod Azure Resources
+-      icon: dashboard
+-spec:
+-  type: service
+-  lifecycle: production
+-  owner: gratibot-owners
+-  system: gratibot
+diff --git a/docs/index.md b/docs/index.md
+deleted file mode 100644
+index e17c61b..0000000
+--- a/docs/index.md
++++ /dev/null
+@@ -1,12 +0,0 @@
+-# Gratibot
+-
+-Gratibot is a Slack bot for recognizing the accomplishments of friends and
+-colleagues. Read more in [Liatrio's blog post about Gratibot.](https://www.liatrio.com/blog/gratibot-chatbot)
+-
+-## Roadmap
+-
+-- [x] Deploy on Azure
+-- [ ] Implement Functional Testing
+-- [x] Refactor Logic to Service Module
+-- [x] Redeem Fistbumps Through Gratibot
+-- [x] Replace Botkit with Bolt
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-audit-ci-cd-hardening.md b/docs/specs/03-spec-ci-cd-hardening/03-audit-ci-cd-hardening.md
+new file mode 100644
+index 0000000..9674937
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-audit-ci-cd-hardening.md
+@@ -0,0 +1,100 @@
++# 03-audit-ci-cd-hardening.md
++
++## Executive Summary
++
++- Overall Status: **PASS**
++- Required Gate Failures: 0
++- Flagged Risks: 0
++- Audit run: 2 (re-audit after user-requested restructure to single-PR,
++  per-unit-commit workflow)
++
++All six REQUIRED planning gates pass. No remediation edits are required before
++handoff to `/SDD-3-manage-tasks`.
++
++## Gate Overview
++
++| Gate | Status | Notes |
++|---|---|---|
++| Requirement-to-test traceability (REQUIRED) | PASS | Every functional requirement across Units 1–6 maps to at least one sub-task and at least one proof artifact (diff, CI run URL, screenshot, grep output, file copy, or image-digest inspection). |
++| Proof artifact verifiability (REQUIRED) | PASS | All artifacts use concrete observable evidence: diffs, CI run URLs, file captures in `03-proofs/`, `docker buildx imagetools inspect` outputs, branch-protection and secrets-tab screenshots, and grep outputs. No vague "works as expected" language. |
++| Repository standards consistency (REQUIRED) | PASS | `AGENTS.md` and root `README.md` both read; four additional sources reviewed. Conventional Commits, pinned action SHAs with `# vX.Y.Z` comments, no-direct-push-to-main, and the `docs/TESTING.md` service-layer test scope are consistently reflected in Relevant Files, Notes, and sub-tasks. No conflicts between sources. |
++| Open question resolution (REQUIRED) | PASS | Spec §"Open Questions" declares "No open questions at this time" and resolves the three drafting-phase questions in-line (mise scope, App permissions, Terragrunt bump safety). |
++| Regression-risk blind spots (FLAG) | PASS | Task 2.18 explicitly scans logs for deprecation warnings (beyond happy-path apply). Task 3.15 exercises `cancel-in-progress` with a second push. Task 3.17 captures a schedule-gated run. Task 4.13 verifies digest-level identity, not just job success. Task 5.10 captures end-to-end App-token use, which would fail if permissions are insufficient. No blind-path coverage gaps worth flagging. |
++| Non-goal leakage (FLAG) | PASS | Reviewed against spec §"Non-Goals" 1–14. No sub-task introduces path-based triggers, smoke-test gates, plan-from-plan patterns, timeout-minutes, hadolint, Trivy/Grype, `release.yml` splits, reusable-workflow consolidation, `plan` environment removal, or out-of-repo S3/Backstage catalog cleanup. |
++
++## Standards Evidence Table (Required)
++
++| Source File | Read | Standards Extracted | Conflicts |
++|---|---|---|---|
++| `AGENTS.md` | yes | Conventional Commits required; feature-branch workflow (no push to `main`); pinned action SHAs with `# vX.Y.Z` comments; tests required only for `service/`/`features/` changes; infra changes human-gated. | none |
++| `CLAUDE.md` | yes | Mirrors `AGENTS.md` content. | none (intentional duplication) |
++| `README.md` | yes | Commit messages are linted via husky + commitlint; releases driven by semantic-release; nonprod auto-deploy after merge, prod via release event with manual approval. | none |
++| `docs/DEVELOPMENT.md` | yes | Node 24; `npm test` and `npm run lint` before commit; conventional commit types drive version bumps; branch-prefix convention matches commit type; husky pre-commit hook runs `npm run lint`. | none |
++| `docs/TESTING.md` | yes | Mocha/Chai/Sinon for `service/` tests only; workflow/infra changes are not required to add unit tests. Informs the "no test files" Notes entry. | none |
++| `package.json` (scripts) | yes | `lint` = `eslint '*.js' 'features/**' ...`; `test` = `c8 mocha ...`; `release` = `semantic-release`. Confirms the shape of the `lint`/`test`/`release` jobs in the consolidated `ci.yaml` and in `release.yml`. | none |
++| `CONTRIBUTING.md` | not found | n/a | n/a |
++| `.github/pull_request_template.md` | not found | n/a | n/a |
++| Existing workflow YAML (`release.yml`, `apply-prod.yml`, `pull-request.yaml`, `test.yaml`, `lint.yaml`, `codeql-analysis.yml`) | yes | Action SHA pinning style (`<sha> # vX.Y.Z`); kebab-case filenames; `id-token: write` only where OIDC is used; `tf-nonprod`/`tf-prod` concurrency groups must remain without `cancel-in-progress`. | none |
++| `docs/specs/02-spec-docker-hardening/02-tasks-docker-hardening.md` | yes | Precedent for Relevant Files table, Notes block, `[ ]` parent/sub-task checkbox layout, Proof Artifact bullet style. | none |
++
++## Chain-of-Verification Check (Phase 4A)
++
++1. Initial assessment: all six REQUIRED gates drafted as PASS.
++2. Self-questioning: "Do all REQUIRED gates pass with explicit evidence?" — Yes. Each PASS
++   in the Gate Overview cites the specific sub-tasks or spec sections that provide the
++   evidence.
++3. Fact-checking:
++   - Every functional requirement string in spec §Units 1–6 was re-read against the
++     sub-tasks — each maps to at least one numbered sub-task and at least one bullet in
++     the relevant `Proof Artifact(s)` block.
++   - `AGENTS.md` Critical Requirements ("Never Commit Directly to `main`", Conventional
++     Commits) verified present in the Notes block of `03-tasks-ci-cd-hardening.md`.
++   - Spec §"Out-of-Repo Prerequisites" #1–#4 verified to each have a corresponding
++     `[HUMAN GATE]` sub-task (1.1, 3.16, 5.1/5.2, 5.11) with evidence capture.
++4. Inconsistency resolution: none required.
++5. Final synthesis: audit status **PASS**; next action is to proceed to
++   `/SDD-3-manage-tasks`.
++
++## Re-Audit Delta (Run 2)
++
++**Structural change this run:** task list was restructured from "one PR per unit" to a
++single-branch, one-commit-per-unit, one-PR workflow at the user's request. A new
++parent task `7.0 Integration PR and post-merge verification` was added to own
++cross-unit orchestration (push, PR creation, PR CI capture, pre-merge branch-protection
++rename, merge, post-merge release/apply-prod captures, PAT revocation, scheduled-cron
++capture). Parent-task count went from 6 to 7; the spec's "4–6 with adjustments"
++guidance accepts this.
++
++**Changed gate statuses since previous run:** none. All six REQUIRED gates remain PASS.
++
++**Evidence trace adjustments:**
++
++- Each unit's Proof Artifact(s) bullets now name the specific `7.x` sub-task that
++  performs the runtime capture (e.g., "Captured as `03-proofs/1.0-release-run.txt` by
++  Task 7.6"). Requirement-to-test traceability therefore continues to pass — every FR
++  still maps to a sub-task and an artifact, just that many runtime captures now live
++  under 7.0 instead of their originating unit.
++- The pre-flight human gates (Tasks 1.1, 5.1, 5.2) are now flagged in the Notes block
++  and in Task 7.1 as "must complete before Unit 7 pushes the branch," so a reviewer
++  can detect a missing prerequisite before CI churns on a broken reference.
++- Task 7.4 performs the branch-protection rename before the merge (Out-of-Repo
++  Prereq #3 shifted from "after Unit 3 ships" to "after Unit 3's commit is on the PR
++  branch and before the consolidated PR merges"). This is necessary because under the
++  single-PR model, the old required checks (`test`, `lint`, `CodeQL / Analyze`) can no
++  longer fire once Unit 3's deletions land on the branch — so without the rename,
++  branch-protection would block the merge. This is a real-world constraint introduced
++  by the restructure; it is captured in Task 7.4's explicit ordering note.
++- Task 7.5 explicitly calls out the bisectability tradeoff: the consolidated PR should
++  be merged with a strategy that preserves per-unit commits (merge commit or rebase);
++  `Squash and merge` would collapse six meaningfully-separate commits into one. If
++  branch protection forbids non-squash merges, Task 7.5 asks the operator to
++  coordinate a temporary protection update rather than silently squashing.
++
++**Newly introduced findings:** none.
++
++**Still-failing REQUIRED gates:** none.
++
++## Next Action
++
++All REQUIRED gates pass on re-audit. No remediation edits needed. The user may
++proceed to `/SDD-3-manage-tasks` to begin implementation.
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-azure-tenant-id-variable.png b/docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-azure-tenant-id-variable.png
+new file mode 100644
+index 0000000..b58794a
+Binary files /dev/null and b/docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-azure-tenant-id-variable.png differ
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-pr-run.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-pr-run.txt
+new file mode 100644
+index 0000000..bd29f7f
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-pr-run.txt
+@@ -0,0 +1 @@
++https://github.com/liatrio/gratibot/actions/runs/24533787561
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/2.0-pr-run.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/2.0-pr-run.txt
+new file mode 100644
+index 0000000..bd29f7f
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/2.0-pr-run.txt
+@@ -0,0 +1 @@
++https://github.com/liatrio/gratibot/actions/runs/24533787561
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-concurrency-cancel.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-concurrency-cancel.txt
+new file mode 100644
+index 0000000..0907619
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-concurrency-cancel.txt
+@@ -0,0 +1,25 @@
++Concurrency cancel-in-progress demonstration (ci.yaml)
++=======================================================
++
++Two commits were pushed in rapid succession to branch ci/03-cicd-hardening to
++trigger the `cancel-in-progress` behavior configured in .github/workflows/ci.yaml.
++(pull-request.yaml intentionally does NOT have workflow-level cancel-in-progress
++because its `plan` job holds an Azure TF state lock and cancelling mid-plan would
++orphan the lock — see the spec's "Concurrency semantics" note and the fix commit
++`fix(ci): drop workflow-level cancel-in-progress from pull-request.yaml`.)
++
++Commit 1 (sha 83ff017) — "chore(ci): trigger concurrency demo run 1"
++  CI run:              https://github.com/liatrio/gratibot/actions/runs/24534019480
++  status:              completed
++  conclusion:          CANCELLED  <-- superseded by run 2
++
++Commit 2 (sha 8e520aa) — "chore(ci): trigger concurrency demo run 2"
++  CI run:              https://github.com/liatrio/gratibot/actions/runs/24534023289
++  status:              in_progress / completed (see PR checks)
++
++Result: the second push arrived while the first run was still executing and
++GitHub Actions cancelled the earlier run, exactly as intended by the `ci.yaml`
++workflow's `concurrency` block with `cancel-in-progress: true`. This confirms
++the concurrency guard is active on stateless validation workflows and prevents
++redundant runs from piling up, while deploy-adjacent workflows that hold
++external locks keep queued (non-cancelling) behavior.
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-pr-run.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-pr-run.txt
+new file mode 100644
+index 0000000..0a56a63
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-pr-run.txt
+@@ -0,0 +1 @@
++https://github.com/liatrio/gratibot/actions/runs/24533787684
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-app-install-NOTE.md b/docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-app-install-NOTE.md
+new file mode 100644
+index 0000000..23f51b2
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-app-install-NOTE.md
+@@ -0,0 +1,24 @@
++# 5.0-app-install screenshot: unavailable
++
++The GitHub App required by Unit 5 (Out-of-Repo Prereq #1) was created and
++installed on `liatrio/gratibot` by a GitHub org admin. The operator running
++this spec did not have access to screenshot the App installation page, so
++`5.0-app-install.png` is not available in this proofs directory.
++
++**Substitute evidence:** the post-merge release run artifact
++`5.0-release-run.txt` (Task 7.6) demonstrates the App was created and
++installed with sufficient permissions — `actions/create-github-app-token`
++successfully mints a token and `semantic-release` successfully publishes a
++GitHub Release using it, which exercises the `contents: write`, `issues: write`,
++and `pull-requests: write` permissions end-to-end. A failing token mint
++(wrong App ID, missing key) or a failing release step (insufficient
++permissions) would break the job; a green run is positive proof that the
++App is installed with at least the required permissions.
++
++**Confirmation recorded at handoff:** the user confirmed Task 5.1 was
++completed by an org admin on 2026-04-16.
++
++If a screenshot is required for the validation phase, an org admin can
++capture one from the installation page at
++`https://github.com/organizations/liatrio/settings/installations` and add it
++to this directory as `5.0-app-install.png`.
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt
+new file mode 100644
+index 0000000..35e3c14
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt
+@@ -0,0 +1,6 @@
++./docs/specs/03-spec-ci-cd-hardening/03-spec-ci-cd-hardening.md:315:- The system shall delete `docs/index.md` (its role was a TechDocs
++./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:20:| `docs/index.md` | Unit 6: deleted (TechDocs landing page; no remaining cross-links point at it). |
++./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:240:`mkdocs.yml` (repo root), and `docs/index.md`. Leave the rest of `docs/` and all
++./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:249:- Cross-link check: `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` returns no matches (or only spec-self-references) — demonstrates no surviving link points at the deleted landing page. Captured as `03-proofs/6.0-crosslink-check.txt` by Task 6.8.
++./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:257:- [ ] 6.5 Delete `docs/index.md`.
++./docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md:260:- [ ] 6.8 Run `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` and confirm no matches outside the `docs/specs/03-spec-ci-cd-hardening/` directory. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt`.
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt
+new file mode 100644
+index 0000000..dcd0a7f
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt
+@@ -0,0 +1,7 @@
++ D .github/workflows/publish-techdocs-to-s3.yaml
++ D catalog-info.yaml
++ D docs/index.md
++ D mkdocs.yml
++?? docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt
++?? docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt
++?? docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-grep-output.txt
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-grep-output.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-grep-output.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-checks.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-checks.txt
+new file mode 100644
+index 0000000..0acdb39
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-checks.txt
+@@ -0,0 +1,11 @@
++CodeQL	skipping	2s	https://github.com/liatrio/gratibot/runs/71723725856	
++Docker / build	pass	18s	https://github.com/liatrio/gratibot/actions/runs/24533787684/job/71723597094	
++Terraform Nonprod plan	pass	41s	https://github.com/liatrio/gratibot/actions/runs/24533787684/job/71723652597	
++Terraform validate check	pass	10s	https://github.com/liatrio/gratibot/actions/runs/24533787684/job/71723596955	
++Docker / publish	skipping	0	https://github.com/liatrio/gratibot/actions/runs/24533787684/job/71723597464	
++Pipeline Setup	pass	5s	https://github.com/liatrio/gratibot/actions/runs/24533787684/job/71723577941	
++Terraform fmt check	pass	13s	https://github.com/liatrio/gratibot/actions/runs/24533787684/job/71723577964	
++codeql (javascript)	pass	1m7s	https://github.com/liatrio/gratibot/actions/runs/24533787561/job/71723577771	
++lint	pass	16s	https://github.com/liatrio/gratibot/actions/runs/24533787561/job/71723577775	
++test	pass	45s	https://github.com/liatrio/gratibot/actions/runs/24533787561/job/71723577786	
++CodeRabbit	pending	0		Review in progress
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-url.txt b/docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-url.txt
+new file mode 100644
+index 0000000..6a73fb6
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-url.txt
+@@ -0,0 +1 @@
++https://github.com/liatrio/gratibot/pull/880
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/ci.yaml b/docs/specs/03-spec-ci-cd-hardening/03-proofs/ci.yaml
+new file mode 100644
+index 0000000..005ef3e
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/ci.yaml
+@@ -0,0 +1,74 @@
++name: CI
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++    branches: [main]
++  schedule:
++    - cron: '15 11 * * 5'
++
++permissions:
++  contents: read
++
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
++jobs:
++  lint:
++    name: lint
++    runs-on: ubuntu-latest
++    if: github.event_name != 'schedule'
++    steps:
++      - name: Checkout
++        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++      - name: Setup Node
++        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
++        with:
++          node-version: 24
++          cache: 'npm'
++      - name: Install Dependencies
++        run: npm ci
++      - name: Run Linter
++        run: npm run lint
++
++  test:
++    name: test
++    runs-on: ubuntu-latest
++    if: github.event_name != 'schedule'
++    steps:
++      - name: Checkout
++        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++      - name: Setup Node
++        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
++        with:
++          node-version: 24
++          cache: 'npm'
++      - name: Install Dependencies
++        run: npm ci
++      - name: Test
++        run: npm test
++
++  codeql:
++    name: codeql
++    runs-on: ubuntu-latest
++    permissions:
++      actions: read
++      contents: read
++      security-events: write
++    strategy:
++      fail-fast: false
++      matrix:
++        language: ['javascript']
++    steps:
++      - name: Checkout repository
++        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
++      - name: Initialize CodeQL
++        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
++        with:
++          languages: ${{ matrix.language }}
++      - name: Autobuild
++        uses: github/codeql-action/autobuild@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
++      - name: Perform CodeQL Analysis
++        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-proofs/mise.toml b/docs/specs/03-spec-ci-cd-hardening/03-proofs/mise.toml
+new file mode 100644
+index 0000000..c74ee77
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-proofs/mise.toml
+@@ -0,0 +1,3 @@
++[tools]
++opentofu = "1.9.4"
++terragrunt = "0.77.22"
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-spec-ci-cd-hardening.md b/docs/specs/03-spec-ci-cd-hardening/03-spec-ci-cd-hardening.md
+new file mode 100644
+index 0000000..8dc7865
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-spec-ci-cd-hardening.md
+@@ -0,0 +1,556 @@
++# 03-spec-ci-cd-hardening.md
++
++## Introduction/Overview
++
++Gratibot's CI/CD pipeline has accumulated latent bugs (dead `if:` gates,
++a typo'd env var causing plan/apply divergence, a broken `needs.*.outputs`
++reference), scattered validation workflows, duplicated secret handling,
++and dead Backstage/TechDocs wiring. This spec hardens and modernizes the
++pipeline in a single coordinated set of changes: fix the bugs, consolidate
++the CI-validation workflows, migrate tool installation to `mise` via
++`gruntwork-io/terragrunt-action`, replace a long-lived release PAT with a
++short-lived GitHub App token, promote images between environments instead
++of rebuilding them, and delete the unused Backstage integration. The goal
++is a correct, auditable, single-person-independent pipeline with fewer
++moving parts.
++
++## Goals
++
++- Eliminate latent deploy-path bugs that can cause plan/apply divergence,
++  broken template references, or unreachable access-control conditions.
++- Remove single-person dependencies from the release and deploy paths
++  (the `Pactionly`/`gesparza3` actor list and the `GRATIBOT_RELEASE_TOKEN`
++  PAT).
++- Collapse three CI-validation workflows into one `ci.yaml` with a shared
++  concurrency group, weekly CodeQL schedule, and cached Node installs.
++- Guarantee that the image deployed to prod is the exact image validated
++  in nonprod by retagging at the registry rather than rebuilding.
++- Decommission the unused Backstage/TechDocs integration and remove its
++  four associated files from the repo.
++
++## User Stories
++
++- **As a Gratibot maintainer**, I want deploy workflows to be free of
++  dead conditionals and typo'd env vars so that a Terragrunt plan in prod
++  matches the apply step and I can trust what CI says it is doing.
++- **As a Gratibot maintainer**, I want the release workflow to use a
++  short-lived GitHub App token rather than a personal PAT so that
++  cutting a release does not depend on one specific person's account
++  and there is no long-lived credential to rotate.
++- **As a Gratibot contributor**, I want lint, test, and CodeQL to run
++  under a single workflow with a shared concurrency group so that
++  overlapping pushes cancel the older run and the PR status checks are
++  predictable.
++- **As a Gratibot maintainer**, I want prod to deploy the exact image
++  that was validated in nonprod so that promotion is a registry retag
++  rather than a rebuild that can diverge from the tested artifact.
++- **As a Gratibot maintainer**, I want tool versions (OpenTofu and
++  Terragrunt) defined once in `mise.toml` so that CI workflows stop
++  drifting against each other and install steps use checksum-validated
++  binaries.
++- **As a Gratibot maintainer**, I want the unused Backstage/TechDocs
++  publishing workflow and its sibling files deleted so that they stop
++  showing up in CI logs and contributor searches.
++
++## Demoable Units of Work
++
++### Unit 1: Deploy-workflow correctness fixes
++
++**Purpose:** Fix the latent bugs in the existing deploy and PR workflows
++so that subsequent structural changes land on a correct baseline. Scoped
++to edits within existing `release.yml`, `apply-prod.yml`, and
++`pull-request.yaml`.
++
++**Functional Requirements:**
++
++- The system shall remove the `if: github.event_name == 'push' ||
++  contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)`
++  conditional from the `build` job in `release.yml` and the `build`
++  (now promote) job in `apply-prod.yml`, because access control is
++  enforced by the workflow triggers and the `prod` environment's
++  manual approval, not by actor allow-lists.
++- The system shall remove the `workflow_dispatch` trigger, the
++  `gratibot_limit` input definition, the `TF_VAR_gratibot_limit` env
++  entry, and the typo'd `GRATIBOT_LIMIT` env entry from both
++  `release.yml` and `apply-prod.yml`. The daily recognition limit is
++  controlled exclusively by the Terraform variable default, which is
++  changed by editing `infra/terragrunt/{nonprod,prod}/environment.yaml`.
++- The system shall replace references to `needs.build.outputs.docker_tag`
++  in the `validate` and `plan` jobs of `pull-request.yaml` with
++  `needs.setup.outputs.docker-tag`. The `validate` job shall no longer
++  declare `needs: build`, since it does not consume build outputs.
++- The system shall replace the inlined Azure tenant ID
++  (`1b4a4fed-fed8-4823-a8a0-3d5cea83d122`) in `release.yml`,
++  `apply-prod.yml`, and `pull-request.yaml` with `${{
++  vars.AZURE_TENANT_ID }}`. The repository variable
++  `AZURE_TENANT_ID` is an out-of-repo prerequisite and is recorded in
++  the "Out-of-Repo Prerequisites" section below.
++- The system shall add a clarifying comment above the `environment:
++  name: "plan"` declaration in `apply-prod.yml` stating that this
++  environment scopes OIDC to a read-only Azure identity (distinct from
++  the elevated identity used by the `prod` environment).
++- The system shall **not** add a top-level `concurrency` block with
++  `cancel-in-progress: true` to `pull-request.yaml`. The `plan` job
++  holds an Azure Terraform state lock, and a workflow-level cancel
++  would kill an in-flight `terragrunt plan`, leaving the lock orphaned
++  and requiring manual recovery. The `plan` job's existing
++  `tf-nonprod` concurrency group already serializes TF operations
++  without cancelling in-flight runs, which is the correct behavior.
++  Existing `tf-nonprod`/`tf-prod` concurrency groups on deploy
++  workflows are left unchanged and shall not use `cancel-in-progress`
++  (queued applies are the intended behavior).
++
++**Proof Artifacts:**
++
++- Diff: `release.yml`, `apply-prod.yml`, and `pull-request.yaml` show
++  the dead `if:` gate removed, `workflow_dispatch` + `gratibot_limit`
++  gone, and tenant ID replaced with `vars.AZURE_TENANT_ID` —
++  demonstrates each requirement is encoded.
++- CI run: A pull request exercising `pull-request.yaml` completes the
++  `validate` and `plan` jobs with the correct `setup.outputs.docker-tag`
++  value interpolated into the resulting image reference —
++  demonstrates the `needs` fix works end-to-end.
++- Deploy run: A merge-to-`main` triggers `release.yml` and runs the
++  nonprod `apply` job without relying on `workflow_dispatch` inputs —
++  demonstrates trigger simplification did not break the push path.
++
++### Unit 2: Tool install migration to mise + terragrunt-action
++
++**Purpose:** Replace the hand-rolled `wget` install of Terragrunt and
++the `opentofu/setup-opentofu` action with `gruntwork-io/terragrunt-action`
++in install-only mode, backed by a single `mise.toml` at the repo root.
++This gives one source of truth for tool versions across every workflow
++and adds checksum validation on install.
++
++**Functional Requirements:**
++
++- The system shall add a `mise.toml` file at the repository root that
++  pins `opentofu` and `terragrunt` versions. The Terragrunt version
++  must be at least `0.77.22` (the minimum required by
++  `gruntwork-io/terragrunt-action`). OpenTofu shall be pinned to a
++  version compatible with the existing `~1.9` constraint.
++- The system shall replace the `opentofu/setup-opentofu` step and the
++  raw `wget` Terragrunt install step in `release.yml`, `apply-prod.yml`,
++  and `pull-request.yaml` with `gruntwork-io/terragrunt-action` used in
++  install-only mode (no `tg_command` argument).
++- The system shall remove the workflow-level `tofu_version` and
++  `tg_version` env entries from all three workflows, since the
++  versions now live in `mise.toml`.
++- The system shall rename deprecated Terragrunt CLI flags in the
++  same three workflows as part of this unit:
++  `--terragrunt-non-interactive` → `--non-interactive`,
++  `--terragrunt-no-auto-init` → `--no-auto-init`. The old flag names
++  still work on `0.77.22` but emit deprecation warnings and are slated
++  for removal in a future major version.
++- The system shall label the unlabeled `include {}` block in
++  `infra/terragrunt/nonprod/gratibot/terragrunt.hcl` and
++  `infra/terragrunt/prod/gratibot/terragrunt.hcl` as
++  `include "root" { ... }`. The unlabeled form still works on
++  `0.77.22` but emits deprecation warnings. Other Terragrunt HCL
++  deprecations (e.g. `find_in_parent_folders()` without an argument)
++  are left alone in this spec to keep scope contained.
++- The `mise.toml` migration shall land before or together with the
++  CI consolidation in Unit 3, so that all workflows use the same
++  tool-install mechanism from the moment consolidation ships.
++
++**Proof Artifacts:**
++
++- File: `mise.toml` present at repo root with `opentofu` and
++  `terragrunt` pins — demonstrates single source of truth exists.
++- Diff: All three workflows show the `opentofu/setup-opentofu` +
++  `wget` Terragrunt sequence replaced by a single
++  `gruntwork-io/terragrunt-action` step — demonstrates migration is
++  uniform.
++- CI run: A nonprod `terragrunt apply` completes using the
++  action-installed Terragrunt binary — demonstrates the migration is
++  functional against the real infra path.
++
++### Unit 3: CI consolidation (lint + test + codeql → ci.yaml)
++
++**Purpose:** Collapse the three existing CI-validation workflows
++(`test.yaml`, `lint.yaml`, `codeql-analysis.yml`) into a single
++`ci.yaml` with consistent triggers, workflow-level read-only
++permissions, shared concurrency, and Node cache.
++
++**Functional Requirements:**
++
++- The system shall create `.github/workflows/ci.yaml` containing three
++  jobs: `lint`, `test`, and `codeql` (plus room for future additions).
++- The workflow shall trigger on `push: branches: [main]`,
++  `pull_request: branches: [main]`, and `schedule` (weekly cron
++  inherited from the existing CodeQL config: `15 11 * * 5`).
++- The workflow shall declare top-level `permissions: contents: read`.
++  The `codeql` job shall override that block locally with the
++  permissions CodeQL currently requires (`actions: read`, `contents:
++  read`, `security-events: write`).
++- The workflow shall declare a top-level `concurrency` block with
++  `group: ${{ github.workflow }}-${{ github.ref }}` and
++  `cancel-in-progress: true`.
++- The `lint` and `test` jobs shall use `actions/setup-node` with
++  `cache: 'npm'` and `node-version: 24`.
++- The `lint` and `test` jobs shall be guarded by `if:
++  github.event_name != 'schedule'` so that the weekly cron executes
++  only the `codeql` job.
++- The `codeql` job shall drop the stale `pathsIgnore: [ "**/middleware" ]`
++  matrix entry (it is not a valid CodeQL matrix dimension in the
++  current setup).
++- The system shall delete `.github/workflows/test.yaml`,
++  `.github/workflows/lint.yaml`, and
++  `.github/workflows/codeql-analysis.yml` once `ci.yaml` is in place.
++- Branch-protection required-check names must be updated after
++  rollout: the old names (`test`, `lint`, `CodeQL / Analyze`) are
++  replaced by `CI / lint`, `CI / test`, `CI / codeql`. This is an
++  out-of-repo step and is tracked in the "Out-of-Repo Prerequisites"
++  section.
++
++**Proof Artifacts:**
++
++- File: `.github/workflows/ci.yaml` exists with the three jobs and the
++  guards described above — demonstrates the consolidation shape.
++- Files deleted: `test.yaml`, `lint.yaml`, `codeql-analysis.yml` are
++  absent from `.github/workflows/` — demonstrates cleanup.
++- CI run: A PR shows three check entries (`CI / lint`, `CI / test`,
++  `CI / codeql`) all passing, and a subsequent push to the same PR
++  branch cancels the older run via concurrency — demonstrates
++  consolidation + concurrency work end-to-end.
++- CI run: A scheduled (cron) run shows only `codeql` executing and
++  `lint`/`test` marked skipped — demonstrates the schedule guard.
++
++### Unit 4: Promote-don't-rebuild in apply-prod
++
++**Purpose:** Make prod deploy the exact image that nonprod validated,
++by retagging the nonprod `sha_short` image at the registry rather than
++running `docker build` again in `apply-prod.yml`.
++
++**Functional Requirements:**
++
++- The system shall replace the `build` job in `apply-prod.yml` with a
++  `promote` job that retags the nonprod image
++  (`ghcr.io/liatrio/gratibot:<sha_short>`) to the release tag
++  (`ghcr.io/liatrio/gratibot:<release_tag>`) using `docker buildx
++  imagetools create`. The step shall not pull layers locally and shall
++  not run `docker build`.
++- The promote job shall resolve the source `sha_short` from the commit
++  associated with the triggering release, so the image being promoted
++  is the image that nonprod applied.
++- The release tag shall be the Git tag name stripped of its `refs/*/`
++  prefix, matching the existing `${GITHUB_REF#refs/*/}` behavior.
++- The downstream `plan` and `apply` jobs in `apply-prod.yml` shall
++  continue to consume the promoted release tag as the value of
++  `TF_VAR_gratibot_image`.
++- `release.yml` remains the single build-and-push point for images.
++  `apply-prod.yml` shall not contain a `docker build` or `docker push`
++  step after this change.
++- The promote change shall land with or after the Azure tenant variable
++  migration in Unit 1, to avoid touching the same env blocks twice.
++
++**Proof Artifacts:**
++
++- Diff: `apply-prod.yml` shows the `build` job replaced by a `promote`
++  job with a `docker buildx imagetools create` step and no `docker
++  build` or `docker push` — demonstrates the promotion model.
++- Registry inspection: The GHCR package for `gratibot` shows the
++  release-tagged manifest pointing to the same image digest as the
++  nonprod `sha_short` tag after a full release run — demonstrates
++  identical artifact promotion.
++- Deploy run: A release event triggers `apply-prod.yml`, and the plan
++  and apply jobs successfully reference the retagged image —
++  demonstrates the end-to-end prod path works against the promoted
++  image.
++
++### Unit 5: GitHub App token migration
++
++**Purpose:** Replace the long-lived `GRATIBOT_RELEASE_TOKEN` PAT used
++by `release.yml`'s `Create Release` step with a short-lived token
++minted from an org-level GitHub App, removing the single-person
++dependency and the long-lived credential.
++
++**Functional Requirements:**
++
++- The system shall replace the `GITHUB_TOKEN: ${{
++  secrets.GRATIBOT_RELEASE_TOKEN }}` line in `release.yml`'s
++  `Create Release` step with a short-lived token minted by
++  `actions/create-github-app-token` at workflow run time.
++- The `actions/create-github-app-token` step shall read the App ID and
++  private key from repo-scoped secrets/variables established as
++  out-of-repo prerequisites.
++- After the migration is merged, the `GRATIBOT_RELEASE_TOKEN` secret
++  shall be revoked (removed from repo secrets, and the PAT itself
++  revoked in its owner's GitHub account). Revocation is an out-of-repo
++  step and is listed in the "Out-of-Repo Prerequisites" section.
++- The GitHub App shall be granted exactly the following repository
++  permissions and no others: `contents: write` (to create the GitHub
++  Release and push the version tag), `issues: write` (for
++  semantic-release auto-comments on closed issues), and
++  `pull-requests: write` (for semantic-release auto-comments on merged
++  PRs). `packages: write` is not required because the image-push step
++  uses `secrets.GITHUB_TOKEN`, not the App token. No branch-protection
++  bypass is required because semantic-release is configured without
++  `@semantic-release/git` and therefore does not push commits to
++  `main`. Setting these permissions on the App is an out-of-repo
++  step performed by the org admin.
++
++**Proof Artifacts:**
++
++- Diff: `release.yml` shows the `Create Release` step now sources
++  `GITHUB_TOKEN` from `actions/create-github-app-token` output and no
++  longer references `secrets.GRATIBOT_RELEASE_TOKEN` — demonstrates
++  the migration.
++- Deploy run: A merge to `main` runs `release.yml` end-to-end and
++  publishes a semantic-release version using the App token —
++  demonstrates the new credential path works.
++- Settings evidence: The `GRATIBOT_RELEASE_TOKEN` secret is no longer
++  listed under repo secrets — demonstrates revocation completed
++  (captured as a screenshot in the spec's proofs folder; the secret
++  value itself shall never be committed).
++
++### Unit 6: Backstage/TechDocs decommission
++
++**Purpose:** Remove the unused Backstage/TechDocs publishing workflow
++and its sibling files so they stop appearing in CI runs, contributor
++searches, and maintenance surface area.
++
++**Functional Requirements:**
++
++- The system shall delete `.github/workflows/publish-techdocs-to-s3.yaml`.
++- The system shall delete `catalog-info.yaml` at the repo root.
++- The system shall delete `mkdocs.yml` at the repo root.
++- The system shall delete `docs/index.md` (its role was a TechDocs
++  landing page).
++- The system shall leave the rest of `docs/` untouched. `ARCHITECTURE.md`,
++  `DEVELOPMENT.md`, `TESTING.md`, `deployment.md`, and `local_dev/`
++  are cross-linked from `CLAUDE.md` and from each other and remain in
++  place.
++- Cleanup of the S3 bucket
++  (`s3://backstage-liatrio-techdocs/<gratibot-path>`) and Backstage
++  catalog deregistration are explicitly out of scope for this repo
++  (see "Non-Goals").
++
++**Proof Artifacts:**
++
++- `git status` / diff: Shows the four files deleted and no other docs
++  files removed — demonstrates the scoped cleanup.
++- Repo search: Searching the repo for `catalog-info`, `mkdocs`, or
++  `techdocs` returns no hits in workflow files or repo root —
++  demonstrates the integration is fully unwired.
++
++## Non-Goals (Out of Scope)
++
++1. **Path-based triggers to skip jobs on layer-specific PRs** —
++   deferred. The interaction between native `paths:` filters and
++   required status checks needs more design before landing.
++2. **Smoke-test gate between nonprod apply and release creation** —
++   dropped.
++3. **Plan-then-apply-from-plan pattern in deploy workflows** — dropped.
++4. **`terragrunt plan` before nonprod apply** — dropped.
++5. **Making `lint`/`test` explicit `needs:` prerequisites of deploy
++   workflows** — dropped; branch protection enforces this on PRs.
++6. **Adding `timeout-minutes` on jobs** — dropped.
++7. **Renovate auto-merge workflow** — already implemented in
++   `renovate.json`; no action needed here.
++8. **Blocking PR Docker image push** — already the default behavior of
++   the reusable `liatrio/github-workflows/docker-build.yaml` workflow.
++9. **Adding `hadolint` Dockerfile linter** — dropped.
++10. **Adding Trivy or Grype image scanning** — dropped.
++11. **Splitting `release.yml` into separate `deploy-nonprod.yaml` +
++    `release.yaml` files** — dropped; the two-file split
++    (`release.yml` + `apply-prod.yml`) stays.
++12. **Consolidating Docker build logic onto the reusable
++    `liatrio/github-workflows/docker-build.yaml`** — dropped.
++    Unit 4 (promote-don't-rebuild) removes the duplication that
++    motivated it.
++13. **Removing the `plan` GitHub Environment from `apply-prod.yml`** —
++    retracted; the `plan` environment provides legitimate OIDC
++    scoping to a read-only Azure identity.
++14. **Cleaning up the stale `s3://backstage-liatrio-techdocs/` content
++    or deregistering Gratibot from the Backstage catalog** — out of
++    scope; Unit 6 only deletes in-repo files.
++
++## Design Considerations
++
++No specific UI/UX design requirements. This spec is pure CI/CD
++plumbing. The only "interface" changes visible to contributors are:
++
++- PR check names change (`test`, `lint`, `CodeQL / Analyze` →
++  `CI / lint`, `CI / test`, `CI / codeql`). Branch protection must be
++  updated to match; see Out-of-Repo Prerequisites.
++- `workflow_dispatch` disappears from `release.yml` and
++  `apply-prod.yml`; the daily-limit override mechanism moves
++  exclusively to editing `infra/terragrunt/{nonprod,prod}/environment.yaml`.
++
++## Repository Standards
++
++This spec follows the project's established standards:
++
++- **Conventional Commits** — every commit in the implementation PRs
++  must use a valid type prefix (`fix:`, `chore:`, `ci:`, `refactor:`,
++  `feat:` where applicable). CI and commitlint will reject invalid
++  formats.
++- **Never commit directly to `main`** — all changes land on feature
++  branches (`fix/ci-*`, `chore/ci-*`, etc.) via pull request.
++- **Pinned action SHAs** — new action references (e.g.
++  `gruntwork-io/terragrunt-action`,
++  `actions/create-github-app-token`) follow the existing convention
++  of pinning to a commit SHA with a `# vX.Y.Z` comment for
++  readability, matching how `actions/checkout`, `actions/setup-node`,
++  and `mikefarah/yq` are pinned today.
++- **Secrets handling** — no PATs, tokens, private keys, or Azure
++  identifiers beyond what is already in the repo shall be committed.
++  The GitHub App private key lives in repo secrets only. The tenant
++  ID moves from inline strings to `vars.AZURE_TENANT_ID`, which is
++  not a secret but also is no longer duplicated.
++- **Workflow YAML style** — kebab-case filenames, lowercase job keys,
++  `id-token: write` only where OIDC is actually used. Matches existing
++  `pull-request.yaml` and `apply-prod.yml` conventions.
++
++## Technical Considerations
++
++- **`gruntwork-io/terragrunt-action` minimum Terragrunt version** is
++  `0.77.22`. The current pin is `0.72.0`, so migrating to the action
++  forces a Terragrunt bump. The repo's Terragrunt configs
++  (`infra/terragrunt/**/*.hcl`) must continue to work under the
++  bumped version; if any breaking syntax changes exist between
++  `0.72.x` and the target, they must be resolved as part of Unit 2.
++- **`mise.toml` scope** — `mise.toml` pins OpenTofu and Terragrunt
++  only. Node is installed via `actions/setup-node` with a hardcoded
++  `node-version: 24`, not via mise. This is a deliberate narrow
++  scope: `actions/setup-node` does not natively read `mise.toml`
++  (supported formats are `.nvmrc`, `.node-version`, `package.json`,
++  and `.tool-versions`), and unifying Node under mise would require
++  either replacing `actions/setup-node` with `jdx/mise-action` or
++  introducing a second tool-version file. Both options widen the
++  spec beyond CI/CD hardening. A future dev-environment parity spec
++  can revisit this if contributors want unified tool management
++  across CI and local dev.
++- **GitHub App token minting** — `actions/create-github-app-token`
++  expects an App ID and a PEM-formatted private key. The App must be
++  installed on the `liatrio/gratibot` repo before the workflow can
++  mint tokens. This is an out-of-repo prerequisite.
++- **Image promotion via `docker buildx imagetools create`** operates
++  on manifests at the registry, requires only a valid registry login,
++  and does not download layers. The GHCR login step in the promote
++  job still requires `packages: write` at the workflow or job level,
++  which already exists in `apply-prod.yml`.
++- **Concurrency semantics** — `cancel-in-progress: true` is correct
++  for workflows that only run stateless validation (`ci.yaml`:
++  lint/test/codeql). It is **incorrect** for any workflow that holds
++  external state locks, including `pull-request.yaml` whose `plan`
++  job acquires an Azure Terraform state lock via `terragrunt plan`: a
++  cancelled run leaves the lock orphaned and requires manual
++  recovery. For those workflows, job-level `concurrency` groups
++  without `cancel-in-progress` (e.g., `tf-nonprod`, `tf-prod`) are
++  the correct mechanism — they serialize without cancelling
++  in-flight work.
++- **CodeQL matrix cleanup** — the `pathsIgnore` key was never a valid
++  matrix dimension; it is simply dropped. Path filtering, if ever
++  needed, belongs in a CodeQL config file rather than a matrix.
++- **No external standards research was required beyond the action
++  and tooling choices already named in the input.** The input
++  explicitly names `gruntwork-io/terragrunt-action`, `mise.toml`,
++  `actions/create-github-app-token`, and `docker buildx imagetools
++  create`; all are current, standard approaches at the time of
++  writing.
++
++## Security Considerations
++
++- **PAT revocation (Unit 5)** — the old `GRATIBOT_RELEASE_TOKEN` PAT
++  must be revoked in the owning user's GitHub account and removed
++  from repo secrets after the App-token path is proven working.
++  Leaving both in place indefinitely defeats the purpose of the
++  migration.
++- **GitHub App private key storage** — the App's private key is
++  stored in repo secrets only (never committed, never logged). The
++  App ID may live in repo variables.
++- **`AZURE_TENANT_ID` as a variable, not a secret** — the tenant ID
++  is not a secret (it is discoverable from Azure AD metadata), so
++  storing it as a repo variable is appropriate. The migration only
++  de-duplicates it.
++- **Proof artifacts must not include tokens or private keys** — the
++  CI-run URLs and diffs captured in this spec's proofs folder must
++  not embed the minted App token, the PAT being revoked, or the
++  GitHub App private key. Screenshots of settings pages showing
++  secret presence/absence are acceptable; screenshots showing secret
++  values are not.
++- **OIDC scoping of the `plan` environment in `apply-prod.yml`** is
++  preserved by this spec. The clarifying comment added in Unit 1
++  makes it explicit that the environment is load-bearing for access
++  control, not cosmetic.
++
++## Success Metrics
++
++1. **Zero latent bugs remaining in the named workflows**: the dead
++   `if:` gates, the typo'd `GRATIBOT_LIMIT`, and the
++   `needs.build.outputs.docker_tag` mismatch are all removed, verified
++   by diff review and successful workflow runs.
++2. **Single-person dependencies eliminated from the release path**:
++   the `GRATIBOT_RELEASE_TOKEN` PAT and the
++   `Pactionly`/`gesparza3` actor allow-list are both gone from
++   `.github/workflows/`, verified by `grep`-style review of the
++   workflow files.
++3. **One CI workflow replaces three**: `test.yaml`, `lint.yaml`, and
++   `codeql-analysis.yml` are deleted and `ci.yaml` runs all three
++   jobs successfully on PRs and on push to `main`.
++4. **Prod image == nonprod image, by digest**: for at least one full
++   release cycle after the promote change, the nonprod `sha_short`
++   tag and the release tag resolve to the same GHCR image digest.
++5. **Four Backstage files deleted, no docs regression**: `docs/`
++   otherwise intact and all `CLAUDE.md` cross-links resolve.
++
++## Open Questions
++
++No open questions at this time. The three questions raised during
++initial drafting were resolved in-spec:
++
++- `mise.toml` is scoped to OpenTofu and Terragrunt only; Node stays
++  on `actions/setup-node`. See Technical Considerations.
++- The GitHub App permission set is pinned to `contents: write`,
++  `issues: write`, `pull-requests: write`. See Unit 5.
++- The Terragrunt `0.72.0` → `0.77.22` bump requires no breaking HCL
++  changes; deprecated CLI flags and the unlabeled `include` block
++  are cleaned up as part of Unit 2.
++
++## Out-of-Repo Prerequisites
++
++These steps occur outside this repository and must be completed in
++coordination with the implementation PRs. They are listed here for
++traceability and will be surfaced again in the task list.
++
++> **Human responsibility.** Every item in this section must be performed
++> by the person running this workflow (or another appropriately
++> privileged human operator), not by the implementation agent. The
++> agent's scope is limited to changes inside this repository. Any task
++> in the downstream task list that maps to one of these prerequisites
++> must be marked as a human gate and not auto-executed.
++
++1. **Create and install a GitHub App at the org level** (required by
++   Unit 5). Record the App ID as a repo variable, store the private
++   key as a repo secret, and install the App on `liatrio/gratibot`.
++   Done by someone with org admin access.
++2. **Add `AZURE_TENANT_ID` as a repo variable** with the value
++   `1b4a4fed-fed8-4823-a8a0-3d5cea83d122` (required by Unit 1).
++3. **Update branch protection required-check names** after Unit 3
++   ships: remove the old `test`, `lint`, and `CodeQL / Analyze`
++   required checks; add `CI / lint`, `CI / test`, `CI / codeql`.
++4. **Revoke `GRATIBOT_RELEASE_TOKEN`** after Unit 5 has been proven
++   in a release run: remove the repo secret and revoke the PAT in its
++   owner's GitHub account.
++
++## Key Ordering and Dependencies
++
++1. **Unit 1** (deploy-workflow correctness fixes) should land first
++   so that Units 2 and 4 build on a correct baseline and do not touch
++   the same env blocks twice.
++2. **Unit 2** (mise + terragrunt-action migration) should land before
++   or together with **Unit 3** (CI consolidation) so that all
++   workflows use the same tool-install mechanism from the moment
++   consolidation ships.
++3. **Unit 4** (promote-don't-rebuild) should land with or after
++   **Unit 1**, because the Azure tenant var migration and the
++   promote change both touch `apply-prod.yml`'s env blocks.
++4. **Unit 5** (GitHub App token migration) is independent of the
++   other units but has an org-level prerequisite (creating the App).
++   Schedule the prerequisite before the PR.
++5. **Unit 6** (Backstage decommission) is independent of everything
++   else and can land at any time.
++6. After **Unit 3** merges, branch protection required-check names
++   must be updated (out-of-repo; see Prerequisites).
+diff --git a/docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md b/docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md
+new file mode 100644
+index 0000000..7bb8125
+--- /dev/null
++++ b/docs/specs/03-spec-ci-cd-hardening/03-tasks-ci-cd-hardening.md
+@@ -0,0 +1,304 @@
++# 03-tasks-ci-cd-hardening.md
++
++## Relevant Files
++
++| File | Why It Is Relevant |
++|---|---|
++| `.github/workflows/release.yml` | Unit 1: remove dead `if:` gate, `workflow_dispatch`, `TF_VAR_gratibot_limit`, and inlined tenant ID. Unit 2: migrate tool install to `gruntwork-io/terragrunt-action`. Unit 5: replace `GRATIBOT_RELEASE_TOKEN` with `actions/create-github-app-token`. |
++| `.github/workflows/apply-prod.yml` | Unit 1: remove dead `if:` gate, `workflow_dispatch`, typo'd `GRATIBOT_LIMIT`, inlined tenant ID, add `plan` environment clarifying comment. Unit 2: migrate tool install. Unit 4: replace `build` job with `promote` (image retag, no rebuild). |
++| `.github/workflows/pull-request.yaml` | Unit 1: fix `needs.build.outputs.docker_tag` → `needs.setup.outputs.docker-tag`, drop `needs: build` from `validate`, replace inlined tenant ID. Workflow-level `concurrency` with `cancel-in-progress: true` is explicitly **not** added — the `plan` job holds an Azure TF state lock and cancelling mid-run would orphan it. Unit 2: migrate tool install. |
++| `.github/workflows/ci.yaml` | Unit 3: new consolidated workflow containing `lint`, `test`, `codeql` jobs with schedule-aware guards, shared concurrency, and Node caching. |
++| `.github/workflows/test.yaml` | Unit 3: deleted after `ci.yaml` lands. |
++| `.github/workflows/lint.yaml` | Unit 3: deleted after `ci.yaml` lands. |
++| `.github/workflows/codeql-analysis.yml` | Unit 3: deleted after `ci.yaml` lands (stale `pathsIgnore` matrix dimension also dropped). |
++| `.github/workflows/publish-techdocs-to-s3.yaml` | Unit 6: deleted (unused Backstage TechDocs publishing workflow). |
++| `mise.toml` | Unit 2: new root-level single source of truth pinning `opentofu` and `terragrunt` versions (Terragrunt ≥ `0.77.22`, OpenTofu compatible with existing `~1.9`). |
++| `infra/terragrunt/nonprod/gratibot/terragrunt.hcl` | Unit 2: relabel unlabeled `include {}` block as `include "root" { ... }` to silence the Terragrunt 0.77 deprecation warning. |
++| `infra/terragrunt/prod/gratibot/terragrunt.hcl` | Unit 2: same relabel as the nonprod file. |
++| `catalog-info.yaml` | Unit 6: deleted (Backstage catalog descriptor, no longer used). |
++| `mkdocs.yml` | Unit 6: deleted (MkDocs site config for the removed TechDocs workflow). |
++| `docs/index.md` | Unit 6: deleted (TechDocs landing page; no remaining cross-links point at it). |
++| `docs/specs/03-spec-ci-cd-hardening/03-proofs/` | Destination for all proof artifacts (diff copies, CI run URLs, screenshots, grep outputs, image-inspect outputs). Must contain no secrets, tokens, or private keys. |
++
++### Notes
++
++- **No service/feature-layer tests are added.** `docs/TESTING.md` applies unit-test coverage
++  to business logic in `service/`, which this spec does not modify. Workflow correctness is
++  verified via CI-run proof artifacts (the workflows themselves are the executable tests).
++- **Single-branch, one-commit-per-unit, one-PR workflow.** All six unit commits land on a
++  single feature branch (`ci/03-cicd-hardening`), created once in Unit 1. Each parent task
++  (Units 1–6) ends in exactly one commit whose message starts with the appropriate
++  conventional-commit prefix for that unit's change. Nothing is pushed or opened as a PR
++  until **Unit 7** runs; Unit 7 handles push, PR creation, PR CI evidence capture,
++  pre-merge branch-protection rename, merge, and post-merge release/apply-prod evidence.
++- **Commit order mirrors parent-task order** (Unit 1 first, Unit 6 last) and follows the
++  spec's Key Ordering and Dependencies (§7): Unit 1 before Units 2 and 4, Unit 2 before
++  or with Unit 3, Unit 4 with or after Unit 1, Units 5 and 6 independent. Do not squash
++  at merge time — preserve per-unit commits for bisectability. Use "Merge commit" or
++  "Rebase and merge"; avoid "Squash and merge".
++- **Pre-flight human gates must complete before any commits are pushed**, because the PR's
++  CI run (Unit 7) will exercise the new references:
++  - `AZURE_TENANT_ID` repo variable must exist (Task 1.1 → Out-of-Repo Prereq #2).
++  - GitHub App created/installed and `RELEASE_APP_ID` + `RELEASE_APP_PRIVATE_KEY`
++    available (Tasks 5.1 and 5.2 → Out-of-Repo Prereq #1).
++  Put another way: Tasks 1.1, 5.1, and 5.2 are the only `[HUMAN GATE]` items that must
++  happen before Unit 7 pushes the branch.
++- **Branch naming:** use `ci/03-cicd-hardening` (matches the spec's conventional-commit
++  prefix for the PR as a whole). Direct pushes to `main` are rejected (per `AGENTS.md`).
++- **Action SHA pins:** new action references (`gruntwork-io/terragrunt-action`,
++  `actions/create-github-app-token`) must be pinned to a commit SHA with a `# vX.Y.Z`
++  comment, matching the existing convention used for `actions/checkout`,
++  `actions/setup-node`, and `mikefarah/yq`.
++- **Pre-commit:** run `npm run lint` before each unit's commit (the husky hook will also
++  run it). No `npm test` is required for workflow-only commits, but running it costs
++  nothing and matches the repo's review checklist.
++
++## Tasks
++
++### [x] 1.0 Deploy-workflow correctness fixes
++
++Fix latent bugs in `release.yml`, `apply-prod.yml`, and `pull-request.yaml` so that
++subsequent structural changes (Units 2 and 4) land on a correct baseline. Removes the
++dead actor allow-list `if:` gate, the typo'd `GRATIBOT_LIMIT` env entry and unused
++`workflow_dispatch` inputs, the broken `needs.build.outputs.docker_tag` reference in
++the PR workflow, and the inlined Azure tenant ID. Adds a clarifying comment above the
++`plan` environment in `apply-prod.yml`. No workflow-level `concurrency` block is added
++to `pull-request.yaml` — the `plan` job holds an Azure TF state lock and cancelling an
++in-flight run would orphan the lock; the `plan` job's own `tf-nonprod` job-level
++concurrency group already serializes TF operations correctly. Lands first per the spec's
++Key Ordering and Dependencies (§7).
++
++#### 1.0 Proof Artifact(s)
++
++- Diff: `git diff main..ci/03-cicd-hardening -- .github/workflows/release.yml .github/workflows/apply-prod.yml .github/workflows/pull-request.yaml` at the Unit 1 commit boundary shows the dead `if:` gate removed, `workflow_dispatch` + `gratibot_limit` block gone, hardcoded tenant ID replaced with `${{ vars.AZURE_TENANT_ID }}`, and the `needs.setup.outputs.docker-tag` reference correct — demonstrates each FR-1 requirement is encoded. Captured as `03-proofs/1.0-diff.patch` by Task 7.11.
++- CI run (PR-level): PR-triggered run of `pull-request.yaml` under Unit 7's PR shows `validate` and `plan` jobs interpolating the `setup.outputs.docker-tag` value into `TF_VAR_gratibot_image` and completing successfully — demonstrates the `needs` fix works end-to-end. Captured as `03-proofs/1.0-pr-run.txt` by Task 7.2.
++- CI run (post-merge): Post-merge `release.yml` run shows the nonprod `apply` job succeeded without referencing `inputs.gratibot_limit` — demonstrates trigger simplification did not break the push path. Captured as `03-proofs/1.0-release-run.txt` by Task 7.6.
++- Human gate evidence: Screenshot of the repo's Settings → Secrets and variables → Actions → Variables tab showing the `AZURE_TENANT_ID` repository variable present. Captured as `03-proofs/1.0-azure-tenant-id-variable.png` by Task 1.1 (pre-flight). Confirms Out-of-Repo Prerequisite #2 was completed before the PR was opened.
++
++#### 1.0 Tasks
++
++- [x] 1.1 [HUMAN GATE] Add `AZURE_TENANT_ID` as a repository variable under Settings → Secrets and variables → Actions → Variables with the value `1b4a4fed-fed8-4823-a8a0-3d5cea83d122`. Capture a screenshot to `docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-azure-tenant-id-variable.png` (Out-of-Repo Prereq #2). Implementation agent must not attempt to set this. **Must complete before Unit 7 pushes the branch.**
++- [x] 1.2 Create branch `ci/03-cicd-hardening` from `main`. All six unit commits land on this single branch; do not create new branches for subsequent units.
++- [x] 1.3 In `.github/workflows/release.yml`, remove the `workflow_dispatch:` trigger block (the trigger key and the `gratibot_limit` input definition). The `on:` block should retain only `push: branches: [main]` with `paths-ignore`.
++- [x] 1.4 In `.github/workflows/release.yml`, remove the `if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)` line from the `build` job.
++- [x] 1.5 In `.github/workflows/release.yml`'s nonprod `apply` job, remove the `TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}` line from the step's `env:` block.
++- [x] 1.6 In `.github/workflows/release.yml`'s nonprod `apply` job, change `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
++- [x] 1.7 In `.github/workflows/apply-prod.yml`, remove the `workflow_dispatch:` trigger block including its `gratibot_limit` input. The `on:` block should retain only `release: types: [created]`.
++- [x] 1.8 In `.github/workflows/apply-prod.yml`, remove the `if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)` line from the `build` job.
++- [x] 1.9 In `.github/workflows/apply-prod.yml`'s `plan` job, remove the `TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}` line from the step's `env:` block.
++- [x] 1.10 In `.github/workflows/apply-prod.yml`'s `apply` job, remove the `GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}` line (the typo'd env entry) from the step's `env:` block.
++- [x] 1.11 In `.github/workflows/apply-prod.yml`'s `plan` and `apply` jobs, change each `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` line to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
++- [x] 1.12 In `.github/workflows/apply-prod.yml`, add a YAML comment immediately above `environment: name: "plan"` reading: `# 'plan' scopes OIDC to a read-only Azure identity, distinct from the elevated identity used by the 'prod' environment.`.
++- [x] 1.13 In `.github/workflows/pull-request.yaml`, replace `${{ needs.build.outputs.docker_tag }}` with `${{ needs.setup.outputs.docker-tag }}` in both the `validate` job's `TF_VAR_gratibot_image` value and the `plan` job's `TF_VAR_gratibot_image` value.
++- [x] 1.14 In `.github/workflows/pull-request.yaml`'s `validate` job, change `needs: build` to `needs: setup` (the job only consumes the `setup` output, not any `build` output).
++- [x] 1.15 In `.github/workflows/pull-request.yaml`'s `plan` job, change `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
++- [x] 1.16 **Do not** add a top-level `concurrency:` block with `cancel-in-progress: true` to `.github/workflows/pull-request.yaml`. The `plan` job runs `terragrunt plan` against the Azure backend and holds a state lock; a workflow-level cancel triggered by a later push would kill the plan mid-execution and orphan the lock. The `plan` job's existing job-level `concurrency: group: "tf-nonprod"` (no `cancel-in-progress`) already serializes TF operations correctly. (This task reverses an earlier intent in the spec — see the "Concurrency semantics" note in §Technical Notes.)
++- [x] 1.17 Run `npm run lint` locally, stage the three workflow files, and create the Unit 1 commit on `ci/03-cicd-hardening` with a message starting `fix(ci):` (e.g., `fix(ci): remove dead gates, typo'd env, and broken refs from deploy workflows`). Do **not** push yet — Unit 7 handles the push.
++
++---
++
++### [x] 2.0 Tool install migration to mise + terragrunt-action
++
++Add a `mise.toml` at the repo root pinning `opentofu` and `terragrunt` versions, and
++replace the `opentofu/setup-opentofu` + raw `wget` Terragrunt install sequence in all
++three deploy/PR workflows with `gruntwork-io/terragrunt-action` in install-only mode.
++Bump Terragrunt from `0.72.0` to at least `0.77.22` (action minimum), rename deprecated
++Terragrunt CLI flags (`--terragrunt-non-interactive` → `--non-interactive`,
++`--terragrunt-no-auto-init` → `--no-auto-init`), and label the previously unlabeled
++`include {}` blocks in the two `terragrunt.hcl` files as `include "root" { ... }`.
++Lands before or together with Unit 3 per the spec's Key Ordering (§7.2).
++
++#### 2.0 Proof Artifact(s)
++
++- File: `mise.toml` exists at the repo root with `opentofu` and `terragrunt` version pins (Terragrunt ≥ `0.77.22`) — demonstrates single source of truth for tool versions exists. Captured as `03-proofs/mise.toml` by Task 2.14.
++- Diff: Unit 2 commit diff across `.github/workflows/release.yml`, `.github/workflows/apply-prod.yml`, and `.github/workflows/pull-request.yaml` shows the `opentofu/setup-opentofu` + `wget` Terragrunt install sequence replaced by a single `gruntwork-io/terragrunt-action` step (pinned to a SHA with a `# vX.Y.Z` comment) in all three workflows, with `tofu_version` and `tg_version` env entries removed — demonstrates uniform migration. Captured in Task 7.11's full diff.
++- Diff: Unit 2 commit diff across `infra/terragrunt/**/*.hcl` shows the unlabeled `include {}` blocks renamed to `include "root" { ... }` — demonstrates deprecation cleanup.
++- CI run (PR-level): PR `fmt`, `validate`, and `plan` jobs in `pull-request.yaml` complete using `gruntwork-io/terragrunt-action` — demonstrates uniform behavior across workflows. Captured as `03-proofs/2.0-pr-run.txt` by Task 7.2.
++- CI run (post-merge): Post-merge nonprod `terragrunt apply` job in `release.yml` completes using the action-installed binary at the new pinned version, with no deprecation warnings about unlabeled `include` or old flag names in the log — demonstrates the migration is functional. Captured as `03-proofs/2.0-release-run.txt` by Task 7.6.
++
++#### 2.0 Tasks
++
++- [x] 2.1 Continue on branch `ci/03-cicd-hardening` (do not create a new branch). The previous Unit 1 commit is the parent.
++- [x] 2.2 Create `mise.toml` at the repository root with two pins: `opentofu = "1.9.4"` (latest patch within `~1.9`) and `terragrunt = "0.77.22"` (action minimum).
++- [x] 2.3 Pinned `gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0` across all three workflows.
++- [x] 2.4 In `.github/workflows/release.yml`, remove the `tofu_version: '~1.9'` and `tg_version: '0.72.0'` entries from the top-level `env:` block.
++- [x] 2.5 In `.github/workflows/release.yml`'s `apply` job, replace the two steps `Setup Tofu` (using `opentofu/setup-opentofu`) and `Setup Terragrunt` (raw `wget`) with a single step using `gruntwork-io/terragrunt-action` in install-only mode (no `tg_command` argument). The step should not reference `${{ env.tofu_version }}` or `${{ env.tg_version }}`.
++- [x] 2.6 In `.github/workflows/release.yml`'s `apply` job's `Deploy Gratibot to Nonprod` step, rename `--terragrunt-non-interactive` to `--non-interactive`.
++- [x] 2.7 In `.github/workflows/apply-prod.yml`, remove the `tofu_version` and `tg_version` entries from the top-level `env:` block.
++- [x] 2.8 In `.github/workflows/apply-prod.yml`'s `plan` job and `apply` job, replace each `Setup Tofu` + `Setup Terragrunt` pair with a single `gruntwork-io/terragrunt-action` install-only step (same pinned SHA as 2.3).
++- [x] 2.9 In `.github/workflows/apply-prod.yml`'s `apply` job's `Deploy Gratibot to Prod` step, rename `--terragrunt-non-interactive` to `--non-interactive`.
++- [x] 2.10 In `.github/workflows/pull-request.yaml`, remove the `tofu_version` and `tg_version` entries from the top-level `env:` block.
++- [x] 2.11 In `.github/workflows/pull-request.yaml`'s `fmt`, `validate`, and `plan` jobs, replace each `Setup Tofu` + (for `validate`/`plan`) `Setup Terragrunt` step sequence with a single `gruntwork-io/terragrunt-action` install-only step (same pinned SHA).
++- [x] 2.12 In `.github/workflows/pull-request.yaml`'s `validate` job's `Terraform validate check` step, rename `--terragrunt-no-auto-init` to `--no-auto-init`.
++- [x] 2.13 In `infra/terragrunt/nonprod/gratibot/terragrunt.hcl`, change the line `include {` to `include "root" {` (closing brace unchanged). Preserve the block body exactly.
++- [x] 2.14 In `infra/terragrunt/prod/gratibot/terragrunt.hcl`, apply the same relabel as 2.13. Copy the final `mise.toml` to `docs/specs/03-spec-ci-cd-hardening/03-proofs/mise.toml`.
++- [x] 2.15 Run `npm run lint`, stage the changes, and create the Unit 2 commit on `ci/03-cicd-hardening` with a message starting `chore(ci):` (e.g., `chore(ci): migrate tofu/terragrunt install to mise + gruntwork terragrunt-action`). Do not push.
++
++---
++
++### [x] 3.0 CI consolidation into single ci.yaml
++
++Collapse `.github/workflows/test.yaml`, `.github/workflows/lint.yaml`, and
++`.github/workflows/codeql-analysis.yml` into a new `.github/workflows/ci.yaml` with
++three jobs (`lint`, `test`, `codeql`), top-level `permissions: contents: read`, a
++top-level `concurrency` block with `cancel-in-progress: true`, `actions/setup-node`
++with `cache: 'npm'` and `node-version: 24` for `lint`/`test`, and a
++`github.event_name != 'schedule'` guard on `lint`/`test` so the weekly cron only
++runs `codeql`. Drops the stale `pathsIgnore` matrix entry from CodeQL. Deletes the
++three legacy workflow files. Coordinates with the human-gated branch-protection
++required-check rename (Out-of-Repo Prerequisite #3), which Task 7.4 performs before
++merge.
++
++#### 3.0 Proof Artifact(s)
++
++- File: `.github/workflows/ci.yaml` exists with three jobs (`lint`, `test`, `codeql`), `push` + `pull_request` + `schedule: '15 11 * * 5'` triggers, top-level `permissions: contents: read`, top-level `concurrency` with `cancel-in-progress: true`, `actions/setup-node` `cache: 'npm'` + `node-version: 24` on `lint`/`test`, schedule guard on `lint`/`test`, and CodeQL job-level permissions override (`actions: read`, `contents: read`, `security-events: write`) — demonstrates the consolidation shape. Captured as `03-proofs/ci.yaml` by Task 3.10.
++- Files deleted: Unit 3 commit shows `.github/workflows/test.yaml`, `.github/workflows/lint.yaml`, and `.github/workflows/codeql-analysis.yml` removed — demonstrates legacy workflow cleanup. Captured in Task 7.11's full diff.
++- CI run (PR-level): PR shows three check entries — `CI / lint`, `CI / test`, `CI / codeql` — all passing. Captured as `03-proofs/3.0-pr-run.txt` by Task 7.2.
++- CI run (concurrency demo): A second push to the PR branch cancels the earlier `CI` run via the concurrency group. Captured as `03-proofs/3.0-concurrency-cancel.txt` by Task 7.3.
++- CI run (schedule): A scheduled cron trigger shows only `codeql` executing while `lint` and `test` are marked `skipped` — demonstrates the schedule guard. Captured as `03-proofs/3.0-schedule-run.txt` by Task 7.10.
++- Human gate evidence: Screenshot of the repo's branch-protection settings on `main` showing `CI / lint`, `CI / test`, `CI / codeql` listed as required status checks and the old `test`, `lint`, `CodeQL / Analyze` checks removed. Captured as `03-proofs/3.0-branch-protection.png` by Task 7.4. Confirms Out-of-Repo Prerequisite #3.
++
++#### 3.0 Tasks
++
++- [x] 3.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 2 commit is the parent.
++- [x] 3.2 Create `.github/workflows/ci.yaml` with `name: CI`, triggers `push: branches: [main]`, `pull_request: branches: [main]`, and `schedule: - cron: '15 11 * * 5'`.
++- [x] 3.3 In `ci.yaml`, add top-level `permissions: contents: read` (workflow-level, applies to all jobs unless overridden).
++- [x] 3.4 In `ci.yaml`, add top-level `concurrency:` block with `group: ${{ github.workflow }}-${{ github.ref }}` and `cancel-in-progress: true`.
++- [x] 3.5 In `ci.yaml`, add a `lint` job: `runs-on: ubuntu-latest`, `if: github.event_name != 'schedule'`, steps: `actions/checkout` (existing pinned SHA), `actions/setup-node` (existing pinned SHA) with `node-version: 24` and `cache: 'npm'`, then `npm ci`, then `npm run lint`.
++- [x] 3.6 In `ci.yaml`, add a `test` job mirroring `lint` (same guard and setup) running `npm test` as the final step.
++- [x] 3.7 In `ci.yaml`, add a `codeql` job with `runs-on: ubuntu-latest` and a job-level `permissions:` block `actions: read`, `contents: read`, `security-events: write`. Job should use the existing CodeQL action SHAs from `codeql-analysis.yml` for `init`, `autobuild`, and `analyze`, run only the `javascript` language matrix entry, and not declare the stale `pathsIgnore` matrix dimension.
++- [x] 3.8 Delete `.github/workflows/test.yaml`.
++- [x] 3.9 Delete `.github/workflows/lint.yaml`.
++- [x] 3.10 Delete `.github/workflows/codeql-analysis.yml`. Copy the final `ci.yaml` to `docs/specs/03-spec-ci-cd-hardening/03-proofs/ci.yaml`.
++- [x] 3.11 Run `npm run lint` and `npm test` locally to confirm both still pass (no source changes, so they should).
++- [x] 3.12 Stage changes and create the Unit 3 commit on `ci/03-cicd-hardening` with a message starting `ci:` (e.g., `ci: consolidate lint, test, and codeql into a single ci.yaml with shared concurrency`). Do not push.
++
++---
++
++### [x] 4.0 Promote-don't-rebuild in apply-prod
++
++Replace the `build` job in `apply-prod.yml` with a `promote` job that retags the
++nonprod-validated image (`ghcr.io/liatrio/gratibot:<sha_short>`) to the release tag
++(`ghcr.io/liatrio/gratibot:<release_tag>`) using `docker buildx imagetools create`,
++with no local pull and no `docker build`/`docker push`. Resolves `sha_short` from the
++commit associated with the triggering release so the image promoted is exactly the
++image nonprod applied. Downstream `plan` and `apply` jobs continue to consume the
++release tag in `TF_VAR_gratibot_image`. Lands with or after Unit 1 per spec §7.3.
++
++#### 4.0 Proof Artifact(s)
++
++- Diff: Unit 4 commit diff of `.github/workflows/apply-prod.yml` shows the `build` job replaced by a `promote` job containing a `docker buildx imagetools create` step, with no `docker build` or `docker push` step remaining anywhere in the file — demonstrates the promotion model is in place. Captured in Task 7.11's full diff.
++- Registry inspection: `docker buildx imagetools inspect ghcr.io/liatrio/gratibot:<release_tag>` and `docker buildx imagetools inspect ghcr.io/liatrio/gratibot:<sha_short>` after the first post-merge release run return the same image digest — demonstrates identical-artifact promotion. Captured as `03-proofs/4.0-imagetools-inspect.txt` by Task 7.8.
++- CI run (post-merge): First post-merge `release: created` event triggers `apply-prod.yml` and the `promote`, `plan`, and `apply` jobs all complete successfully. Captured as `03-proofs/4.0-prod-run.txt` by Task 7.7.
++
++#### 4.0 Tasks
++
++- [x] 4.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 3 commit is the parent.
++- [x] 4.2 In `.github/workflows/apply-prod.yml`, rename the `build` job key to `promote` and change its `name:` to `"Promote image from nonprod"` (or similar).
++- [x] 4.3 In the renamed `promote` job, add a `Resolve nonprod sha_short` step (`id: source`) that sets `sha_short=$(git rev-parse --short ${{ github.sha }})` as a step output. (The release event's `github.sha` is the commit the release tag points at — the same commit nonprod applied.)
++- [x] 4.4 In the `promote` job, keep the `Generate tag` step (or equivalent) that sets the release tag output (`tag=${GITHUB_REF#refs/*/}`). Keep the `Log into registry` step.
++- [x] 4.5 Replace the `Build image` and `Push image` steps with a single `Promote image` step that runs `docker buildx imagetools create -t $IMAGE_NAME:${{ steps.tag.outputs.tag }} $IMAGE_NAME:${{ steps.source.outputs.sha_short }}`. This step must not run `docker build` or `docker push`.
++- [x] 4.6 Update the `promote` job's `outputs:` block so it exposes both the `docker_tag` (release tag, consumed by `plan`/`apply`) and `source_tag` (the `sha_short` it was promoted from, captured for traceability).
++- [x] 4.7 Update the `plan` job's `needs: build` to `needs: promote` and its `TF_VAR_gratibot_image` to `"${{ env.IMAGE_PATH }}:${{ needs.promote.outputs.docker_tag }}"`.
++- [x] 4.8 Update the `apply` job's `needs: [build, plan]` to `needs: [promote, plan]` and its `TF_VAR_gratibot_image` in the same way.
++- [x] 4.9 Grep `.github/workflows/apply-prod.yml` for `docker build`, `docker push`, and `Build image` and confirm no remaining occurrences.
++- [x] 4.10 Run `npm run lint` and create the Unit 4 commit on `ci/03-cicd-hardening` with a message starting `refactor(ci):` (e.g., `refactor(ci): promote nonprod image to release tag instead of rebuilding in apply-prod`). Do not push.
++
++---
++
++### [x] 5.0 GitHub App token migration in release.yml
++
++Replace the long-lived `GRATIBOT_RELEASE_TOKEN` PAT in `release.yml`'s `Create Release`
++step with a short-lived token minted by `actions/create-github-app-token` (pinned to a
++SHA with a `# vX.Y.Z` comment per repo convention). Sources App ID from a repo variable
++and private key from a repo secret (both established by Tasks 5.1 and 5.2 before the PR
++is opened). After the migration is proven by a successful post-merge release run, Task
++7.9 revokes `GRATIBOT_RELEASE_TOKEN` (Out-of-Repo Prerequisite #4). Independent of
++Units 1–4 but gated on the App being created/installed first.
++
++#### 5.0 Proof Artifact(s)
++
++- Diff: Unit 5 commit diff of `.github/workflows/release.yml` shows the `Create Release` step now sources `GITHUB_TOKEN` from an `actions/create-github-app-token` step's output and no longer references `secrets.GRATIBOT_RELEASE_TOKEN` anywhere in the file — demonstrates the credential migration is encoded. Captured in Task 7.11's full diff.
++- CI run (post-merge): Post-merge `release.yml` run shows the App-token step mints a token and `npm run release` (semantic-release) publishes a new version tag/GitHub Release using that token — demonstrates the new credential path works against `contents: write`, `issues: write`, and `pull-requests: write` permissions. Captured as `03-proofs/5.0-release-run.txt` by Task 7.6.
++- Human gate evidence (App creation/install): Screenshot of the GitHub App's installation page on `liatrio/gratibot` showing the App installed with exactly `contents: write`, `issues: write`, and `pull-requests: write` repository permissions and no others. Captured as `03-proofs/5.0-app-install.png` by Task 5.1 (pre-flight). Confirms Out-of-Repo Prerequisite #1.
++- Human gate evidence (PAT revocation): Screenshot of the repo's Settings → Secrets and variables → Actions → Secrets tab showing `GRATIBOT_RELEASE_TOKEN` is no longer present. Captured as `03-proofs/5.0-pat-revoked.png` by Task 7.9 (post-merge). Confirms Out-of-Repo Prerequisite #4. Secret values must not appear in any artifact.
++
++#### 5.0 Tasks
++
++- [x] 5.1 [HUMAN GATE] In the `liatrio` GitHub org settings, create a new GitHub App (name suggestion: `gratibot-release`) with exactly three repository permissions: `contents: write`, `issues: write`, `pull-requests: write`. No other permissions. Install the App on `liatrio/gratibot` only. Record the App ID and download a PEM private key. Capture a screenshot of the installation page (showing only those three permissions) to `docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-app-install.png`. (Out-of-Repo Prereq #1.) **Must complete before Unit 7 pushes the branch.** _Completed by org admin on 2026-04-16; screenshot artifact unavailable — see `03-proofs/5.0-app-install-NOTE.md`. Runtime proof in `5.0-release-run.txt` (Task 7.6) serves as substitute evidence._
++- [x] 5.2 [HUMAN GATE] In `liatrio/gratibot` Settings → Secrets and variables → Actions: add a repo variable `RELEASE_APP_ID` set to the App ID from 5.1; add a repo secret `RELEASE_APP_PRIVATE_KEY` set to the PEM private key contents. The private key must never be committed or echoed in logs. **Must complete before Unit 7 pushes the branch.**
++- [x] 5.3 Continue on branch `ci/03-cicd-hardening`. The previous Unit 4 commit is the parent.
++- [x] 5.4 Pinned `actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1`.
++- [x] 5.5 In `.github/workflows/release.yml`'s `release` job, insert a new step immediately before `Create Release` with `id: app-token` using `actions/create-github-app-token@<sha>` and inputs `app-id: ${{ vars.RELEASE_APP_ID }}` and `private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}`.
++- [x] 5.6 In the same `release` job, change the `Create Release` step's `env.GITHUB_TOKEN` value from `${{ secrets.GRATIBOT_RELEASE_TOKEN }}` to `${{ steps.app-token.outputs.token }}`.
++- [x] 5.7 Grep `.github/workflows/release.yml` for `GRATIBOT_RELEASE_TOKEN` and confirm zero remaining references.
++- [x] 5.8 Run `npm run lint` and create the Unit 5 commit on `ci/03-cicd-hardening` with a message starting `ci:` (e.g., `ci: replace GRATIBOT_RELEASE_TOKEN PAT with short-lived GitHub App token`). Do not push.
++
++---
++
++### [x] 6.0 Backstage/TechDocs decommission
++
++Delete the four files supporting the unused Backstage/TechDocs integration:
++`.github/workflows/publish-techdocs-to-s3.yaml`, `catalog-info.yaml` (repo root),
++`mkdocs.yml` (repo root), and `docs/index.md`. Leave the rest of `docs/` and all
++`CLAUDE.md`/`AGENTS.md` cross-links intact. S3 bucket cleanup and Backstage catalog
++deregistration are explicitly out of scope per spec Non-Goal #14. Independent of all
++other units; committed last per the single-PR commit order.
++
++#### 6.0 Proof Artifact(s)
++
++- `git status` / diff: Unit 6 commit shows exactly the four files deleted and no other files in `docs/` removed — demonstrates the cleanup is correctly scoped. Captured as `03-proofs/6.0-git-status.txt` by Task 6.9 and in Task 7.11's full diff.
++- Repo search: `grep -ril -E 'catalog-info|mkdocs|techdocs' .github/ 2>/dev/null` returns no in-repo hits in workflow files — demonstrates the integration is fully unwired. Captured as `03-proofs/6.0-grep-output.txt` by Task 6.7. (Hits in `docs/specs/03-spec-ci-cd-hardening/` itself are expected and acceptable, since this spec discusses the decommission.)
++- Cross-link check: `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` returns no matches (or only spec-self-references) — demonstrates no surviving link points at the deleted landing page. Captured as `03-proofs/6.0-crosslink-check.txt` by Task 6.8.
++
++#### 6.0 Tasks
++
++- [x] 6.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 5 commit is the parent.
++- [x] 6.2 Delete `.github/workflows/publish-techdocs-to-s3.yaml`.
++- [x] 6.3 Delete `catalog-info.yaml` (repo root).
++- [x] 6.4 Delete `mkdocs.yml` (repo root).
++- [x] 6.5 Delete `docs/index.md`.
++- [x] 6.6 Run `ls docs/` and confirm `ARCHITECTURE.md`, `DEVELOPMENT.md`, `TESTING.md`, `deployment.md`, `local_dev/`, and `specs/` are all still present.
++- [x] 6.7 Run `grep -ril -E 'catalog-info|mkdocs|techdocs' .github/ 2>/dev/null` and confirm no matches. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-grep-output.txt`.
++- [x] 6.8 Run `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` and confirm no matches outside the `docs/specs/03-spec-ci-cd-hardening/` directory. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt`.
++- [x] 6.9 Capture `git status --porcelain` showing the four deletions (plus any new proof files) to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt`.
++- [x] 6.10 Run `npm run lint` and create the Unit 6 commit on `ci/03-cicd-hardening` with a message starting `chore:` (e.g., `chore: remove unused Backstage/TechDocs integration files`). Do not push yet — Unit 7 handles the push.
++
++---
++
++### [ ] 7.0 Integration PR and post-merge verification
++
++Push the `ci/03-cicd-hardening` branch (containing six per-unit commits), open the
++consolidated PR, capture PR-level CI evidence, perform the pre-merge branch-protection
++rename (Out-of-Repo Prereq #3), merge, and then capture all post-merge runtime evidence
++(release.yml and apply-prod.yml runs, image-digest identity, scheduled-cron behavior)
++and complete the post-merge PAT revocation (Out-of-Repo Prereq #4). This parent task
++owns the cross-unit integration work that was previously spread across per-unit "open
++PR" / "after merge" sub-tasks; individual units' Proof Artifact(s) bullets point here
++for runtime captures.
++
++#### 7.0 Proof Artifact(s)
++
++- PR URL: The single PR created by Task 7.1 covering all six unit commits. Captured as `03-proofs/7.0-pr-url.txt`.
++- PR check summary: Screenshot or copy of the PR's checks tab showing `CI / lint`, `CI / test`, `CI / codeql`, `pull request / fmt`, `pull request / validate`, `pull request / plan`, and the reusable docker-build check all passing. Captured as `03-proofs/7.0-pr-checks.png` (or `.txt` for the URL list).
++- Consolidated diff: Full `git diff main..ci/03-cicd-hardening` captured as `03-proofs/7.0-full-diff.patch` — this also serves as the source for each unit's diff-level evidence.
++- Human gate evidence (branch-protection rename): Screenshot captured as `03-proofs/3.0-branch-protection.png` (Task 7.4). Confirms Out-of-Repo Prereq #3.
++- Post-merge release run: URL captured as `03-proofs/1.0-release-run.txt`, `03-proofs/2.0-release-run.txt`, and `03-proofs/5.0-release-run.txt` (same run, referenced by three units).
++- Post-merge apply-prod run: URL captured as `03-proofs/4.0-prod-run.txt` after the first release event.
++- imagetools inspect: Captured as `03-proofs/4.0-imagetools-inspect.txt` showing both tags resolve to the same digest.
++- Scheduled-cron evidence: URL captured as `03-proofs/3.0-schedule-run.txt` from the next Friday 11:15 UTC run (or earlier if a workflow_dispatch equivalent is available).
++- Human gate evidence (PAT revocation): Screenshot captured as `03-proofs/5.0-pat-revoked.png` (Task 7.9). Confirms Out-of-Repo Prereq #4.
++
++#### 7.0 Tasks
++
++- [x] 7.1 Confirm all pre-flight human gates are complete: `AZURE_TENANT_ID` variable (Task 1.1), GitHub App installed with `contents: write` + `issues: write` + `pull-requests: write` (Task 5.1), and `RELEASE_APP_ID` variable + `RELEASE_APP_PRIVATE_KEY` secret (Task 5.2). If any is missing, stop and complete it; otherwise CI will fail.
++- [x] 7.2 Push branch `ci/03-cicd-hardening` to origin. Open a PR targeting `main` with title `ci: harden and modernize CI/CD pipeline (spec 03)` and a body that links to `docs/specs/03-spec-ci-cd-hardening/03-spec-ci-cd-hardening.md`, summarizes the six units, and calls out the `[HUMAN GATE]` tasks already completed and still pending. Wait for CI to run. Capture the PR URL to `docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-url.txt` and the checks view to `docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-pr-checks.png`. Extract unit-specific PR-run URLs (for `pull-request.yaml` `validate`+`plan`) to `03-proofs/1.0-pr-run.txt`, `03-proofs/2.0-pr-run.txt`, and the `CI` workflow run URL to `03-proofs/3.0-pr-run.txt`.
++- [x] 7.3 Push a trivial second commit to the PR branch (e.g., add a blank line to an already-modified workflow file or a comment tweak) and confirm that the earlier `CI` workflow run on the branch is cancelled by the `cancel-in-progress: true` concurrency group. Capture the cancelled-run URL or a screenshot to `docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-concurrency-cancel.txt`. Amend or keep the second commit as appropriate (either is fine — Unit 3's cancel-in-progress is the only thing being demonstrated).
++- [ ] 7.4 [HUMAN GATE] Once Unit 3's commit has run on the PR branch and `CI / lint`, `CI / test`, `CI / codeql` check entries are observable on the PR: in Settings → Branches → Branch protection on `main`, remove the required checks `test`, `lint`, and `CodeQL / Analyze` and add `CI / lint`, `CI / test`, `CI / codeql`. Capture a screenshot to `docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-branch-protection.png`. (Out-of-Repo Prereq #3.) **Must complete before 7.5.**
++- [ ] 7.5 Request maintainer review. Once approved, merge the PR using a merge strategy that preserves per-unit commits (`Create a merge commit` or `Rebase and merge`; **do not squash**). If branch-protection only permits `Squash and merge`, update branch protection temporarily or coordinate with the maintainer, since the spec's bisectability guarantee depends on preserved per-unit commits.
++- [ ] 7.6 Capture the post-merge `release.yml` run URL (covering nonprod apply, GitHub App token mint, and semantic-release publish) to three locations (same URL, referenced by three units): `docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-release-run.txt`, `docs/specs/03-spec-ci-cd-hardening/03-proofs/2.0-release-run.txt`, and `docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-release-run.txt`. Verify the run log contains no Terragrunt deprecation warnings about unlabeled `include` or `--terragrunt-*` flags (Unit 2 evidence).
++- [ ] 7.7 After semantic-release emits a GitHub Release, capture the resulting `apply-prod.yml` run URL showing `promote` + `plan` + `apply` all succeeded and no `docker build` or `docker push` appears in logs, to `docs/specs/03-spec-ci-cd-hardening/03-proofs/4.0-prod-run.txt`.
++- [ ] 7.8 From a terminal authenticated to GHCR, run `docker buildx imagetools inspect ghcr.io/liatrio/gratibot:<release_tag>` and `docker buildx imagetools inspect ghcr.io/liatrio/gratibot:<sha_short>` using the exact release tag and source `sha_short` from the 7.7 run. Save the two (sanitized — no tokens) outputs to `docs/specs/03-spec-ci-cd-hardening/03-proofs/4.0-imagetools-inspect.txt`. Confirm both report the same image digest.
++- [ ] 7.9 [HUMAN GATE] After the 7.6 release run succeeds end-to-end with the App token: delete the `GRATIBOT_RELEASE_TOKEN` repo secret, then revoke the PAT in its owner's GitHub account. Capture a screenshot of the Actions secrets tab (showing `GRATIBOT_RELEASE_TOKEN` absent) to `docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-pat-revoked.png`. (Out-of-Repo Prereq #4.)
++- [ ] 7.10 On the next scheduled cron firing (Friday 11:15 UTC), capture the `CI` workflow run URL showing only `codeql` ran and `lint`/`test` were marked `skipped`. Save to `docs/specs/03-spec-ci-cd-hardening/03-proofs/3.0-schedule-run.txt`. (This evidence may lag up to seven days behind the merge; note the capture date.)
++- [ ] 7.11 Generate the final consolidated diff for the PR: from a fresh clone or `main`-anchored reference, run `git diff <merge-base>..<merge-commit> > docs/specs/03-spec-ci-cd-hardening/03-proofs/7.0-full-diff.patch`. This artifact sources each unit's diff-level evidence bullet.
+diff --git a/infra/terragrunt/nonprod/gratibot/terragrunt.hcl b/infra/terragrunt/nonprod/gratibot/terragrunt.hcl
+index 4d6e9f0..4bd2c68 100644
+--- a/infra/terragrunt/nonprod/gratibot/terragrunt.hcl
++++ b/infra/terragrunt/nonprod/gratibot/terragrunt.hcl
+@@ -1,4 +1,4 @@
+-include {
++include "root" {
+   path = find_in_parent_folders()
+ }
+ 
+diff --git a/infra/terragrunt/prod/gratibot/terragrunt.hcl b/infra/terragrunt/prod/gratibot/terragrunt.hcl
+index 4d6e9f0..4bd2c68 100644
+--- a/infra/terragrunt/prod/gratibot/terragrunt.hcl
++++ b/infra/terragrunt/prod/gratibot/terragrunt.hcl
+@@ -1,4 +1,4 @@
+-include {
++include "root" {
+   path = find_in_parent_folders()
+ }
+ 
+diff --git a/mise.toml b/mise.toml
+new file mode 100644
+index 0000000..c74ee77
+--- /dev/null
++++ b/mise.toml
+@@ -0,0 +1,3 @@
++[tools]
++opentofu = "1.9.4"
++terragrunt = "0.77.22"
+diff --git a/mkdocs.yml b/mkdocs.yml
+deleted file mode 100644
+index 29c2872..0000000
+--- a/mkdocs.yml
++++ /dev/null
+@@ -1,11 +0,0 @@
+-site_name: 'gratibot'
+-
+-plugins:
+-  - techdocs-core
+-
+-nav:
+-  - Introduction: index.md
+-  - Local Development: 
+-    - Create Slack App: 'local_dev/create_slack_app.md' 
+-    - Running Bot: 'local_dev/running_bot.md'
+-  - Deployment: 'deployment.md'

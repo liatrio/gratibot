@@ -1,0 +1,35 @@
+Task 7.8 — docker buildx imagetools inspect of promoted tag and source tag
+===========================================================================
+
+Release: v3.36.2
+Source commit: 5141d72326e4838965045cd256fe7df9f40a4fba
+Apply-prod run: https://github.com/liatrio/gratibot/actions/runs/24535082982
+
+--- ghcr.io/liatrio/gratibot:v3.36.2 ---
+Name:      ghcr.io/liatrio/gratibot:v3.36.2
+MediaType: application/vnd.docker.distribution.manifest.list.v2+json
+Digest:    sha256:15f2c24fc66f53f642681e65e40371aeaf1db4bfb2d9881280bd245c5f476472
+           
+Manifests: 
+  Name:      ghcr.io/liatrio/gratibot:v3.36.2@sha256:4e57ec44ddea4bfb624a7d2b1b0e19a27f55a7d6d89e6b7fb0dcc94da662e730
+  MediaType: application/vnd.docker.distribution.manifest.v2+json
+  Platform:  linux/amd64
+
+--- ghcr.io/liatrio/gratibot:5141d72 ---
+Name:      ghcr.io/liatrio/gratibot:5141d72
+MediaType: application/vnd.docker.distribution.manifest.v2+json
+Digest:    sha256:4e57ec44ddea4bfb624a7d2b1b0e19a27f55a7d6d89e6b7fb0dcc94da662e730
+
+Interpretation
+--------------
+The top-level digests differ:
+  v3.36.2  -> sha256:15f2c24f...  (manifest-list wrapper created by 'buildx imagetools create')
+  5141d72  -> sha256:4e57ec44...  (single-platform manifest pushed by the original 'docker build')
+
+However, the v3.36.2 manifest list contains exactly one linux/amd64 manifest whose
+digest is sha256:4e57ec44ddea4bfb624a7d2b1b0e19a27f55a7d6d89e6b7fb0dcc94da662e730 —
+identical to the 5141d72 tag's top-level digest. This confirms that the promotion
+step retagged without rebuilding: the container image bytes (config + layers) are
+identical across both tags. The only difference is the OCI wrapper that
+'docker buildx imagetools create' applies, which does not change the image
+Azure Container Instances will pull and run.

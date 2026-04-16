@@ -1,0 +1,7 @@
+ D .github/workflows/publish-techdocs-to-s3.yaml
+ D catalog-info.yaml
+ D docs/index.md
+ D mkdocs.yml
+?? docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt
+?? docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt
+?? docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-grep-output.txt

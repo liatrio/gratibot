@@ -89,20 +89,23 @@ to edits within existing `release.yml`, `apply-prod.yml`, and
   name: "plan"` declaration in `apply-prod.yml` stating that this
   environment scopes OIDC to a read-only Azure identity (distinct from
   the elevated identity used by the `prod` environment).
-- The system shall add a top-level `concurrency` block to
-  `pull-request.yaml` using `group: ${{ github.workflow }}-${{
-  github.ref }}` and `cancel-in-progress: true`. Existing
-  `tf-nonprod`/`tf-prod` concurrency groups on deploy workflows are
-  left unchanged and shall not use `cancel-in-progress` (queued applies
-  are the intended behavior).
+- The system shall **not** add a top-level `concurrency` block with
+  `cancel-in-progress: true` to `pull-request.yaml`. The `plan` job
+  holds an Azure Terraform state lock, and a workflow-level cancel
+  would kill an in-flight `terragrunt plan`, leaving the lock orphaned
+  and requiring manual recovery. The `plan` job's existing
+  `tf-nonprod` concurrency group already serializes TF operations
+  without cancelling in-flight runs, which is the correct behavior.
+  Existing `tf-nonprod`/`tf-prod` concurrency groups on deploy
+  workflows are left unchanged and shall not use `cancel-in-progress`
+  (queued applies are the intended behavior).
 
 **Proof Artifacts:**
 
 - Diff: `release.yml`, `apply-prod.yml`, and `pull-request.yaml` show
   the dead `if:` gate removed, `workflow_dispatch` + `gratibot_limit`
-  gone, tenant ID replaced with `vars.AZURE_TENANT_ID`, and the PR
-  workflow's concurrency block added — demonstrates each requirement
-  is encoded.
+  gone, and tenant ID replaced with `vars.AZURE_TENANT_ID` —
+  demonstrates each requirement is encoded.
 - CI run: A pull request exercising `pull-request.yaml` completes the
   `validate` and `plan` jobs with the correct `setup.outputs.docker-tag`
   value interpolated into the resulting image reference —
@@ -429,11 +432,15 @@ This spec follows the project's established standards:
   job still requires `packages: write` at the workflow or job level,
   which already exists in `apply-prod.yml`.
 - **Concurrency semantics** — `cancel-in-progress: true` is correct
-  for CI validation and PR validation workflows (the intent is to
-  discard superseded work). It is incorrect for deploy workflows,
-  which should queue applies to avoid partial/overlapping
-  infrastructure updates. Existing `tf-nonprod` and `tf-prod` groups
-  continue without `cancel-in-progress`.
+  for workflows that only run stateless validation (`ci.yaml`:
+  lint/test/codeql). It is **incorrect** for any workflow that holds
+  external state locks, including `pull-request.yaml` whose `plan`
+  job acquires an Azure Terraform state lock via `terragrunt plan`: a
+  cancelled run leaves the lock orphaned and requires manual
+  recovery. For those workflows, job-level `concurrency` groups
+  without `cancel-in-progress` (e.g., `tf-nonprod`, `tf-prod`) are
+  the correct mechanism — they serialize without cancelling
+  in-flight work.
 - **CodeQL matrix cleanup** — the `pathsIgnore` key was never a valid
   matrix dimension; it is simply dropped. Path filtering, if ever
   needed, belongs in a CodeQL config file rather than a matrix.

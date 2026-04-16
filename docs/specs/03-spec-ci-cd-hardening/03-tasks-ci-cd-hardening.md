@@ -55,7 +55,7 @@
 
 ## Tasks
 
-### [ ] 1.0 Deploy-workflow correctness fixes
+### [x] 1.0 Deploy-workflow correctness fixes
 
 Fix latent bugs in `release.yml`, `apply-prod.yml`, and `pull-request.yaml` so that
 subsequent structural changes (Units 2 and 4) land on a correct baseline. Removes the
@@ -74,27 +74,27 @@ to `pull-request.yaml` and a clarifying comment above the `plan` environment in
 
 #### 1.0 Tasks
 
-- [ ] 1.1 [HUMAN GATE] Add `AZURE_TENANT_ID` as a repository variable under Settings → Secrets and variables → Actions → Variables with the value `1b4a4fed-fed8-4823-a8a0-3d5cea83d122`. Capture a screenshot to `docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-azure-tenant-id-variable.png` (Out-of-Repo Prereq #2). Implementation agent must not attempt to set this. **Must complete before Unit 7 pushes the branch.**
-- [ ] 1.2 Create branch `ci/03-cicd-hardening` from `main`. All six unit commits land on this single branch; do not create new branches for subsequent units.
-- [ ] 1.3 In `.github/workflows/release.yml`, remove the `workflow_dispatch:` trigger block (the trigger key and the `gratibot_limit` input definition). The `on:` block should retain only `push: branches: [main]` with `paths-ignore`.
-- [ ] 1.4 In `.github/workflows/release.yml`, remove the `if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)` line from the `build` job.
-- [ ] 1.5 In `.github/workflows/release.yml`'s nonprod `apply` job, remove the `TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}` line from the step's `env:` block.
-- [ ] 1.6 In `.github/workflows/release.yml`'s nonprod `apply` job, change `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
-- [ ] 1.7 In `.github/workflows/apply-prod.yml`, remove the `workflow_dispatch:` trigger block including its `gratibot_limit` input. The `on:` block should retain only `release: types: [created]`.
-- [ ] 1.8 In `.github/workflows/apply-prod.yml`, remove the `if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)` line from the `build` job.
-- [ ] 1.9 In `.github/workflows/apply-prod.yml`'s `plan` job, remove the `TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}` line from the step's `env:` block.
-- [ ] 1.10 In `.github/workflows/apply-prod.yml`'s `apply` job, remove the `GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}` line (the typo'd env entry) from the step's `env:` block.
-- [ ] 1.11 In `.github/workflows/apply-prod.yml`'s `plan` and `apply` jobs, change each `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` line to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
-- [ ] 1.12 In `.github/workflows/apply-prod.yml`, add a YAML comment immediately above `environment: name: "plan"` reading: `# 'plan' scopes OIDC to a read-only Azure identity, distinct from the elevated identity used by the 'prod' environment.`.
-- [ ] 1.13 In `.github/workflows/pull-request.yaml`, replace `${{ needs.build.outputs.docker_tag }}` with `${{ needs.setup.outputs.docker-tag }}` in both the `validate` job's `TF_VAR_gratibot_image` value and the `plan` job's `TF_VAR_gratibot_image` value.
-- [ ] 1.14 In `.github/workflows/pull-request.yaml`'s `validate` job, change `needs: build` to `needs: setup` (the job only consumes the `setup` output, not any `build` output).
-- [ ] 1.15 In `.github/workflows/pull-request.yaml`'s `plan` job, change `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
-- [ ] 1.16 In `.github/workflows/pull-request.yaml`, add a top-level `concurrency:` block (sibling to `on:`, `env:`, `permissions:`, `jobs:`) with `group: ${{ github.workflow }}-${{ github.ref }}` and `cancel-in-progress: true`.
-- [ ] 1.17 Run `npm run lint` locally, stage the three workflow files, and create the Unit 1 commit on `ci/03-cicd-hardening` with a message starting `fix(ci):` (e.g., `fix(ci): remove dead gates, typo'd env, and broken refs from deploy workflows`). Do **not** push yet — Unit 7 handles the push.
+- [~] 1.1 [HUMAN GATE] Add `AZURE_TENANT_ID` as a repository variable under Settings → Secrets and variables → Actions → Variables with the value `1b4a4fed-fed8-4823-a8a0-3d5cea83d122`. Capture a screenshot to `docs/specs/03-spec-ci-cd-hardening/03-proofs/1.0-azure-tenant-id-variable.png` (Out-of-Repo Prereq #2). Implementation agent must not attempt to set this. **Must complete before Unit 7 pushes the branch.**
+- [x] 1.2 Create branch `ci/03-cicd-hardening` from `main`. All six unit commits land on this single branch; do not create new branches for subsequent units.
+- [x] 1.3 In `.github/workflows/release.yml`, remove the `workflow_dispatch:` trigger block (the trigger key and the `gratibot_limit` input definition). The `on:` block should retain only `push: branches: [main]` with `paths-ignore`.
+- [x] 1.4 In `.github/workflows/release.yml`, remove the `if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)` line from the `build` job.
+- [x] 1.5 In `.github/workflows/release.yml`'s nonprod `apply` job, remove the `TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}` line from the step's `env:` block.
+- [x] 1.6 In `.github/workflows/release.yml`'s nonprod `apply` job, change `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
+- [x] 1.7 In `.github/workflows/apply-prod.yml`, remove the `workflow_dispatch:` trigger block including its `gratibot_limit` input. The `on:` block should retain only `release: types: [created]`.
+- [x] 1.8 In `.github/workflows/apply-prod.yml`, remove the `if: github.event_name == 'push' || contains(fromJSON('["Pactionly", "gesparza3"]'), github.actor)` line from the `build` job.
+- [x] 1.9 In `.github/workflows/apply-prod.yml`'s `plan` job, remove the `TF_VAR_gratibot_limit: ${{ inputs.gratibot_limit }}` line from the step's `env:` block.
+- [x] 1.10 In `.github/workflows/apply-prod.yml`'s `apply` job, remove the `GRATIBOT_LIMIT: ${{ inputs.gratibot_limit }}` line (the typo'd env entry) from the step's `env:` block.
+- [x] 1.11 In `.github/workflows/apply-prod.yml`'s `plan` and `apply` jobs, change each `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` line to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
+- [x] 1.12 In `.github/workflows/apply-prod.yml`, add a YAML comment immediately above `environment: name: "plan"` reading: `# 'plan' scopes OIDC to a read-only Azure identity, distinct from the elevated identity used by the 'prod' environment.`.
+- [x] 1.13 In `.github/workflows/pull-request.yaml`, replace `${{ needs.build.outputs.docker_tag }}` with `${{ needs.setup.outputs.docker-tag }}` in both the `validate` job's `TF_VAR_gratibot_image` value and the `plan` job's `TF_VAR_gratibot_image` value.
+- [x] 1.14 In `.github/workflows/pull-request.yaml`'s `validate` job, change `needs: build` to `needs: setup` (the job only consumes the `setup` output, not any `build` output).
+- [x] 1.15 In `.github/workflows/pull-request.yaml`'s `plan` job, change `ARM_TENANT_ID: "1b4a4fed-fed8-4823-a8a0-3d5cea83d122"` to `ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}`.
+- [x] 1.16 In `.github/workflows/pull-request.yaml`, add a top-level `concurrency:` block (sibling to `on:`, `env:`, `permissions:`, `jobs:`) with `group: ${{ github.workflow }}-${{ github.ref }}` and `cancel-in-progress: true`.
+- [x] 1.17 Run `npm run lint` locally, stage the three workflow files, and create the Unit 1 commit on `ci/03-cicd-hardening` with a message starting `fix(ci):` (e.g., `fix(ci): remove dead gates, typo'd env, and broken refs from deploy workflows`). Do **not** push yet — Unit 7 handles the push.
 
 ---
 
-### [ ] 2.0 Tool install migration to mise + terragrunt-action
+### [x] 2.0 Tool install migration to mise + terragrunt-action
 
 Add a `mise.toml` at the repo root pinning `opentofu` and `terragrunt` versions, and
 replace the `opentofu/setup-opentofu` + raw `wget` Terragrunt install sequence in all
@@ -115,25 +115,25 @@ Lands before or together with Unit 3 per the spec's Key Ordering (§7.2).
 
 #### 2.0 Tasks
 
-- [ ] 2.1 Continue on branch `ci/03-cicd-hardening` (do not create a new branch). The previous Unit 1 commit is the parent.
-- [ ] 2.2 Create `mise.toml` at the repository root with two pins: `opentofu = "1.9.0"` (exact version within the existing `~1.9` constraint; adjust to the latest current patch at implementation time) and `terragrunt = "0.77.22"` (minimum action requirement; may pin higher if a newer patch is current).
-- [ ] 2.3 Identify the current release SHA of `gruntwork-io/terragrunt-action` and record it in a `# vX.Y.Z` comment alongside the `uses:` reference. Use this same pin in all three workflows.
-- [ ] 2.4 In `.github/workflows/release.yml`, remove the `tofu_version: '~1.9'` and `tg_version: '0.72.0'` entries from the top-level `env:` block.
-- [ ] 2.5 In `.github/workflows/release.yml`'s `apply` job, replace the two steps `Setup Tofu` (using `opentofu/setup-opentofu`) and `Setup Terragrunt` (raw `wget`) with a single step using `gruntwork-io/terragrunt-action` in install-only mode (no `tg_command` argument). The step should not reference `${{ env.tofu_version }}` or `${{ env.tg_version }}`.
-- [ ] 2.6 In `.github/workflows/release.yml`'s `apply` job's `Deploy Gratibot to Nonprod` step, rename `--terragrunt-non-interactive` to `--non-interactive`.
-- [ ] 2.7 In `.github/workflows/apply-prod.yml`, remove the `tofu_version` and `tg_version` entries from the top-level `env:` block.
-- [ ] 2.8 In `.github/workflows/apply-prod.yml`'s `plan` job and `apply` job, replace each `Setup Tofu` + `Setup Terragrunt` pair with a single `gruntwork-io/terragrunt-action` install-only step (same pinned SHA as 2.3).
-- [ ] 2.9 In `.github/workflows/apply-prod.yml`'s `apply` job's `Deploy Gratibot to Prod` step, rename `--terragrunt-non-interactive` to `--non-interactive`.
-- [ ] 2.10 In `.github/workflows/pull-request.yaml`, remove the `tofu_version` and `tg_version` entries from the top-level `env:` block.
-- [ ] 2.11 In `.github/workflows/pull-request.yaml`'s `fmt`, `validate`, and `plan` jobs, replace each `Setup Tofu` + (for `validate`/`plan`) `Setup Terragrunt` step sequence with a single `gruntwork-io/terragrunt-action` install-only step (same pinned SHA).
-- [ ] 2.12 In `.github/workflows/pull-request.yaml`'s `validate` job's `Terraform validate check` step, rename `--terragrunt-no-auto-init` to `--no-auto-init`.
-- [ ] 2.13 In `infra/terragrunt/nonprod/gratibot/terragrunt.hcl`, change the line `include {` to `include "root" {` (closing brace unchanged). Preserve the block body exactly.
-- [ ] 2.14 In `infra/terragrunt/prod/gratibot/terragrunt.hcl`, apply the same relabel as 2.13. Copy the final `mise.toml` to `docs/specs/03-spec-ci-cd-hardening/03-proofs/mise.toml`.
-- [ ] 2.15 Run `npm run lint`, stage the changes, and create the Unit 2 commit on `ci/03-cicd-hardening` with a message starting `chore(ci):` (e.g., `chore(ci): migrate tofu/terragrunt install to mise + gruntwork terragrunt-action`). Do not push.
+- [x] 2.1 Continue on branch `ci/03-cicd-hardening` (do not create a new branch). The previous Unit 1 commit is the parent.
+- [x] 2.2 Create `mise.toml` at the repository root with two pins: `opentofu = "1.9.4"` (latest patch within `~1.9`) and `terragrunt = "0.77.22"` (action minimum).
+- [x] 2.3 Pinned `gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0` across all three workflows.
+- [x] 2.4 In `.github/workflows/release.yml`, remove the `tofu_version: '~1.9'` and `tg_version: '0.72.0'` entries from the top-level `env:` block.
+- [x] 2.5 In `.github/workflows/release.yml`'s `apply` job, replace the two steps `Setup Tofu` (using `opentofu/setup-opentofu`) and `Setup Terragrunt` (raw `wget`) with a single step using `gruntwork-io/terragrunt-action` in install-only mode (no `tg_command` argument). The step should not reference `${{ env.tofu_version }}` or `${{ env.tg_version }}`.
+- [x] 2.6 In `.github/workflows/release.yml`'s `apply` job's `Deploy Gratibot to Nonprod` step, rename `--terragrunt-non-interactive` to `--non-interactive`.
+- [x] 2.7 In `.github/workflows/apply-prod.yml`, remove the `tofu_version` and `tg_version` entries from the top-level `env:` block.
+- [x] 2.8 In `.github/workflows/apply-prod.yml`'s `plan` job and `apply` job, replace each `Setup Tofu` + `Setup Terragrunt` pair with a single `gruntwork-io/terragrunt-action` install-only step (same pinned SHA as 2.3).
+- [x] 2.9 In `.github/workflows/apply-prod.yml`'s `apply` job's `Deploy Gratibot to Prod` step, rename `--terragrunt-non-interactive` to `--non-interactive`.
+- [x] 2.10 In `.github/workflows/pull-request.yaml`, remove the `tofu_version` and `tg_version` entries from the top-level `env:` block.
+- [x] 2.11 In `.github/workflows/pull-request.yaml`'s `fmt`, `validate`, and `plan` jobs, replace each `Setup Tofu` + (for `validate`/`plan`) `Setup Terragrunt` step sequence with a single `gruntwork-io/terragrunt-action` install-only step (same pinned SHA).
+- [x] 2.12 In `.github/workflows/pull-request.yaml`'s `validate` job's `Terraform validate check` step, rename `--terragrunt-no-auto-init` to `--no-auto-init`.
+- [x] 2.13 In `infra/terragrunt/nonprod/gratibot/terragrunt.hcl`, change the line `include {` to `include "root" {` (closing brace unchanged). Preserve the block body exactly.
+- [x] 2.14 In `infra/terragrunt/prod/gratibot/terragrunt.hcl`, apply the same relabel as 2.13. Copy the final `mise.toml` to `docs/specs/03-spec-ci-cd-hardening/03-proofs/mise.toml`.
+- [x] 2.15 Run `npm run lint`, stage the changes, and create the Unit 2 commit on `ci/03-cicd-hardening` with a message starting `chore(ci):` (e.g., `chore(ci): migrate tofu/terragrunt install to mise + gruntwork terragrunt-action`). Do not push.
 
 ---
 
-### [ ] 3.0 CI consolidation into single ci.yaml
+### [x] 3.0 CI consolidation into single ci.yaml
 
 Collapse `.github/workflows/test.yaml`, `.github/workflows/lint.yaml`, and
 `.github/workflows/codeql-analysis.yml` into a new `.github/workflows/ci.yaml` with
@@ -157,22 +157,22 @@ merge.
 
 #### 3.0 Tasks
 
-- [ ] 3.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 2 commit is the parent.
-- [ ] 3.2 Create `.github/workflows/ci.yaml` with `name: CI`, triggers `push: branches: [main]`, `pull_request: branches: [main]`, and `schedule: - cron: '15 11 * * 5'`.
-- [ ] 3.3 In `ci.yaml`, add top-level `permissions: contents: read` (workflow-level, applies to all jobs unless overridden).
-- [ ] 3.4 In `ci.yaml`, add top-level `concurrency:` block with `group: ${{ github.workflow }}-${{ github.ref }}` and `cancel-in-progress: true`.
-- [ ] 3.5 In `ci.yaml`, add a `lint` job: `runs-on: ubuntu-latest`, `if: github.event_name != 'schedule'`, steps: `actions/checkout` (existing pinned SHA), `actions/setup-node` (existing pinned SHA) with `node-version: 24` and `cache: 'npm'`, then `npm ci`, then `npm run lint`.
-- [ ] 3.6 In `ci.yaml`, add a `test` job mirroring `lint` (same guard and setup) running `npm test` as the final step.
-- [ ] 3.7 In `ci.yaml`, add a `codeql` job with `runs-on: ubuntu-latest` and a job-level `permissions:` block `actions: read`, `contents: read`, `security-events: write`. Job should use the existing CodeQL action SHAs from `codeql-analysis.yml` for `init`, `autobuild`, and `analyze`, run only the `javascript` language matrix entry, and not declare the stale `pathsIgnore` matrix dimension.
-- [ ] 3.8 Delete `.github/workflows/test.yaml`.
-- [ ] 3.9 Delete `.github/workflows/lint.yaml`.
-- [ ] 3.10 Delete `.github/workflows/codeql-analysis.yml`. Copy the final `ci.yaml` to `docs/specs/03-spec-ci-cd-hardening/03-proofs/ci.yaml`.
-- [ ] 3.11 Run `npm run lint` and `npm test` locally to confirm both still pass (no source changes, so they should).
-- [ ] 3.12 Stage changes and create the Unit 3 commit on `ci/03-cicd-hardening` with a message starting `ci:` (e.g., `ci: consolidate lint, test, and codeql into a single ci.yaml with shared concurrency`). Do not push.
+- [x] 3.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 2 commit is the parent.
+- [x] 3.2 Create `.github/workflows/ci.yaml` with `name: CI`, triggers `push: branches: [main]`, `pull_request: branches: [main]`, and `schedule: - cron: '15 11 * * 5'`.
+- [x] 3.3 In `ci.yaml`, add top-level `permissions: contents: read` (workflow-level, applies to all jobs unless overridden).
+- [x] 3.4 In `ci.yaml`, add top-level `concurrency:` block with `group: ${{ github.workflow }}-${{ github.ref }}` and `cancel-in-progress: true`.
+- [x] 3.5 In `ci.yaml`, add a `lint` job: `runs-on: ubuntu-latest`, `if: github.event_name != 'schedule'`, steps: `actions/checkout` (existing pinned SHA), `actions/setup-node` (existing pinned SHA) with `node-version: 24` and `cache: 'npm'`, then `npm ci`, then `npm run lint`.
+- [x] 3.6 In `ci.yaml`, add a `test` job mirroring `lint` (same guard and setup) running `npm test` as the final step.
+- [x] 3.7 In `ci.yaml`, add a `codeql` job with `runs-on: ubuntu-latest` and a job-level `permissions:` block `actions: read`, `contents: read`, `security-events: write`. Job should use the existing CodeQL action SHAs from `codeql-analysis.yml` for `init`, `autobuild`, and `analyze`, run only the `javascript` language matrix entry, and not declare the stale `pathsIgnore` matrix dimension.
+- [x] 3.8 Delete `.github/workflows/test.yaml`.
+- [x] 3.9 Delete `.github/workflows/lint.yaml`.
+- [x] 3.10 Delete `.github/workflows/codeql-analysis.yml`. Copy the final `ci.yaml` to `docs/specs/03-spec-ci-cd-hardening/03-proofs/ci.yaml`.
+- [x] 3.11 Run `npm run lint` and `npm test` locally to confirm both still pass (no source changes, so they should).
+- [x] 3.12 Stage changes and create the Unit 3 commit on `ci/03-cicd-hardening` with a message starting `ci:` (e.g., `ci: consolidate lint, test, and codeql into a single ci.yaml with shared concurrency`). Do not push.
 
 ---
 
-### [ ] 4.0 Promote-don't-rebuild in apply-prod
+### [x] 4.0 Promote-don't-rebuild in apply-prod
 
 Replace the `build` job in `apply-prod.yml` with a `promote` job that retags the
 nonprod-validated image (`ghcr.io/liatrio/gratibot:<sha_short>`) to the release tag
@@ -190,20 +190,20 @@ release tag in `TF_VAR_gratibot_image`. Lands with or after Unit 1 per spec §7.
 
 #### 4.0 Tasks
 
-- [ ] 4.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 3 commit is the parent.
-- [ ] 4.2 In `.github/workflows/apply-prod.yml`, rename the `build` job key to `promote` and change its `name:` to `"Promote image from nonprod"` (or similar).
-- [ ] 4.3 In the renamed `promote` job, add a `Resolve nonprod sha_short` step (`id: source`) that sets `sha_short=$(git rev-parse --short ${{ github.sha }})` as a step output. (The release event's `github.sha` is the commit the release tag points at — the same commit nonprod applied.)
-- [ ] 4.4 In the `promote` job, keep the `Generate tag` step (or equivalent) that sets the release tag output (`tag=${GITHUB_REF#refs/*/}`). Keep the `Log into registry` step.
-- [ ] 4.5 Replace the `Build image` and `Push image` steps with a single `Promote image` step that runs `docker buildx imagetools create -t $IMAGE_NAME:${{ steps.tag.outputs.tag }} $IMAGE_NAME:${{ steps.source.outputs.sha_short }}`. This step must not run `docker build` or `docker push`.
-- [ ] 4.6 Update the `promote` job's `outputs:` block so it exposes both the `docker_tag` (release tag, consumed by `plan`/`apply`) and `source_tag` (the `sha_short` it was promoted from, captured for traceability).
-- [ ] 4.7 Update the `plan` job's `needs: build` to `needs: promote` and its `TF_VAR_gratibot_image` to `"${{ env.IMAGE_PATH }}:${{ needs.promote.outputs.docker_tag }}"`.
-- [ ] 4.8 Update the `apply` job's `needs: [build, plan]` to `needs: [promote, plan]` and its `TF_VAR_gratibot_image` in the same way.
-- [ ] 4.9 Grep `.github/workflows/apply-prod.yml` for `docker build`, `docker push`, and `Build image` and confirm no remaining occurrences.
-- [ ] 4.10 Run `npm run lint` and create the Unit 4 commit on `ci/03-cicd-hardening` with a message starting `refactor(ci):` (e.g., `refactor(ci): promote nonprod image to release tag instead of rebuilding in apply-prod`). Do not push.
+- [x] 4.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 3 commit is the parent.
+- [x] 4.2 In `.github/workflows/apply-prod.yml`, rename the `build` job key to `promote` and change its `name:` to `"Promote image from nonprod"` (or similar).
+- [x] 4.3 In the renamed `promote` job, add a `Resolve nonprod sha_short` step (`id: source`) that sets `sha_short=$(git rev-parse --short ${{ github.sha }})` as a step output. (The release event's `github.sha` is the commit the release tag points at — the same commit nonprod applied.)
+- [x] 4.4 In the `promote` job, keep the `Generate tag` step (or equivalent) that sets the release tag output (`tag=${GITHUB_REF#refs/*/}`). Keep the `Log into registry` step.
+- [x] 4.5 Replace the `Build image` and `Push image` steps with a single `Promote image` step that runs `docker buildx imagetools create -t $IMAGE_NAME:${{ steps.tag.outputs.tag }} $IMAGE_NAME:${{ steps.source.outputs.sha_short }}`. This step must not run `docker build` or `docker push`.
+- [x] 4.6 Update the `promote` job's `outputs:` block so it exposes both the `docker_tag` (release tag, consumed by `plan`/`apply`) and `source_tag` (the `sha_short` it was promoted from, captured for traceability).
+- [x] 4.7 Update the `plan` job's `needs: build` to `needs: promote` and its `TF_VAR_gratibot_image` to `"${{ env.IMAGE_PATH }}:${{ needs.promote.outputs.docker_tag }}"`.
+- [x] 4.8 Update the `apply` job's `needs: [build, plan]` to `needs: [promote, plan]` and its `TF_VAR_gratibot_image` in the same way.
+- [x] 4.9 Grep `.github/workflows/apply-prod.yml` for `docker build`, `docker push`, and `Build image` and confirm no remaining occurrences.
+- [x] 4.10 Run `npm run lint` and create the Unit 4 commit on `ci/03-cicd-hardening` with a message starting `refactor(ci):` (e.g., `refactor(ci): promote nonprod image to release tag instead of rebuilding in apply-prod`). Do not push.
 
 ---
 
-### [ ] 5.0 GitHub App token migration in release.yml
+### [x] 5.0 GitHub App token migration in release.yml
 
 Replace the long-lived `GRATIBOT_RELEASE_TOKEN` PAT in `release.yml`'s `Create Release`
 step with a short-lived token minted by `actions/create-github-app-token` (pinned to a
@@ -222,18 +222,18 @@ Units 1–4 but gated on the App being created/installed first.
 
 #### 5.0 Tasks
 
-- [ ] 5.1 [HUMAN GATE] In the `liatrio` GitHub org settings, create a new GitHub App (name suggestion: `gratibot-release`) with exactly three repository permissions: `contents: write`, `issues: write`, `pull-requests: write`. No other permissions. Install the App on `liatrio/gratibot` only. Record the App ID and download a PEM private key. Capture a screenshot of the installation page (showing only those three permissions) to `docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-app-install.png`. (Out-of-Repo Prereq #1.) **Must complete before Unit 7 pushes the branch.**
-- [ ] 5.2 [HUMAN GATE] In `liatrio/gratibot` Settings → Secrets and variables → Actions: add a repo variable `RELEASE_APP_ID` set to the App ID from 5.1; add a repo secret `RELEASE_APP_PRIVATE_KEY` set to the PEM private key contents. The private key must never be committed or echoed in logs. **Must complete before Unit 7 pushes the branch.**
-- [ ] 5.3 Continue on branch `ci/03-cicd-hardening`. The previous Unit 4 commit is the parent.
-- [ ] 5.4 Identify the current release SHA of `actions/create-github-app-token` and record it alongside a `# vX.Y.Z` comment.
-- [ ] 5.5 In `.github/workflows/release.yml`'s `release` job, insert a new step immediately before `Create Release` with `id: app-token` using `actions/create-github-app-token@<sha>` and inputs `app-id: ${{ vars.RELEASE_APP_ID }}` and `private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}`.
-- [ ] 5.6 In the same `release` job, change the `Create Release` step's `env.GITHUB_TOKEN` value from `${{ secrets.GRATIBOT_RELEASE_TOKEN }}` to `${{ steps.app-token.outputs.token }}`.
-- [ ] 5.7 Grep `.github/workflows/release.yml` for `GRATIBOT_RELEASE_TOKEN` and confirm zero remaining references.
-- [ ] 5.8 Run `npm run lint` and create the Unit 5 commit on `ci/03-cicd-hardening` with a message starting `ci:` (e.g., `ci: replace GRATIBOT_RELEASE_TOKEN PAT with short-lived GitHub App token`). Do not push.
+- [~] 5.1 [HUMAN GATE] In the `liatrio` GitHub org settings, create a new GitHub App (name suggestion: `gratibot-release`) with exactly three repository permissions: `contents: write`, `issues: write`, `pull-requests: write`. No other permissions. Install the App on `liatrio/gratibot` only. Record the App ID and download a PEM private key. Capture a screenshot of the installation page (showing only those three permissions) to `docs/specs/03-spec-ci-cd-hardening/03-proofs/5.0-app-install.png`. (Out-of-Repo Prereq #1.) **Must complete before Unit 7 pushes the branch.**
+- [~] 5.2 [HUMAN GATE] In `liatrio/gratibot` Settings → Secrets and variables → Actions: add a repo variable `RELEASE_APP_ID` set to the App ID from 5.1; add a repo secret `RELEASE_APP_PRIVATE_KEY` set to the PEM private key contents. The private key must never be committed or echoed in logs. **Must complete before Unit 7 pushes the branch.**
+- [x] 5.3 Continue on branch `ci/03-cicd-hardening`. The previous Unit 4 commit is the parent.
+- [x] 5.4 Pinned `actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1`.
+- [x] 5.5 In `.github/workflows/release.yml`'s `release` job, insert a new step immediately before `Create Release` with `id: app-token` using `actions/create-github-app-token@<sha>` and inputs `app-id: ${{ vars.RELEASE_APP_ID }}` and `private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}`.
+- [x] 5.6 In the same `release` job, change the `Create Release` step's `env.GITHUB_TOKEN` value from `${{ secrets.GRATIBOT_RELEASE_TOKEN }}` to `${{ steps.app-token.outputs.token }}`.
+- [x] 5.7 Grep `.github/workflows/release.yml` for `GRATIBOT_RELEASE_TOKEN` and confirm zero remaining references.
+- [x] 5.8 Run `npm run lint` and create the Unit 5 commit on `ci/03-cicd-hardening` with a message starting `ci:` (e.g., `ci: replace GRATIBOT_RELEASE_TOKEN PAT with short-lived GitHub App token`). Do not push.
 
 ---
 
-### [ ] 6.0 Backstage/TechDocs decommission
+### [x] 6.0 Backstage/TechDocs decommission
 
 Delete the four files supporting the unused Backstage/TechDocs integration:
 `.github/workflows/publish-techdocs-to-s3.yaml`, `catalog-info.yaml` (repo root),
@@ -250,16 +250,16 @@ other units; committed last per the single-PR commit order.
 
 #### 6.0 Tasks
 
-- [ ] 6.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 5 commit is the parent.
-- [ ] 6.2 Delete `.github/workflows/publish-techdocs-to-s3.yaml`.
-- [ ] 6.3 Delete `catalog-info.yaml` (repo root).
-- [ ] 6.4 Delete `mkdocs.yml` (repo root).
-- [ ] 6.5 Delete `docs/index.md`.
-- [ ] 6.6 Run `ls docs/` and confirm `ARCHITECTURE.md`, `DEVELOPMENT.md`, `TESTING.md`, `deployment.md`, `local_dev/`, and `specs/` are all still present.
-- [ ] 6.7 Run `grep -ril -E 'catalog-info|mkdocs|techdocs' .github/ 2>/dev/null` and confirm no matches. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-grep-output.txt`.
-- [ ] 6.8 Run `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` and confirm no matches outside the `docs/specs/03-spec-ci-cd-hardening/` directory. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt`.
-- [ ] 6.9 Capture `git status --porcelain` showing the four deletions (plus any new proof files) to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt`.
-- [ ] 6.10 Run `npm run lint` and create the Unit 6 commit on `ci/03-cicd-hardening` with a message starting `chore:` (e.g., `chore: remove unused Backstage/TechDocs integration files`). Do not push yet — Unit 7 handles the push.
+- [x] 6.1 Continue on branch `ci/03-cicd-hardening`. The previous Unit 5 commit is the parent.
+- [x] 6.2 Delete `.github/workflows/publish-techdocs-to-s3.yaml`.
+- [x] 6.3 Delete `catalog-info.yaml` (repo root).
+- [x] 6.4 Delete `mkdocs.yml` (repo root).
+- [x] 6.5 Delete `docs/index.md`.
+- [x] 6.6 Run `ls docs/` and confirm `ARCHITECTURE.md`, `DEVELOPMENT.md`, `TESTING.md`, `deployment.md`, `local_dev/`, and `specs/` are all still present.
+- [x] 6.7 Run `grep -ril -E 'catalog-info|mkdocs|techdocs' .github/ 2>/dev/null` and confirm no matches. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-grep-output.txt`.
+- [x] 6.8 Run `grep -rn 'docs/index.md' . --exclude-dir=node_modules --exclude-dir=.git` and confirm no matches outside the `docs/specs/03-spec-ci-cd-hardening/` directory. Capture output to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-crosslink-check.txt`.
+- [x] 6.9 Capture `git status --porcelain` showing the four deletions (plus any new proof files) to `docs/specs/03-spec-ci-cd-hardening/03-proofs/6.0-git-status.txt`.
+- [x] 6.10 Run `npm run lint` and create the Unit 6 commit on `ci/03-cicd-hardening` with a message starting `chore:` (e.g., `chore: remove unused Backstage/TechDocs integration files`). Do not push yet — Unit 7 handles the push.
 
 ---
 

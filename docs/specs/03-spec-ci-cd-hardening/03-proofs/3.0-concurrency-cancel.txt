@@ -1,0 +1,20 @@
+Concurrency cancel-in-progress demonstration
+=============================================
+
+Two commits were pushed in rapid succession to branch ci/03-cicd-hardening to
+trigger the `cancel-in-progress` behavior configured in .github/workflows/ci.yaml
+and .github/workflows/pull-request.yaml.
+
+Commit 1 (sha 83ff017) — "chore(ci): trigger concurrency demo run 1"
+  CI run:              https://github.com/liatrio/gratibot/actions/runs/24534019480
+  status:              completed
+  conclusion:          CANCELLED  <-- superseded by run 2
+
+Commit 2 (sha 8e520aa) — "chore(ci): trigger concurrency demo run 2"
+  CI run:              https://github.com/liatrio/gratibot/actions/runs/24534023289
+  status:              in_progress / completed (see PR checks)
+
+Result: the second push arrived while the first run was still executing and
+GitHub Actions cancelled the earlier run, exactly as intended by the
+`concurrency` block with `cancel-in-progress: true`. This confirms the
+concurrency guard is active and prevents redundant runs from piling up.

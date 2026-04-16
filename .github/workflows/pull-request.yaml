@@ -8,8 +8,6 @@ on:
 
 env:
   IMAGE_PATH: ${{ github.repository_owner }}/gratibot
-  tofu_version: '~1.9'
-  tg_version: '0.72.0'
 
 permissions:
   id-token: write
@@ -49,10 +47,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Setup Tofu
-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
-        with:
-          tofu_version: ${{ env.tofu_version }}
+      - name: Install OpenTofu and Terragrunt
+        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
       - name: Terraform fmt check
         run: tofu fmt -check -recursive
 
@@ -63,19 +59,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Setup Tofu
-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
-        with:
-          tofu_version: ${{ env.tofu_version }}
-      - name: Setup Terragrunt
-        run: |
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
-          sudo chmod +x /usr/local/bin/terragrunt
+      - name: Install OpenTofu and Terragrunt
+        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
       - name: Terraform validate check
         run: |
           terragrunt init -backend=false
-          terragrunt validate --terragrunt-no-auto-init
+          terragrunt validate --no-auto-init
         working-directory: infra/terragrunt/nonprod/gratibot/
         env:
           TF_VAR_gratibot_image: "${{ env.IMAGE_PATH }}:${{ needs.setup.outputs.docker-tag }}"
@@ -88,15 +77,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Setup Tofu
-        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
-        with:
-          tofu_version: ${{ env.tofu_version }}
-      - name: Setup Terragrunt
-        run: |
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.tg_version }}/terragrunt_linux_amd64
-          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
-          sudo chmod +x /usr/local/bin/terragrunt
+      - name: Install OpenTofu and Terragrunt
+        uses: gruntwork-io/terragrunt-action@53dbdc2c3d43e82bf3bae10b734a968196442bec # v3.2.0
       - name: Plan Gratibot staging deployment
         id: plan_gratibot_staging_deployment
         working-directory: infra/terragrunt/nonprod/gratibot/

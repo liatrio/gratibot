@@ -23,7 +23,7 @@ async function respondToRecognitionMessage({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  let allUsers = [];
+  let allUsers;
   let gratitude;
   try {
     allUsers = await recognition.gratitudeReceiverIdsIn(client, message.text);

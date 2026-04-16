@@ -162,8 +162,8 @@ function aggregateData(response, timeRange) {
   }
   data = data.reverse();
 
-  let recognitionDate = null;
-  let index = 0;
+  let recognitionDate;
+  let index;
   currentTime = moment(Date.now()).tz("America/Los_Angeles");
 
   for (let i = 0; i < response.length; i++) {

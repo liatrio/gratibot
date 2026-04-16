@@ -30,7 +30,7 @@ async function respondToRecognitionMessage({ message, client }) {
     slackMessage: message.text,
   });
 
-  let allUsers = [];
+  let allUsers;
   let gratitude;
   try {
     allUsers = await recognition.gratitudeReceiverIdsIn(client, message.text);
@@ -96,7 +96,7 @@ async function respondToRecognitionReaction({ event, client }) {
 
   event.channel = event.item.channel;
 
-  let allUsers = [];
+  let allUsers;
   let gratitude;
   let originalMessage;
   try {

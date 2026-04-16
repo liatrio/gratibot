@@ -76,8 +76,15 @@ jobs:
       - name: Install devDependencies
         run: npm ci
 
+      - name: Generate release token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Create Release
         run: npm run release
         env:
-          GITHUB_TOKEN: ${{ secrets.GRATIBOT_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 

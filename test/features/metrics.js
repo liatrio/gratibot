@@ -12,9 +12,9 @@ describe("features/metrics", () => {
 
   describe("respondToMetrics", () => {
     it("should post Gratibot Metrics text with blocks from createMetricsBlocks", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       metricsFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /metrics/i);
 
       const fakeBlocks = [{ type: "section" }];
       sinon.stub(metrics, "createMetricsBlocks").resolves(fakeBlocks);
@@ -44,9 +44,9 @@ describe("features/metrics", () => {
 
   describe("updateMetricsResponse", () => {
     it("should ack and respond with new blocks keyed by action.value", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       metricsFeature(app);
-      const actionHandler = registrations.action[0].handler;
+      const actionHandler = findHandler("action", /metrics-\d+/);
 
       const fakeBlocks = [{ type: "section" }];
       sinon.stub(metrics, "createMetricsBlocks").resolves(fakeBlocks);

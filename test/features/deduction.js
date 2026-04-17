@@ -42,9 +42,9 @@ describe("features/deduction", () => {
 
   describe("respondToDeduction", () => {
     it("should post an error message when users.info returns ok: false", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       deductionFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /deduct/i);
 
       const client = buildClient();
       client.users.info = sinon
@@ -75,9 +75,9 @@ describe("features/deduction", () => {
 
     it("should reject a caller not in config.redemptionAdmins with a not-allowed message", async () => {
       setAdmins(["UADMIN1"]);
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       deductionFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /deduct/i);
 
       const client = buildClient();
       const isBalanceSufficentStub = sinon.stub(
@@ -102,9 +102,9 @@ describe("features/deduction", () => {
 
     it("should post the usage hint when the deduct command is malformed", async () => {
       setAdmins(["UADMIN1"]);
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       deductionFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /deduct/i);
 
       const client = buildClient();
       const isBalanceSufficentStub = sinon.stub(
@@ -156,9 +156,9 @@ describe("features/deduction", () => {
 
     it("should post an insufficient-balance message when deduction.isBalanceSufficent returns false", async () => {
       setAdmins(["UADMIN1"]);
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       deductionFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /deduct/i);
 
       sinon.stub(deduction, "isBalanceSufficent").resolves(false);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
@@ -182,9 +182,9 @@ describe("features/deduction", () => {
 
     it("should post a confirmation with the deduction ID on the happy path", async () => {
       setAdmins(["UADMIN1"]);
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       deductionFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /deduct/i);
 
       sinon.stub(deduction, "isBalanceSufficent").resolves(true);
       sinon

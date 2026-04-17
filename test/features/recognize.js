@@ -3,6 +3,7 @@ const expect = require("chai").expect;
 
 const recognizeFeature = require("../../features/recognize");
 const recognition = require("../../service/recognition");
+const config = require("../../config");
 const { GratitudeError, SlackError } = require("../../service/errors");
 const { createMockApp } = require("../mocks/bolt-app");
 
@@ -33,9 +34,9 @@ describe("features/recognize", () => {
 
   describe("respondToRecognitionMessage", () => {
     it("should assemble the gratitude object and react to the message on the happy path", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const messageHandler = registrations.message[0].handler;
+      const messageHandler = findHandler("message", config.recognizeEmoji);
 
       sinon.stub(recognition, "validateAndSendGratitude").resolves();
       sinon
@@ -84,9 +85,9 @@ describe("features/recognize", () => {
     });
 
     it("should flag giver_in_receivers when the giver also appears in the receiver list", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const messageHandler = registrations.message[0].handler;
+      const messageHandler = findHandler("message", config.recognizeEmoji);
 
       sinon.stub(recognition, "validateAndSendGratitude").resolves();
       sinon
@@ -119,9 +120,9 @@ describe("features/recognize", () => {
     });
 
     it("should route SlackError through handleSlackError and not react to the message", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const messageHandler = registrations.message[0].handler;
+      const messageHandler = findHandler("message", config.recognizeEmoji);
 
       sinon
         .stub(recognition, "validateAndSendGratitude")
@@ -165,9 +166,9 @@ describe("features/recognize", () => {
     });
 
     it("should route a plain Error through handleGenericError", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const messageHandler = registrations.message[0].handler;
+      const messageHandler = findHandler("message", config.recognizeEmoji);
 
       sinon
         .stub(recognition, "validateAndSendGratitude")
@@ -205,9 +206,9 @@ describe("features/recognize", () => {
     });
 
     it("should route GratitudeError through handleGratitudeError and not react to the message", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const messageHandler = registrations.message[0].handler;
+      const messageHandler = findHandler("message", config.recognizeEmoji);
 
       sinon
         .stub(recognition, "validateAndSendGratitude")
@@ -299,9 +300,9 @@ describe("features/recognize", () => {
     }
 
     it("should validate and respond to the giver when the reacted message contains :fistbump:", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const reactionHandler = registrations.event[0].handler;
+      const reactionHandler = findHandler("event", "reaction_added");
 
       sinon.stub(recognition, "validateAndSendGratitude").resolves();
       sinon
@@ -330,9 +331,9 @@ describe("features/recognize", () => {
     });
 
     it("should short-circuit when the reacted message does not contain the recognize emoji", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const reactionHandler = registrations.event[0].handler;
+      const reactionHandler = findHandler("event", "reaction_added");
 
       const validateStub = sinon.stub(recognition, "validateAndSendGratitude");
 
@@ -347,9 +348,9 @@ describe("features/recognize", () => {
     });
 
     it("should dispatch handleSlackError when conversations.replies responds with ok:false", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const reactionHandler = registrations.event[0].handler;
+      const reactionHandler = findHandler("event", "reaction_added");
 
       const validateStub = sinon.stub(recognition, "validateAndSendGratitude");
 
@@ -366,9 +367,9 @@ describe("features/recognize", () => {
     });
 
     it("should set giver_in_receivers when the reactor is also a receiver", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       recognizeFeature(app);
-      const reactionHandler = registrations.event[0].handler;
+      const reactionHandler = findHandler("event", "reaction_added");
 
       sinon.stub(recognition, "validateAndSendGratitude").resolves();
       sinon

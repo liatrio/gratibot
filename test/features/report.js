@@ -38,9 +38,12 @@ describe("features/report", () => {
   describe("respondToReport", () => {
     it("should default to the caller and 180-day range when no mention or time range is supplied", async () => {
       stubReportServiceHappy();
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler(
+        "message",
+        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
+      );
 
       const client = buildClient();
       const message = {
@@ -66,9 +69,12 @@ describe("features/report", () => {
 
     it("should target the mentioned user when <@Uother> appears in the text", async () => {
       stubReportServiceHappy();
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler(
+        "message",
+        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
+      );
 
       const client = buildClient();
       const message = {
@@ -85,9 +91,12 @@ describe("features/report", () => {
 
     it("should parse a trailing integer as the time range", async () => {
       stubReportServiceHappy();
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler(
+        "message",
+        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
+      );
 
       const client = buildClient();
       const message = {
@@ -108,9 +117,12 @@ describe("features/report", () => {
       sinon.stub(report, "getTotalRecognitionsForUser").resolves(0);
       sinon.stub(report, "createUserTopMessagesBlocks").resolves([]);
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler(
+        "message",
+        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
+      );
 
       const client = buildClient({ usersInfoOk: false });
       const message = {
@@ -136,9 +148,12 @@ describe("features/report", () => {
       sinon.stub(report, "getTotalRecognitionsForUser").resolves(0);
       sinon.stub(report, "createUserTopMessagesBlocks").resolves([]);
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler(
+        "message",
+        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
+      );
 
       const client = buildClient();
       const message = {
@@ -164,9 +179,9 @@ describe("features/report", () => {
       sinon.stub(report, "getTotalRecognitionsForUser").resolves(3);
       sinon.stub(report, "createUserTopMessagesBlocks").resolves(fakeBlocks);
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const actionHandler = registrations.action[0].handler;
+      const actionHandler = findHandler("action", /user-top-messages-\d+/);
 
       const ack = sinon.stub().resolves();
       const respond = sinon.stub().resolves();
@@ -188,9 +203,9 @@ describe("features/report", () => {
     it("should respond with a 'Something went wrong' message and replace_original:false when users.info rejects", async () => {
       const getTopStub = sinon.stub(report, "getTopMessagesForUser");
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const actionHandler = registrations.action[0].handler;
+      const actionHandler = findHandler("action", /user-top-messages-\d+/);
 
       const ack = sinon.stub().resolves();
       const respond = sinon.stub().resolves();

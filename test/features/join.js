@@ -30,9 +30,9 @@ describe("features/join", () => {
 
   describe("joinPublicChannel", () => {
     it("should invoke client.conversations.join with the new channel id on the happy path", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       joinFeature(app);
-      const handler = registrations.event[0].handler;
+      const handler = findHandler("event", "channel_created");
 
       const join = sinon.stub();
       const client = buildClient(join);
@@ -46,9 +46,9 @@ describe("features/join", () => {
     });
 
     it("should dispatch handleSlackError when conversations.join throws a SlackError", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       joinFeature(app);
-      const handler = registrations.event[0].handler;
+      const handler = findHandler("event", "channel_created");
 
       const join = sinon
         .stub()
@@ -63,9 +63,9 @@ describe("features/join", () => {
     });
 
     it("should dispatch handleGenericError when conversations.join throws a plain Error", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       joinFeature(app);
-      const handler = registrations.event[0].handler;
+      const handler = findHandler("event", "channel_created");
 
       const join = sinon.stub().throws(new Error("boom"));
       const client = buildClient(join);

@@ -12,9 +12,9 @@ describe("features/balance", () => {
 
   describe("respondToBalance", () => {
     it("should post the three-line balance text via respondToUser on the happy path", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       balanceFeature(app);
-      const messageHandler = registrations.message[0].handler;
+      const messageHandler = findHandler("message", /balance/i);
 
       sinon.stub(balance, "currentBalance").resolves(42);
       sinon.stub(balance, "lifetimeEarnings").resolves(100);
@@ -52,9 +52,9 @@ describe("features/balance", () => {
     });
 
     it("should post an error message when users.info returns ok: false", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       balanceFeature(app);
-      const messageHandler = registrations.message[0].handler;
+      const messageHandler = findHandler("message", /balance/i);
 
       const currentBalanceStub = sinon.stub(balance, "currentBalance");
 

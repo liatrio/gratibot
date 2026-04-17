@@ -11,12 +11,10 @@ describe("features/help", () => {
 
   describe("respondToHelp", () => {
     it("should post the help markdown back to the user via chat.postMessage when the help command is sent as a DM", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       helpFeature(app);
 
-      // The first registered app.message(...) call in features/help.js is
-      // the /help/i handler; subsequent ones are the easter egg.
-      const helpHandler = registrations.message[0].handler;
+      const helpHandler = findHandler("message", /help/i);
       const postMessage = sinon.stub().resolves();
       const client = { chat: { postMessage, postEphemeral: sinon.stub() } };
       const message = {
@@ -38,10 +36,13 @@ describe("features/help", () => {
 
   describe("respondToEasterEgg", () => {
     it("should reply with the thunderfury response via say()", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       helpFeature(app);
 
-      const easterEggHandler = registrations.message[1].handler;
+      const easterEggHandler = findHandler(
+        "message",
+        /(thunderfury|Thunderfury)/,
+      );
       const say = sinon.stub().resolves();
       const message = { user: "U123", text: "thunderfury!" };
 

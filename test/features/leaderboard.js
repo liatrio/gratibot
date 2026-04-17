@@ -12,9 +12,9 @@ describe("features/leaderboard", () => {
 
   describe("respondToLeaderboard", () => {
     it("should post Gratibot Leaderboard text with blocks from createLeaderboardBlocks", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       leaderboardFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /leaderboard/i);
 
       const fakeBlocks = [
         { type: "section", text: { type: "mrkdwn", text: "top" } },
@@ -49,9 +49,9 @@ describe("features/leaderboard", () => {
 
   describe("updateLeaderboardResponse", () => {
     it("should ack and respond with new blocks keyed by action.value", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       leaderboardFeature(app);
-      const actionHandler = registrations.action[0].handler;
+      const actionHandler = findHandler("action", /leaderboard-\d+/);
 
       const fakeBlocks = [{ type: "section" }];
       sinon.stub(leaderboard, "createLeaderboardBlocks").resolves(fakeBlocks);

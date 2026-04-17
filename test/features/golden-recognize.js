@@ -49,9 +49,9 @@ describe("features/golden-recognize", () => {
         .stub(recognition, "receiverSlackNotification")
         .resolves({ blocks: [] });
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       goldenRecognizeFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", config.goldenRecognizeEmoji);
 
       const client = buildClient();
       const message = {
@@ -88,9 +88,9 @@ describe("features/golden-recognize", () => {
         .stub(recognition, "validateAndSendGratitude")
         .rejects(new GratitudeError(["- You can't recognize yourself"]));
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       goldenRecognizeFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", config.goldenRecognizeEmoji);
 
       const client = buildClient();
       const message = {
@@ -122,9 +122,9 @@ describe("features/golden-recognize", () => {
           ),
         );
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       goldenRecognizeFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", config.goldenRecognizeEmoji);
 
       const client = buildClient();
       const message = {
@@ -149,9 +149,9 @@ describe("features/golden-recognize", () => {
         .stub(recognition, "validateAndSendGratitude")
         .rejects(new Error("unexpected"));
 
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       goldenRecognizeFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", config.goldenRecognizeEmoji);
 
       const client = buildClient();
       const message = {

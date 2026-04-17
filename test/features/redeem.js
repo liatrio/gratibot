@@ -27,9 +27,9 @@ describe("features/redeem", () => {
 
   describe("respondToRedeem", () => {
     it("should post Gratibot Rewards blocks via respondToUser", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       redeemFeature(app);
-      const handler = registrations.message[0].handler;
+      const handler = findHandler("message", /redeem/i);
 
       sinon.stub(balance, "currentBalance").resolves(17);
       const fakeBlocks = [{ type: "section" }];
@@ -56,9 +56,9 @@ describe("features/redeem", () => {
 
   describe("redeemItem", () => {
     it("should post a message including cost and deduction ID for a non-Liatrio Store item on the happy path", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       redeemFeature(app);
-      const actionHandler = registrations.action[0].handler;
+      const actionHandler = findHandler("action", { action_id: "redeem" });
 
       sinon
         .stub(redeem, "getSelectedItemDetails")
@@ -91,9 +91,9 @@ describe("features/redeem", () => {
     });
 
     it("should not create a deduction when the Liatrio Store is selected and should include the store link prompt", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       redeemFeature(app);
-      const actionHandler = registrations.action[0].handler;
+      const actionHandler = findHandler("action", { action_id: "redeem" });
 
       sinon
         .stub(redeem, "getSelectedItemDetails")
@@ -124,9 +124,9 @@ describe("features/redeem", () => {
     });
 
     it("should post an ephemeral insufficient-balance warning when balance is too low", async () => {
-      const { app, registrations } = createMockApp();
+      const { app, findHandler } = createMockApp();
       redeemFeature(app);
-      const actionHandler = registrations.action[0].handler;
+      const actionHandler = findHandler("action", { action_id: "redeem" });
 
       sinon
         .stub(redeem, "getSelectedItemDetails")

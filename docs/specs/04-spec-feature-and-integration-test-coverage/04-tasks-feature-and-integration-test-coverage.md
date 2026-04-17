@@ -78,7 +78,7 @@ to ≥ 75%.
 - [x] 1.11 Run `npm test` locally; inspect the c8 text summary and confirm `features/` statement coverage ≥ 75%. If a file sits below 75%, add one or two targeted `it` cases for the missed branch — do **not** modify the feature source. Record the final `features/` coverage number in the PR description.
 - [x] 1.12 Run `npm run lint`; fix any mocha-plugin or prettier violations with `npm run lint:fix`. Commit on the shared `test/04-feature-and-integration-coverage` branch with a `test:` prefixed message referencing this task section.
 
-### [ ] 2.0 `service/report.js` unit tests (Unit 2)
+### [x] 2.0 `service/report.js` unit tests (Unit 2)
 
 Create `test/service/report.js` following the conventions in `docs/TESTING.md`
 (Mocha `describe`/`it`, Sinon stubs for `recognitionCollection`,
@@ -100,13 +100,13 @@ by c8 is ≥ 80%.
 
 #### 2.0 Tasks
 
-- [ ] 2.1 Scaffold `test/service/report.js`: top-level `describe("service/report")`, `afterEach(() => sinon.restore())`, imports for `report`, `recognitionCollection`, `config`, `sinon`, and `expect` per the pattern in `test/service/balance.js`.
-- [ ] 2.2 `describe("getTopMessagesForUser")`: (a) happy path — stub `recognitionCollection.aggregate` to return `{ toArray: sinon.stub().resolves([{ _id: "msg-a", count: 3, firstTimestamp: new Date("2024-01-01"), channel: "C1", recognizers: ["U1", "U2"] }]) }`; assert result maps to `[{ message, count, timestamp, formattedDate, channel, recognizers }]` with `formattedDate === "Jan 1, 2024"`; (b) empty result — aggregate resolves `[]` → function returns `[]`.
-- [ ] 2.3 `describe("getTopMessagesForUser")` continued: (c) error path — stub `recognitionCollection.aggregate` to return `{ toArray: sinon.stub().rejects(new Error("boom")) }` and assert `await expect(...).to.be.rejectedWith("boom")` (covers the catch/rethrow branch).
-- [ ] 2.4 `describe("getTotalRecognitionsForUser")`: (a) happy path — `sinon.stub(recognitionCollection, "countDocuments").resolves(7)` → function returns `7`; (b) error path — `countDocuments` rejects → function rethrows (covers the catch/rethrow branch).
-- [ ] 2.5 `describe("createUserTopMessagesBlocks")`: (a) `topMessages.length === 0` → blocks array contains the "No `:fistbump:` found" section; (b) `topMessages.length > 0` with `recognizers.length <= 3` → block text includes `"from <@U1>, <@U2>"`; (c) `topMessages.length > 0` with `recognizers.length > 3` → block text includes `"from <@U1> and 3 others"` (use four recognizers); (d) actions block at the end contains three buttons with `value: "${userId}:30"`, `${userId}:180`, and `${userId}:365`.
-- [ ] 2.6 Run `npm test` and confirm the c8 row for `service/report.js` shows statement coverage ≥ 80%. If below, add branch cases for uncovered lines. If a branch is unreachable without a production change, add `it.skip` with a comment referencing Open Question #3 in the spec.
-- [ ] 2.7 Run `npm run lint`; commit on the shared `test/04-feature-and-integration-coverage` branch with a `test:` Conventional Commit message referencing this task section.
+- [x] 2.1 Scaffold `test/service/report.js`: top-level `describe("service/report")`, `afterEach(() => sinon.restore())`, imports for `report`, `recognitionCollection`, `config`, `sinon`, and `expect` per the pattern in `test/service/balance.js`.
+- [x] 2.2 `describe("getTopMessagesForUser")`: (a) happy path — stub `recognitionCollection.aggregate` to return `{ toArray: sinon.stub().resolves([{ _id: "msg-a", count: 3, firstTimestamp: new Date("2024-01-01"), channel: "C1", recognizers: ["U1", "U2"] }]) }`; assert result maps to `[{ message, count, timestamp, formattedDate, channel, recognizers }]` with `formattedDate === "Jan 1, 2024"`; (b) empty result — aggregate resolves `[]` → function returns `[]`.
+- [x] 2.3 `describe("getTopMessagesForUser")` continued: (c) error path — stub `recognitionCollection.aggregate` to return `{ toArray: sinon.stub().rejects(new Error("boom")) }` and assert `await expect(...).to.be.rejectedWith("boom")` (covers the catch/rethrow branch).
+- [x] 2.4 `describe("getTotalRecognitionsForUser")`: (a) happy path — `sinon.stub(recognitionCollection, "countDocuments").resolves(7)` → function returns `7`; (b) error path — `countDocuments` rejects → function rethrows (covers the catch/rethrow branch).
+- [x] 2.5 `describe("createUserTopMessagesBlocks")`: (a) `topMessages.length === 0` → blocks array contains the "No `:fistbump:` found" section; (b) `topMessages.length > 0` with `recognizers.length <= 3` → block text includes `"from <@U1>, <@U2>"`; (c) `topMessages.length > 0` with `recognizers.length > 3` → block text includes `"from <@U1> and 3 others"` (use four recognizers); (d) actions block at the end contains three buttons with `value: "${userId}:30"`, `${userId}:180`, and `${userId}:365`.
+- [x] 2.6 Run `npm test` and confirm the c8 row for `service/report.js` shows statement coverage ≥ 80%. If below, add branch cases for uncovered lines. If a branch is unreachable without a production change, add `it.skip` with a comment referencing Open Question #3 in the spec.
+- [x] 2.7 Run `npm run lint`; commit on the shared `test/04-feature-and-integration-coverage` branch with a `test:` Conventional Commit message referencing this task section.
 
 ### [ ] 3.0 Service-layer MongoDB integration suites (Unit 3)
 

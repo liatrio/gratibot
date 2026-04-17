@@ -18,9 +18,9 @@ describe("features/help", () => {
       const postMessage = sinon.stub().resolves();
       const client = { chat: { postMessage, postEphemeral: sinon.stub() } };
       const message = {
-        user: "U123",
+        user: "Ucaller",
         text: "help",
-        channel: "D456",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -28,7 +28,7 @@ describe("features/help", () => {
 
       expect(postMessage.calledOnce).to.equal(true);
       const args = postMessage.firstCall.args[0];
-      expect(args.channel).to.equal("D456");
+      expect(args.channel).to.equal("Ddm");
       expect(args.text).to.include("Give Recognition");
       expect(args.text).to.include("View Balance");
     });
@@ -44,7 +44,7 @@ describe("features/help", () => {
         /(thunderfury|Thunderfury)/,
       );
       const say = sinon.stub().resolves();
-      const message = { user: "U123", text: "thunderfury!" };
+      const message = { user: "Ucaller", text: "thunderfury!" };
 
       await easterEggHandler({ message, say });
 

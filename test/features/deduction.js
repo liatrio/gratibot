@@ -56,9 +56,9 @@ describe("features/deduction", () => {
       );
 
       const message = {
-        user: "UADMIN1",
+        user: "Uadmin",
         text: "<@Ugratibot> deduct <@Uother> 5",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -74,7 +74,7 @@ describe("features/deduction", () => {
     });
 
     it("should reject a caller not in config.redemptionAdmins with a not-allowed message", async () => {
-      setAdmins(["UADMIN1"]);
+      setAdmins(["Uadmin"]);
       const { app, findHandler } = createMockApp();
       deductionFeature(app);
       const handler = findHandler("message", /deduct/i);
@@ -87,7 +87,7 @@ describe("features/deduction", () => {
       const message = {
         user: "Unotadmin",
         text: "<@Ugratibot> deduct <@Uother> 5",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -101,7 +101,7 @@ describe("features/deduction", () => {
     });
 
     it("should post the usage hint when the deduct command is malformed", async () => {
-      setAdmins(["UADMIN1"]);
+      setAdmins(["Uadmin"]);
       const { app, findHandler } = createMockApp();
       deductionFeature(app);
       const handler = findHandler("message", /deduct/i);
@@ -115,9 +115,9 @@ describe("features/deduction", () => {
       // Too few tokens (3)
       await handler({
         message: {
-          user: "UADMIN1",
+          user: "Uadmin",
           text: "<@Ugratibot> deduct <@Uother>",
-          channel: "D1",
+          channel: "Ddm",
           channel_type: "im",
         },
         client,
@@ -126,9 +126,9 @@ describe("features/deduction", () => {
       // Bad user regex at index 2
       await handler({
         message: {
-          user: "UADMIN1",
+          user: "Uadmin",
           text: "<@Ugratibot> deduct notauser 5",
-          channel: "D1",
+          channel: "Ddm",
           channel_type: "im",
         },
         client,
@@ -137,9 +137,9 @@ describe("features/deduction", () => {
       // Non-numeric value at index 3
       await handler({
         message: {
-          user: "UADMIN1",
+          user: "Uadmin",
           text: "<@Ugratibot> deduct <@Uother> notanumber",
-          channel: "D1",
+          channel: "Ddm",
           channel_type: "im",
         },
         client,
@@ -155,7 +155,7 @@ describe("features/deduction", () => {
     });
 
     it("should post an insufficient-balance message when deduction.isBalanceSufficent returns false", async () => {
-      setAdmins(["UADMIN1"]);
+      setAdmins(["Uadmin"]);
       const { app, findHandler } = createMockApp();
       deductionFeature(app);
       const handler = findHandler("message", /deduct/i);
@@ -165,9 +165,9 @@ describe("features/deduction", () => {
 
       const client = buildClient();
       const message = {
-        user: "UADMIN1",
+        user: "Uadmin",
         text: "<@Ugratibot> deduct <@Uother> 5",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -181,7 +181,7 @@ describe("features/deduction", () => {
     });
 
     it("should post a confirmation with the deduction ID on the happy path", async () => {
-      setAdmins(["UADMIN1"]);
+      setAdmins(["Uadmin"]);
       const { app, findHandler } = createMockApp();
       deductionFeature(app);
       const handler = findHandler("message", /deduct/i);
@@ -193,9 +193,9 @@ describe("features/deduction", () => {
 
       const client = buildClient();
       const message = {
-        user: "UADMIN1",
+        user: "Uadmin",
         text: "<@Ugratibot> deduct <@Uother> 5",
-        channel: "C1",
+        channel: "Cchannel",
         channel_type: "channel",
       };
 
@@ -207,7 +207,7 @@ describe("features/deduction", () => {
 
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       const args = client.chat.postMessage.firstCall.args[0];
-      expect(args.channel).to.equal("C1");
+      expect(args.channel).to.equal("Cchannel");
       expect(args.text).to.include(
         "A deduction of 5 fistbumps has been made for <@Uother>",
       );

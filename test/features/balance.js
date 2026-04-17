@@ -32,9 +32,9 @@ describe("features/balance", () => {
         },
       };
       const message = {
-        user: "U1",
+        user: "Ucaller",
         text: "balance",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -42,7 +42,7 @@ describe("features/balance", () => {
 
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       const args = client.chat.postMessage.firstCall.args[0];
-      expect(args.channel).to.equal("D1");
+      expect(args.channel).to.equal("Ddm");
       expect(args.text).to.include("Your current balance is: `42`");
       expect(args.text).to.include("Your lifetime earnings are: `100`");
       expect(args.text).to.include("You have `5` left to give away today.");
@@ -68,9 +68,9 @@ describe("features/balance", () => {
         },
       };
       const message = {
-        user: "U1",
+        user: "Ucaller",
         text: "balance",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 

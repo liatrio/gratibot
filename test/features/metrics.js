@@ -26,9 +26,9 @@ describe("features/metrics", () => {
         },
       };
       const message = {
-        user: "U1",
+        user: "Ucaller",
         text: "metrics",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -53,7 +53,7 @@ describe("features/metrics", () => {
 
       const ack = sinon.stub().resolves();
       const respond = sinon.stub().resolves();
-      const body = { user: { id: "U1" } };
+      const body = { user: { id: "Ucaller" } };
       const action = { value: "90" };
 
       await actionHandler({ ack, body, action, respond });

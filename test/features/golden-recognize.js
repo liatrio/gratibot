@@ -57,7 +57,7 @@ describe("features/golden-recognize", () => {
       const message = {
         user: "Ugiver",
         text: "thanks <@Ureceiver> for leading the pack :goldenfistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -96,7 +96,7 @@ describe("features/golden-recognize", () => {
       const message = {
         user: "Ugiver",
         text: "self-fistbump :goldenfistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -130,7 +130,7 @@ describe("features/golden-recognize", () => {
       const message = {
         user: "Ugiver",
         text: "hi <@Ureceiver> :goldenfistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -157,7 +157,7 @@ describe("features/golden-recognize", () => {
       const message = {
         user: "Ugiver",
         text: "hi <@Ureceiver> :goldenfistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };

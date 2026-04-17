@@ -28,9 +28,9 @@ describe("features/leaderboard", () => {
         },
       };
       const message = {
-        user: "U1",
+        user: "Ucaller",
         text: "leaderboard",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -58,7 +58,7 @@ describe("features/leaderboard", () => {
 
       const ack = sinon.stub().resolves();
       const respond = sinon.stub().resolves();
-      const body = { user: { id: "U1" } };
+      const body = { user: { id: "Ucaller" } };
       const action = { value: "90" };
 
       await actionHandler({ ack, body, action, respond });

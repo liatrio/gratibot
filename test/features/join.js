@@ -19,7 +19,7 @@ function buildEvent() {
   return {
     channel: { id: "Cnew" },
     channel_type: "channel",
-    user: "U1",
+    user: "Ucaller",
   };
 }
 

@@ -19,8 +19,8 @@ describe("service/report", () => {
             _id: "great work",
             count: 3,
             firstTimestamp,
-            channel: "C1",
-            recognizers: ["U1", "U2"],
+            channel: "Cchannel",
+            recognizers: ["Ugiver1", "Ugiver2"],
           },
         ]),
       });
@@ -36,9 +36,9 @@ describe("service/report", () => {
         message: "great work",
         count: 3,
         timestamp: firstTimestamp,
-        channel: "C1",
+        channel: "Cchannel",
       });
-      expect(result[0].recognizers).to.deep.equal(["U1", "U2"]);
+      expect(result[0].recognizers).to.deep.equal(["Ugiver1", "Ugiver2"]);
       expect(result[0].formattedDate).to.equal("Jan 1, 2024");
     });
 
@@ -115,8 +115,8 @@ describe("service/report", () => {
             count: 2,
             timestamp: new Date("2024-02-02"),
             formattedDate: "Feb 2, 2024",
-            channel: "C1",
-            recognizers: ["U1", "U2"],
+            channel: "Cchannel",
+            recognizers: ["Ugiver1", "Ugiver2"],
           },
         ],
         2,
@@ -131,7 +131,9 @@ describe("service/report", () => {
           block.text.text.includes('_"amazing"_'),
       );
       expect(messageSection).to.not.be.undefined;
-      expect(messageSection.text.text).to.include("from <@U1>, <@U2>");
+      expect(messageSection.text.text).to.include(
+        "from <@Ugiver1>, <@Ugiver2>",
+      );
     });
 
     it("should collapse recognizers to the first plus a count when there are more than three", async () => {
@@ -143,8 +145,8 @@ describe("service/report", () => {
             count: 4,
             timestamp: new Date("2024-03-03"),
             formattedDate: "Mar 3, 2024",
-            channel: "C1",
-            recognizers: ["U1", "U2", "U3", "U4"],
+            channel: "Cchannel",
+            recognizers: ["Ugiver1", "Ugiver2", "Ugiver3", "Ugiver4"],
           },
         ],
         4,
@@ -159,7 +161,9 @@ describe("service/report", () => {
           block.text.text.includes('_"team effort"_'),
       );
       expect(messageSection).to.not.be.undefined;
-      expect(messageSection.text.text).to.include("from <@U1> and 3 others");
+      expect(messageSection.text.text).to.include(
+        "from <@Ugiver1> and 3 others",
+      );
     });
 
     it("should finish with an actions block containing the three time-range buttons", async () => {

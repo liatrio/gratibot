@@ -49,7 +49,7 @@ describe("features/report", () => {
       const message = {
         user: "Ucaller",
         text: "report",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -80,7 +80,7 @@ describe("features/report", () => {
       const message = {
         user: "Ucaller",
         text: "report <@Uother>",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -102,7 +102,7 @@ describe("features/report", () => {
       const message = {
         user: "Ucaller",
         text: "report 30",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -128,7 +128,7 @@ describe("features/report", () => {
       const message = {
         user: "Ucaller",
         text: "report",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -159,7 +159,7 @@ describe("features/report", () => {
       const message = {
         user: "Ucaller",
         text: "report",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 

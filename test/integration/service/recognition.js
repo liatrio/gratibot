@@ -74,7 +74,7 @@ describe("integration: service/recognition", function () {
         "Ugiver",
         "Ureceiver",
         "great work",
-        "C123",
+        "Cchannel",
         [],
         ":fistbump:",
       );
@@ -87,7 +87,7 @@ describe("integration: service/recognition", function () {
         recognizer: "Ugiver",
         recognizee: "Ureceiver",
         message: "great work",
-        channel: "C123",
+        channel: "Cchannel",
       });
     });
 
@@ -96,7 +96,7 @@ describe("integration: service/recognition", function () {
         "Ugiver",
         "Ureceiver",
         "hand off",
-        "C123",
+        "Cchannel",
         [],
         ":goldenfistbump:",
       );
@@ -114,7 +114,7 @@ describe("integration: service/recognition", function () {
         recognizer: "Ugiver",
         recognizee: "Ureceiver",
         message: "hand off",
-        channel: "C123",
+        channel: "Cchannel",
       });
     });
   });

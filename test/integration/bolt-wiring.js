@@ -30,14 +30,14 @@ function attachClientStubs(app) {
   const stubs = {
     usersInfo: sinon.stub().resolves({
       ok: true,
-      user: { id: "U1", name: "user1", tz: "America/Los_Angeles" },
+      user: { id: "Ucaller", name: "user1", tz: "America/Los_Angeles" },
     }),
     postEphemeral: sinon.stub().resolves(),
     postMessage: sinon.stub().resolves(),
     reactionsAdd: sinon.stub().resolves(),
     conversationsReplies: sinon.stub().resolves({
       ok: true,
-      messages: [{ text: "thanks :fistbump:", user: "U2" }],
+      messages: [{ text: "thanks :fistbump:", user: "Ureceiver" }],
     }),
   };
   app.use(async ({ client, next }) => {
@@ -74,7 +74,7 @@ function eventBody({ channelType, channel, text, ts, eventId }) {
       type: "message",
       channel_type: channelType,
       channel,
-      user: "U1",
+      user: "Ucaller",
       text,
       ts,
     },
@@ -109,7 +109,7 @@ describe("integration: bolt-wiring", function () {
       await app.processEvent({
         body: eventBody({
           channelType: "im",
-          channel: "Duser",
+          channel: "Ddm",
           text: "balance",
           ts: "1.0",
           eventId: "Ev-dm",
@@ -129,7 +129,7 @@ describe("integration: bolt-wiring", function () {
       await app.processEvent({
         body: eventBody({
           channelType: "channel",
-          channel: "Croom",
+          channel: "Cchannel",
           text: "balance",
           ts: "1.1",
           eventId: "Ev-chan",
@@ -152,7 +152,7 @@ describe("integration: bolt-wiring", function () {
       await app.processEvent({
         body: eventBody({
           channelType: "im",
-          channel: "Duser",
+          channel: "Ddm",
           text: "balance",
           ts: "2.0",
           eventId: "Ev-match",
@@ -169,7 +169,7 @@ describe("integration: bolt-wiring", function () {
       await app.processEvent({
         body: eventBody({
           channelType: "im",
-          channel: "Duser",
+          channel: "Ddm",
           text: "not a recognized command",
           ts: "2.1",
           eventId: "Ev-nomatch",
@@ -186,13 +186,13 @@ describe("integration: bolt-wiring", function () {
     it("posts the formatted user-facing message via postEphemeral when validateAndSendGratitude rejects with GratitudeError", async () => {
       const { app, stubs } = makeApp({ withRecognize: true });
 
-      sinon.stub(recognition, "gratitudeReceiverIdsIn").resolves(["U2"]);
+      sinon.stub(recognition, "gratitudeReceiverIdsIn").resolves(["Ureceiver"]);
       sinon.stub(recognition, "trimmedGratitudeMessage").returns("trimmed");
       sinon.stub(recognition, "gratitudeTagsIn").returns([]);
       sinon.stub(recognition, "gratitudeCountIn").returns(1);
       sinon
         .stub(apiwrappers, "userInfo")
-        .resolves({ id: "U1", tz: "America/Los_Angeles" });
+        .resolves({ id: "Ucaller", tz: "America/Los_Angeles" });
       sinon
         .stub(recognition, "validateAndSendGratitude")
         .rejects(new GratitudeError(["- You can't recognize yourself"]));
@@ -200,7 +200,7 @@ describe("integration: bolt-wiring", function () {
       await app.processEvent({
         body: eventBody({
           channelType: "channel",
-          channel: "Croom",
+          channel: "Cchannel",
           text: ":fistbump: <@U2> awesome",
           ts: "3.0",
           eventId: "Ev-grat",

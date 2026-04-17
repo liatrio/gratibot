@@ -48,43 +48,43 @@ describe("integration: service/report", function () {
 
       await recognitionCollection.insertMany([
         {
-          recognizer: "U1",
+          recognizer: "Ugiver1",
           recognizee: "Ureceiver",
           timestamp: seededDate,
           message: "great work",
-          channel: "C1",
+          channel: "Cchannel1",
           values: [],
         },
         {
-          recognizer: "U2",
+          recognizer: "Ugiver2",
           recognizee: "Ureceiver",
           timestamp: seededDate,
           message: "great work",
-          channel: "C1",
+          channel: "Cchannel1",
           values: [],
         },
         {
-          recognizer: "U3",
+          recognizer: "Ugiver3",
           recognizee: "Ureceiver",
           timestamp: seededDate,
           message: "great work",
-          channel: "C1",
+          channel: "Cchannel1",
           values: [],
         },
         {
-          recognizer: "U1",
+          recognizer: "Ugiver1",
           recognizee: "Ureceiver",
           timestamp: seededDate,
           message: "awesome",
-          channel: "C2",
+          channel: "Cchannel2",
           values: [],
         },
         {
-          recognizer: "U2",
+          recognizer: "Ugiver2",
           recognizee: "Ureceiver",
           timestamp: seededDate,
           message: "nice",
-          channel: "C3",
+          channel: "Cchannel3",
           values: [],
         },
       ]);
@@ -95,10 +95,14 @@ describe("integration: service/report", function () {
       expect(result[0]).to.include({
         message: "great work",
         count: 3,
-        channel: "C1",
+        channel: "Cchannel1",
         formattedDate: expectedFormatted,
       });
-      expect(result[0].recognizers).to.have.members(["U1", "U2", "U3"]);
+      expect(result[0].recognizers).to.have.members([
+        "Ugiver1",
+        "Ugiver2",
+        "Ugiver3",
+      ]);
       expect(result.map((r) => r.count)).to.deep.equal([3, 1, 1]);
     });
 
@@ -118,27 +122,27 @@ describe("integration: service/report", function () {
       const within = moment().tz(tz).subtract(3, "days").toDate();
       await recognitionCollection.insertMany([
         {
-          recognizer: "U1",
+          recognizer: "Ugiver1",
           recognizee: "Ureceiver",
           timestamp: within,
           message: "m",
-          channel: "C",
+          channel: "Cchannel",
           values: [],
         },
         {
-          recognizer: "U2",
+          recognizer: "Ugiver2",
           recognizee: "Ureceiver",
           timestamp: within,
           message: "m",
-          channel: "C",
+          channel: "Cchannel",
           values: [],
         },
         {
-          recognizer: "U1",
+          recognizer: "Ugiver1",
           recognizee: "Uother",
           timestamp: within,
           message: "m",
-          channel: "C",
+          channel: "Cchannel",
           values: [],
         },
       ]);

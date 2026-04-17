@@ -63,7 +63,7 @@ describe("features/recognize", () => {
       const message = {
         user: "Ugiver",
         text: "thanks <@Ureceiver> for your great help :fistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -75,12 +75,12 @@ describe("features/recognize", () => {
       expect(gratitude.giver.id).to.equal("Ugiver");
       expect(gratitude.receivers.map((r) => r.id)).to.deep.equal(["Ureceiver"]);
       expect(gratitude.giver_in_receivers).to.equal(false);
-      expect(gratitude.channel).to.equal("C999");
+      expect(gratitude.channel).to.equal("Cchannel");
       expect(gratitude.type).to.equal(":fistbump:");
 
       expect(client.reactions.add.calledOnce).to.equal(true);
       const reactionArgs = client.reactions.add.firstCall.args[0];
-      expect(reactionArgs.channel).to.equal("C999");
+      expect(reactionArgs.channel).to.equal("Cchannel");
       expect(reactionArgs.timestamp).to.equal("1700000000.000100");
     });
 
@@ -108,7 +108,7 @@ describe("features/recognize", () => {
       const message = {
         user: "Ugiver",
         text: "thanks <@Ugiver> for the self-assist :fistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -151,7 +151,7 @@ describe("features/recognize", () => {
       const message = {
         user: "Ugiver",
         text: "thanks <@Ureceiver> :fistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -191,7 +191,7 @@ describe("features/recognize", () => {
       const message = {
         user: "Ugiver",
         text: "thanks <@Ureceiver> :fistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -231,7 +231,7 @@ describe("features/recognize", () => {
       const message = {
         user: "Ugiver",
         text: "thanks <@Ureceiver> :fistbump:",
-        channel: "C999",
+        channel: "Cchannel",
         ts: "1700000000.000100",
         channel_type: "channel",
       };
@@ -295,7 +295,7 @@ describe("features/recognize", () => {
       return {
         user: reactorUserId,
         reaction: "nail_care",
-        item: { channel: "C999", ts: "1700000000.000100" },
+        item: { channel: "Cchannel", ts: "1700000000.000100" },
       };
     }
 
@@ -322,7 +322,7 @@ describe("features/recognize", () => {
       expect(gratitude.giver.id).to.equal("Ugiver");
       expect(gratitude.receivers.map((r) => r.id)).to.deep.equal(["Ureceiver"]);
       expect(gratitude.count).to.equal(1);
-      expect(gratitude.channel).to.equal("C999");
+      expect(gratitude.channel).to.equal("Cchannel");
 
       // sendNotificationToReceivers + respondToUser — the reaction handler does
       // not call client.reactions.add.

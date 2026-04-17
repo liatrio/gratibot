@@ -37,9 +37,9 @@ describe("features/redeem", () => {
 
       const client = buildClient();
       const message = {
-        user: "U1",
+        user: "Ucaller",
         text: "redeem",
-        channel: "D1",
+        channel: "Ddm",
         channel_type: "im",
       };
 
@@ -69,8 +69,8 @@ describe("features/redeem", () => {
       const client = buildClient();
       const ack = sinon.stub().resolves();
       const body = {
-        user: { id: "U1" },
-        channel: { id: "D1" },
+        user: { id: "Ucaller" },
+        channel: { id: "Ddm" },
         actions: [
           { selected_option: { value: '{"name":"Sticker","cost":"5"}' } },
         ],
@@ -82,7 +82,7 @@ describe("features/redeem", () => {
       expect(deduction.createDeduction.calledOnce).to.equal(true);
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       const text = client.chat.postMessage.firstCall.args[0].text;
-      expect(text).to.include("<@U1> has selected Sticker");
+      expect(text).to.include("<@Ucaller> has selected Sticker");
       expect(text).to.include("for 5 fistbumps");
       expect(text).to.include("DED-1");
       expect(client.chat.postMessage.firstCall.args[0].channel).to.equal(
@@ -104,8 +104,8 @@ describe("features/redeem", () => {
       const client = buildClient();
       const ack = sinon.stub().resolves();
       const body = {
-        user: { id: "U1" },
-        channel: { id: "D1" },
+        user: { id: "Ucaller" },
+        channel: { id: "Ddm" },
         actions: [
           {
             selected_option: {
@@ -137,8 +137,8 @@ describe("features/redeem", () => {
       const client = buildClient();
       const ack = sinon.stub().resolves();
       const body = {
-        user: { id: "U1" },
-        channel: { id: "D1" },
+        user: { id: "Ucaller" },
+        channel: { id: "Ddm" },
         actions: [
           { selected_option: { value: '{"name":"Sticker","cost":"500"}' } },
         ],

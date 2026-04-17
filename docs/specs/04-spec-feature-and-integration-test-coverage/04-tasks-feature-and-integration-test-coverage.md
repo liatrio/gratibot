@@ -185,7 +185,7 @@ not expand to one case per feature handler. Demoable end state:
 - [x] 4.9 Run the grep check: `grep -n "require.*@slack/bolt" test/integration/bolt-wiring.js` and confirm a single real import. Confirm no `sinon.stub(require("@slack/bolt"), ...)` appears anywhere in the file.
 - [x] 4.10 Run `npm run lint`; commit on the shared `test/04-feature-and-integration-coverage` branch with a `test:` Conventional Commit message referencing this task section.
 
-### [ ] 5.0 Coverage floor enforcement in c8 (Unit 5)
+### [x] 5.0 Coverage floor enforcement in c8 (Unit 5)
 
 Declare `c8.thresholds` in `package.json` (or equivalent c8 config location)
 so that `npm test` exits non-zero when a threshold is not met. Initial
@@ -213,9 +213,9 @@ exits non-zero when coverage falls below the configured floor.
 
 #### 5.0 Tasks
 
-- [ ] 5.1 After Units 1–4 have landed (or at least the test additions are in place locally), run `npm test` and record the achieved totals for statements, branches, functions, and lines from the c8 text summary.
-- [ ] 5.2 Edit `package.json`: under the existing `c8` key, add `"statements": 80, "branches": 85, "functions": 80, "lines": 80` as top-level c8 options (c8 reads these as thresholds directly — no nested `thresholds` key needed). Keep the existing `reporter`, `all`, and `include` keys intact.
-- [ ] 5.3 If any target from 5.2 exceeds the achieved value from 5.1, lower that target to the achieved value rounded down to the nearest whole percent. Record the deviation in the spec's Open Question #1 and in the PR description — do **not** modify any file under `features/`, `service/`, `database/`, `middleware/`, `app.js`, or `config.js` to hit the number.
-- [ ] 5.4 Run `npm test` and confirm the coverage thresholds now appear in the c8 output and the command exits 0.
-- [ ] 5.5 Deliberate-violation sanity check (local only, do NOT commit): on a scratch branch, temporarily delete one feature test file, run `npm test`, and confirm c8 exits non-zero citing the violated threshold. Discard the scratch branch. Capture the failing output for the PR description.
-- [ ] 5.6 Run `npm run lint`; commit on the shared `test/04-feature-and-integration-coverage` branch with a `chore:` Conventional Commit message referencing this task section. Include the final threshold values in the commit body.
+- [x] 5.1 After Units 1–4 have landed (or at least the test additions are in place locally), run `npm test` and record the achieved totals for statements, branches, functions, and lines from the c8 text summary.
+- [x] 5.2 Edit `package.json`: under the existing `c8` key, add `"statements": 80, "branches": 85, "functions": 80, "lines": 80` as top-level c8 options (c8 reads these as thresholds directly — no nested `thresholds` key needed). Keep the existing `reporter`, `all`, and `include` keys intact.
+- [x] 5.3 If any target from 5.2 exceeds the achieved value from 5.1, lower that target to the achieved value rounded down to the nearest whole percent. Record the deviation in the spec's Open Question #1 and in the PR description — do **not** modify any file under `features/`, `service/`, `database/`, `middleware/`, `app.js`, or `config.js` to hit the number.
+- [x] 5.4 Run `npm test` and confirm the coverage thresholds now appear in the c8 output and the command exits 0.
+- [x] 5.5 Deliberate-violation sanity check (local only, do NOT commit): on a scratch branch, temporarily delete one feature test file, run `npm test`, and confirm c8 exits non-zero citing the violated threshold. Discard the scratch branch. Capture the failing output for the PR description.
+- [x] 5.6 Run `npm run lint`; commit on the shared `test/04-feature-and-integration-coverage` branch with a `chore:` Conventional Commit message referencing this task section. Include the final threshold values in the commit body.

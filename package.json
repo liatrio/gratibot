@@ -9,7 +9,8 @@
   "scripts": {
     "prepare": "husky",
     "start": "node app.js",
-    "test": "c8 mocha test/* --recursive --require test/setup.js",
+    "test": "c8 mocha test/* --recursive --require test/setup.js --ignore 'test/integration/**'",
+    "test:integration": "mocha 'test/integration/**/*.js' --require test/setup.js --require test/integration/setup.js",
     "lint": "eslint '*.js' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**'",
     "lint:fix": "eslint '*.js' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**' --fix",
     "release": "semantic-release"
@@ -37,6 +38,7 @@
     "husky": "^9.1.7",
     "mocha": "^11.0.1",
     "mocha-suppress-logs": "^0.6.0",
+    "mongodb-memory-server": "^11.0.1",
     "prettier": "^3.4.2",
     "semantic-release": "^25.0.0",
     "sinon": "^21.0.0"

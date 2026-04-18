@@ -24,4 +24,4 @@ services:
   mongodb:
     ports:
       - 27017:27017
-    image: mongo:4.2
+    image: mongo:4.4

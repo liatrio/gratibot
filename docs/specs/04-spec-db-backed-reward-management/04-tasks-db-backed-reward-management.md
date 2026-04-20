@@ -9,12 +9,12 @@
 | `test/service/rewardSeed.js` | **NEW.** Mocha/Chai/Sinon tests for seed idempotency, the `kind: "liatrio-store"` marker, and (after Unit 4) the reduced inline seed. |
 | `service/redeem.js` | **MODIFY.** Replace the top-level `fs.readFileSync(rewards.json)` with an async `createRedeemBlocks(currentBalance)` that reads from `rewardCollection`, filters `active: true`, and sorts ascending by `sortOrder` then `name`. Selected-item payload gains `kind`. |
 | `test/service/redeem.js` | **MODIFY.** Stub `rewardCollection.find(...).sort(...).toArray()`. Add cases for active-only filter, sort order with tiebreak, and `kind` presence in the select-option `value`. |
-| `features/redeem.js` | **MODIFY.** Tighten the user-facing matcher so `admin redeem` does not fire it; branch on `kind === "liatrio-store"` instead of `itemName === "Liatrio Store"`; await the now-async `createRedeemBlocks`. |
-| `test/features/redeem.js` | **NEW.** Feature-layer specs using `test/mocks/bolt-app.js` to assert (a) matcher does not fire on `admin redeem`, (b) `redeemItem` branches on `kind`. |
+| `features/redeem.js` | **MODIFY.** Branch on `kind === "liatrio-store"` instead of `itemName === "Liatrio Store"`; await the now-async `createRedeemBlocks`. (The Unit 2 matcher-tightening from task 2.13 was reverted post-Unit-2 when the admin command was changed from `admin redeem` to `admin`; the matcher is back to `/redeem/i`.) |
+| `test/features/redeem.js` | **NEW.** Feature-layer specs using `test/mocks/bolt-app.js` to assert `redeemItem` branches on `kind`. |
 | `app.js` | **MODIFY.** Invoke `seedRewards()` after `client.connect()` and before the feature-module loader loop. Log seed outcome via Winston. |
 | `service/rewardAdmin.js` | **NEW.** CRUD + validation + authorization for the admin surface: `isAuthorized(userId)`, `listRewards()`, `createReward(input, actor)`, `updateReward(id, input, actor)`, `softDeleteReward(id, actor)`, `validateReward(input)`, Block Kit builders for the main view, add form, and edit form. Unit 3 also owns `resolveUploadedImageURL(fileRef, client)`. |
 | `test/service/rewardAdmin.js` | **NEW.** Unit tests for all of the above including each validation branch, the upload-flow success/failure cases (Unit 3), and Block Kit structure for the three views. |
-| `features/reward-admin.js` | **NEW.** Registers `app.message(/^\s*admin\s+redeem\s*$/i, ...)` for DM + directMention, the `block_actions` handlers for `reward_admin_add`, `reward_admin_edit`, `reward_admin_softdelete`, and the `view_submission` handlers for the Add and Edit views. Re-checks authorization on every `view_submission`. |
+| `features/reward-admin.js` | **NEW.** Registers `app.message(/^\s*admin\s*$/i, ...)` for DM + directMention — the handler composes a per-user button list (currently only "Manage Rewards" for redemption admins) and replies via `say`. Also registers `app.action("reward_admin_open", ...)` which re-checks authorization and calls `client.views.open` with the action's `trigger_id`. Plus the `block_actions` handlers for `reward_admin_add`, `reward_admin_edit`, `reward_admin_softdelete`, and the `view_submission` handlers for the Add and Edit views. Re-checks authorization on every `view_submission`. |
 | `test/features/reward-admin.js` | **NEW.** Feature-layer specs using `test/mocks/bolt-app.js` covering non-admin rejection, admin modal-open, edit/add `views.update`, submit round-trip to list view, and `view_submission` auth re-check rejecting non-admin replay. |
 | `rewards.json` | **MODIFY then DELETE.** Unit 1 is the last reader of this file (via the seed). Unit 4 deletes it. |
 | `slack_app_manifest.yml` | **MODIFY.** Unit 3 adds `files:read` and `files:write` to `oauth_config.scopes.bot`. |
@@ -91,14 +91,42 @@ catalog to MongoDB with startup seeding`.
 ### [x] 2.0 Admin modal: authorization, list view, add, edit, soft-delete (Unit 2)
 
 Add the Slack-native admin surface. A new `features/reward-admin.js` registers the
-`admin redeem` matcher (DM + `@gratibot` directed), enforces `config.redemptionAdmins`
-membership (on both `message` and every `view_submission`), opens a Block Kit modal
-whose main view lists all rewards, and routes "Add", "Edit", and "Soft-delete" actions
-to `client.views.update`. A new `service/rewardAdmin.js` holds CRUD, validation, and
-authorization logic. `features/redeem.js` is tightened so the user-facing matcher does
-not also fire for `admin redeem`. The image field is a plain-text `imageURL` input in
-this unit (upload flow is Unit 3). Commit: `feat(reward-admin): add in-Slack admin
-modal for reward CRUD`.
+`admin` matcher (DM + `@gratibot` directed) as a general admin dispatcher that
+composes a per-user list of admin-control buttons; in v1 the only button is
+"Manage Rewards", gated on `config.redemptionAdmins`. Clicking that button fires
+`reward_admin_open`, which re-checks authorization and opens the Block Kit modal
+whose main view lists all rewards. The feature routes "Add", "Edit", and
+"Soft-delete" actions to `client.views.update`, and re-checks `config.redemptionAdmins`
+membership on every `view_submission`. A new `service/rewardAdmin.js` holds CRUD,
+validation, and authorization logic. The image field is a plain-text `imageURL`
+input in this unit (upload flow is Unit 3). Commit: `feat(reward-admin): add
+in-Slack admin modal for reward CRUD`.
+
+**Post-Unit-2 update (2026-04):** the admin command was originally scoped as
+`admin redeem`. It was renamed to just `admin` so that future admin capabilities
+can register their own buttons on the same dispatcher (matching the "different
+admins click different buttons" intent). The user-facing denial text became
+`You do not have admin access.` (dispatcher-level, when the user has no admin
+roles at all); the reward-specific denial `You are not authorized to manage
+rewards.` remains on the `reward_admin_open` action re-check. As a side effect,
+the tightening in task 2.13 (user-facing redeem matcher exclusion of
+`admin redeem`) was reverted — `admin` alone doesn't contain `redeem`, so no
+disambiguation is needed and `features/redeem.js` returned to `/redeem/i`. Tests
+were updated to match. Individual task bullets below are preserved as a record
+of what was committed under Unit 2; read the spec (Unit 2 FRs + Design
+Considerations + Technical Considerations → Matcher Disambiguation) for the
+current intent.
+
+**Post-Unit-2 update (2026-04, soft-delete removal):** the Edit form's
+"Soft-delete" button was removed. Retiring a reward is now done by
+unchecking the "Active" checkbox already in the Edit form and saving — the
+same end state (`active: false`) via a field the form already submits. This
+removed the `reward_admin_softdelete` action handler, the `softDeleteReward`
+service function and its tests, and the danger-button block from
+`buildEditView`. The task bullets that call out the Soft-delete button
+(2.6, 2.8, 2.11, 2.15, 2.18) and the `04-proofs/2.0-modal-edit-softdelete.png`
+screenshot are preserved as history; the current Edit form has no
+Soft-delete button.
 
 #### 2.0 Proof Artifact(s)
 
@@ -113,9 +141,14 @@ modal for reward CRUD`.
   `views.update` path, Add-submit `response_action: "update"` returns to list, and
   `view_submission` authorization re-check rejects a non-admin replay. Captured as
   `04-proofs/2.0-test-output.txt`.
-- Test: updated `test/features/redeem.js` asserts the user-facing matcher does not
-  fire on `admin redeem` — demonstrates disambiguation. Captured as
-  `04-proofs/2.0-test-output.txt`.
+- Test: updated `test/features/redeem.js` originally asserted the user-facing
+  matcher does not fire on `admin redeem` — this demonstrated disambiguation
+  at Unit 2 commit time. **Post-Unit-2 update:** the admin command was renamed
+  to `admin` and the matcher tightening was reverted, so this test was removed;
+  a matcher suite in `test/features/reward-admin.js` now asserts `admin` does
+  not accidentally match `admin redeem` or `administrate`. Captured as
+  `04-proofs/2.0-test-output.txt` (original) and superseded in the current
+  tree.
 - Screenshot: modal main view showing at least one active and one inactive reward
   with a visually unambiguous active/inactive indicator — demonstrates list view
   renders correctly. Captured as `04-proofs/2.0-modal-main-view.png`.
@@ -125,9 +158,12 @@ modal for reward CRUD`.
 - Screenshot: modal edit-reward form with Soft-delete confirmation dialog (danger
   style); after confirm, main view shows the row as inactive — demonstrates edit and
   soft-delete paths. Captured as `04-proofs/2.0-modal-edit-softdelete.png`.
-- Slack: DM `admin redeem` from a non-admin account replies with exact text `You are
-  not authorized to manage rewards.` and no modal opens — demonstrates the
-  authorization boundary. Captured as `04-proofs/2.0-non-admin-reject.png`.
+- Slack: DM `admin` from a non-admin account replies with exact text `You do not
+  have admin access.` and no buttons are shown (so no modal can be opened) —
+  demonstrates the authorization boundary. Captured as
+  `04-proofs/2.0-non-admin-reject.png` (note: the Unit 2 screenshot captured the
+  pre-rename message `You are not authorized to manage rewards.`; the
+  post-rename behavior is covered by the matcher and handler tests).
 
 #### 2.0 Tasks
 

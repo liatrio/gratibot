@@ -111,19 +111,6 @@ async function updateReward(id, input, actorUserId) {
   return rewardCollection.updateOne({ _id: new ObjectId(id) }, { $set: set });
 }
 
-async function softDeleteReward(id, actorUserId) {
-  const now = new Date();
-  winston.info("soft-deleting reward", {
-    func: "service.rewardAdmin.softDeleteReward",
-    callingUser: actorUserId,
-    rewardId: id,
-  });
-  return rewardCollection.updateOne(
-    { _id: new ObjectId(id) },
-    { $set: { active: false, updatedBy: actorUserId, updatedAt: now } },
-  );
-}
-
 function buildMainView(rewards) {
   const blocks = [
     {
@@ -147,18 +134,31 @@ function buildMainView(rewards) {
   } else {
     for (const reward of rewards) {
       const inactiveSuffix = reward.active === false ? "  _(inactive)_" : "";
-      blocks.push({
+      const section = {
         type: "section",
         text: {
           type: "mrkdwn",
           text: `*${reward.name}*${inactiveSuffix}\nCost: ${reward.cost}  •  Sort order: ${reward.sortOrder}`,
         },
-        accessory: {
-          type: "button",
-          text: { type: "plain_text", text: "Edit" },
-          action_id: "reward_admin_edit",
-          value: String(reward._id),
-        },
+      };
+      if (reward.imageURL) {
+        section.accessory = {
+          type: "image",
+          image_url: reward.imageURL,
+          alt_text: `Image of ${reward.name}`,
+        };
+      }
+      blocks.push(section);
+      blocks.push({
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: { type: "plain_text", text: "Edit" },
+            action_id: "reward_admin_edit",
+            value: String(reward._id),
+          },
+        ],
       });
     }
   }
@@ -291,32 +291,6 @@ function buildAddView() {
 }
 
 function buildEditView(reward) {
-  const blocks = stripUndefined(formInputBlocks(reward));
-  blocks.push({ type: "divider" });
-  blocks.push({
-    type: "actions",
-    block_id: "reward_admin_danger",
-    elements: [
-      {
-        type: "button",
-        style: "danger",
-        text: { type: "plain_text", text: "Soft-delete" },
-        action_id: "reward_admin_softdelete",
-        value: String(reward._id),
-        confirm: {
-          title: { type: "plain_text", text: "Soft-delete this reward?" },
-          text: {
-            type: "mrkdwn",
-            text: "Hide this reward from the redemption list? Historical redemptions are not affected.",
-          },
-          confirm: { type: "plain_text", text: "Soft-delete" },
-          deny: { type: "plain_text", text: "Cancel" },
-          style: "danger",
-        },
-      },
-    ],
-  });
-
   return {
     type: "modal",
     callback_id: "reward_admin_edit_submit",
@@ -324,7 +298,7 @@ function buildEditView(reward) {
     title: { type: "plain_text", text: "Edit Reward" },
     submit: { type: "plain_text", text: "Save" },
     close: { type: "plain_text", text: "Cancel" },
-    blocks,
+    blocks: stripUndefined(formInputBlocks(reward)),
   };
 }
 
@@ -371,7 +345,6 @@ module.exports = {
   listRewards,
   createReward,
   updateReward,
-  softDeleteReward,
   buildMainView,
   buildAddView,
   buildEditView,

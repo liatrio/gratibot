@@ -5,7 +5,7 @@ const rewardAdminFeature = require("../../features/reward-admin");
 const rewardAdmin = require("../../service/rewardAdmin");
 const { createMockApp } = require("../mocks/bolt-app");
 
-const ADMIN_REDEEM_MATCHER = /^\s*admin\s+redeem\s*$/i;
+const ADMIN_MATCHER = /^\s*admin\s*$/i;
 
 function buildClient() {
   return {
@@ -21,11 +21,11 @@ describe("features/reward-admin", function () {
     sinon.restore();
   });
 
-  describe("handleAdminRedeem", function () {
-    it("replies with the non-authorized message and does not open a modal for a non-admin", async function () {
+  describe("handleAdmin", function () {
+    it("replies with the no-admin-access message and does not open a modal when the user has no admin roles", async function () {
       const { app, findHandler } = createMockApp();
       rewardAdminFeature(app);
-      const handler = findHandler("message", ADMIN_REDEEM_MATCHER);
+      const handler = findHandler("message", ADMIN_MATCHER);
 
       sinon.stub(rewardAdmin, "isAuthorized").returns(false);
       const listStub = sinon.stub(rewardAdmin, "listRewards").resolves([]);
@@ -34,7 +34,7 @@ describe("features/reward-admin", function () {
       const say = sinon.stub().resolves();
       const message = {
         user: "Uouter",
-        text: "admin redeem",
+        text: "admin",
         channel: "Ddm",
         channel_type: "im",
       };
@@ -47,17 +47,15 @@ describe("features/reward-admin", function () {
       });
 
       expect(say.calledOnce).to.equal(true);
-      expect(say.firstCall.args[0]).to.equal(
-        "You are not authorized to manage rewards.",
-      );
+      expect(say.firstCall.args[0]).to.equal("You do not have admin access.");
       expect(client.views.open.called).to.equal(false);
       expect(listStub.called).to.equal(false);
     });
 
-    it("replies with an 'Open reward admin' button for an admin (message events have no trigger_id)", async function () {
+    it("replies with a 'Manage Rewards' button for a redemption admin (message events have no trigger_id)", async function () {
       const { app, findHandler } = createMockApp();
       rewardAdminFeature(app);
-      const handler = findHandler("message", ADMIN_REDEEM_MATCHER);
+      const handler = findHandler("message", ADMIN_MATCHER);
 
       sinon.stub(rewardAdmin, "isAuthorized").returns(true);
       const listStub = sinon.stub(rewardAdmin, "listRewards").resolves([]);
@@ -67,7 +65,7 @@ describe("features/reward-admin", function () {
       const say = sinon.stub().resolves();
 
       await handler({
-        message: { user: "Uadmin", text: "admin redeem", channel_type: "im" },
+        message: { user: "Uadmin", text: "admin", channel_type: "im" },
         body: {},
         client,
         say,
@@ -78,12 +76,35 @@ describe("features/reward-admin", function () {
       expect(buildStub.called).to.equal(false);
       expect(say.calledOnce).to.equal(true);
       const arg = say.firstCall.args[0];
-      expect(arg.text).to.equal("Open the reward admin panel");
+      expect(arg.text).to.equal("Admin controls");
       expect(arg.blocks).to.be.an("array").with.lengthOf(1);
       expect(arg.blocks[0].type).to.equal("actions");
       const button = arg.blocks[0].elements[0];
       expect(button.type).to.equal("button");
+      expect(button.text.text).to.equal("Manage Rewards");
       expect(button.action_id).to.equal("reward_admin_open");
+    });
+  });
+
+  describe("admin matcher", function () {
+    it("matches plain 'admin'", function () {
+      expect(ADMIN_MATCHER.test("admin")).to.equal(true);
+    });
+
+    it("matches 'ADMIN' (case-insensitive)", function () {
+      expect(ADMIN_MATCHER.test("ADMIN")).to.equal(true);
+    });
+
+    it("matches '  admin  ' (whitespace-tolerant)", function () {
+      expect(ADMIN_MATCHER.test("  admin  ")).to.equal(true);
+    });
+
+    it("does NOT match 'admin redeem'", function () {
+      expect(ADMIN_MATCHER.test("admin redeem")).to.equal(false);
+    });
+
+    it("does NOT match 'administrate'", function () {
+      expect(ADMIN_MATCHER.test("administrate")).to.equal(false);
     });
   });
 
@@ -337,68 +358,6 @@ describe("features/reward-admin", function () {
 
       expect(updateStub.called).to.equal(false);
       expect(ack.firstCall.args[0].response_action).to.equal("errors");
-    });
-  });
-
-  describe("reward_admin_softdelete action", function () {
-    it("calls softDeleteReward for an admin and updates back to the main view", async function () {
-      const { app, findHandler } = createMockApp();
-      rewardAdminFeature(app);
-      const handler = findHandler("action", "reward_admin_softdelete");
-
-      const fakeMainView = { type: "modal", callback_id: "reward_admin_main" };
-      sinon.stub(rewardAdmin, "isAuthorized").returns(true);
-      const softDeleteStub = sinon
-        .stub(rewardAdmin, "softDeleteReward")
-        .resolves({});
-      sinon.stub(rewardAdmin, "listRewards").resolves([]);
-      sinon.stub(rewardAdmin, "buildMainView").returns(fakeMainView);
-
-      const client = buildClient();
-      const ack = sinon.stub().resolves();
-
-      await handler({
-        ack,
-        body: {
-          user: { id: "Uadmin" },
-          actions: [{ value: "REWARDID" }],
-          view: { id: "V1", hash: "H1" },
-        },
-        client,
-      });
-
-      expect(softDeleteStub.calledOnce).to.equal(true);
-      expect(softDeleteStub.firstCall.args[0]).to.equal("REWARDID");
-      expect(softDeleteStub.firstCall.args[1]).to.equal("Uadmin");
-      expect(client.views.update.calledOnce).to.equal(true);
-      expect(client.views.update.firstCall.args[0].view).to.equal(fakeMainView);
-    });
-
-    it("does not soft-delete for a non-admin", async function () {
-      const { app, findHandler } = createMockApp();
-      rewardAdminFeature(app);
-      const handler = findHandler("action", "reward_admin_softdelete");
-
-      sinon.stub(rewardAdmin, "isAuthorized").returns(false);
-      const softDeleteStub = sinon
-        .stub(rewardAdmin, "softDeleteReward")
-        .resolves({});
-
-      const client = buildClient();
-      const ack = sinon.stub().resolves();
-
-      await handler({
-        ack,
-        body: {
-          user: { id: "Uouter" },
-          actions: [{ value: "REWARDID" }],
-          view: { id: "V1", hash: "H1" },
-        },
-        client,
-      });
-
-      expect(softDeleteStub.called).to.equal(false);
-      expect(client.views.update.called).to.equal(false);
     });
   });
 });

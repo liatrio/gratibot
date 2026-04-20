@@ -5,51 +5,56 @@ const rewardAdmin = require("../service/rewardAdmin");
 const { GratitudeError } = require("../service/errors");
 
 const NOT_AUTHORIZED_MESSAGE = "You are not authorized to manage rewards.";
-const ADMIN_REDEEM_MATCHER = /^\s*admin\s+redeem\s*$/i;
+const NO_ADMIN_ACCESS_MESSAGE = "You do not have admin access.";
+const ADMIN_MATCHER = /^\s*admin\s*$/i;
 
 module.exports = function (app) {
   app.message(
-    ADMIN_REDEEM_MATCHER,
+    ADMIN_MATCHER,
     anyOf(directMention, directMessage()),
-    handleAdminRedeem,
+    handleAdmin,
   );
   app.action("reward_admin_open", handleOpenAction);
   app.action("reward_admin_add", handleAddAction);
   app.action("reward_admin_edit", handleEditAction);
-  app.action("reward_admin_softdelete", handleSoftDeleteAction);
   app.view("reward_admin_add_submit", handleAddSubmit);
   app.view("reward_admin_edit_submit", handleEditSubmit);
 };
 
-async function handleAdminRedeem({ message, say }) {
-  winston.info("@gratibot admin redeem Called", {
-    func: "feature.rewardAdmin.handleAdminRedeem",
+// Collects the admin-control buttons the given user is permitted to see.
+// Future admin capabilities should append their own entry here gated by
+// the relevant authorization check.
+function adminButtonsFor(userId) {
+  const buttons = [];
+  if (rewardAdmin.isAuthorized(userId)) {
+    buttons.push({
+      type: "button",
+      style: "primary",
+      text: { type: "plain_text", text: "Manage Rewards" },
+      action_id: "reward_admin_open",
+    });
+  }
+  return buttons;
+}
+
+async function handleAdmin({ message, say }) {
+  winston.info("@gratibot admin Called", {
+    func: "feature.rewardAdmin.handleAdmin",
     callingUser: message.user,
   });
 
-  if (!rewardAdmin.isAuthorized(message.user)) {
-    await say(NOT_AUTHORIZED_MESSAGE);
+  const buttons = adminButtonsFor(message.user);
+  if (buttons.length === 0) {
+    await say(NO_ADMIN_ACCESS_MESSAGE);
     return;
   }
 
   // Message events do not carry a trigger_id, so a modal cannot be opened
-  // directly from the "admin redeem" message. Reply with a button; the
-  // subsequent action click supplies the trigger_id used to open the modal.
+  // directly from the "admin" message. Reply with buttons; the subsequent
+  // action click supplies the trigger_id used to open the modal.
   await say({
-    text: "Open the reward admin panel",
-    blocks: [
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            style: "primary",
-            text: { type: "plain_text", text: "Open reward admin" },
-            action_id: "reward_admin_open",
-          },
-        ],
-      },
-    ],
+    text: "Admin controls",
+    blocks: [{ type: "actions", elements: buttons }],
   });
 }
 
@@ -117,27 +122,6 @@ async function handleEditAction({ ack, body, client }) {
     view_id: body.view.id,
     hash: body.view.hash,
     view: rewardAdmin.buildEditView(reward),
-  });
-}
-
-async function handleSoftDeleteAction({ ack, body, client }) {
-  await ack();
-  if (!rewardAdmin.isAuthorized(body.user.id)) {
-    winston.warn("non-admin attempted reward_admin_softdelete", {
-      func: "feature.rewardAdmin.handleSoftDeleteAction",
-      callingUser: body.user.id,
-    });
-    return;
-  }
-
-  const rewardId = body.actions[0].value;
-  await rewardAdmin.softDeleteReward(rewardId, body.user.id);
-
-  const rewards = await rewardAdmin.listRewards();
-  await client.views.update({
-    view_id: body.view.id,
-    hash: body.view.hash,
-    view: rewardAdmin.buildMainView(rewards),
   });
 }
 

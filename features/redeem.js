@@ -8,7 +8,7 @@ const deduction = require("../service/deduction");
 
 module.exports = function (app) {
   app.message(
-    /^(?!\s*admin\s+redeem\s*$).*redeem/i,
+    /redeem/i,
     anyOf(directMention, directMessage()),
     respondToRedeem,
   );

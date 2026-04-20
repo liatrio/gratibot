@@ -201,25 +201,6 @@ describe("service/rewardAdmin", function () {
     });
   });
 
-  describe("softDeleteReward", function () {
-    it("sets active: false, updatedBy, and updatedAt", async function () {
-      const updateOne = sinon.stub(rewardCollection, "updateOne").resolves({});
-      sinon.useFakeTimers(new Date(2025, 0, 3));
-      const id = new ObjectId().toString();
-
-      await rewardAdmin.softDeleteReward(id, "Uadmin");
-
-      expect(updateOne.calledOnce).to.equal(true);
-      const [filter, update] = updateOne.firstCall.args;
-      expect(String(filter._id)).to.equal(id);
-      expect(update.$set).to.deep.equal({
-        active: false,
-        updatedBy: "Uadmin",
-        updatedAt: new Date(2025, 0, 3),
-      });
-    });
-  });
-
   describe("buildMainView", function () {
     it("returns a modal with the Add button at the top", function () {
       const view = rewardAdmin.buildMainView([]);
@@ -233,7 +214,7 @@ describe("service/rewardAdmin", function () {
       expect(firstBlock.elements[0].text.text).to.equal("Add new reward");
     });
 
-    it("renders one section per reward with Edit button carrying _id", function () {
+    it("renders one section per reward with an image accessory and an Edit button carrying _id", function () {
       const id1 = new ObjectId();
       const id2 = new ObjectId();
       const rewards = [
@@ -243,6 +224,7 @@ describe("service/rewardAdmin", function () {
           cost: 5,
           sortOrder: 0,
           active: true,
+          imageURL: "https://example.com/alpha.png",
         },
         {
           _id: id2,
@@ -250,6 +232,7 @@ describe("service/rewardAdmin", function () {
           cost: 10,
           sortOrder: 1,
           active: false,
+          imageURL: "https://example.com/beta.png",
         },
       ];
 
@@ -259,12 +242,36 @@ describe("service/rewardAdmin", function () {
 
       expect(sections[0].text.text).to.include("*Alpha*");
       expect(sections[0].text.text).to.not.include("(inactive)");
-      expect(sections[0].accessory.action_id).to.equal("reward_admin_edit");
-      expect(sections[0].accessory.value).to.equal(String(id1));
+      expect(sections[0].accessory.type).to.equal("image");
+      expect(sections[0].accessory.image_url).to.equal(
+        "https://example.com/alpha.png",
+      );
+      expect(sections[0].accessory.alt_text).to.equal("Image of Alpha");
 
       expect(sections[1].text.text).to.include("*Beta*");
       expect(sections[1].text.text).to.include("(inactive)");
-      expect(sections[1].accessory.value).to.equal(String(id2));
+      expect(sections[1].accessory.image_url).to.equal(
+        "https://example.com/beta.png",
+      );
+
+      const editButtons = view.blocks
+        .filter((b) => b.type === "actions")
+        .flatMap((b) => b.elements)
+        .filter((e) => e.action_id === "reward_admin_edit");
+      expect(editButtons).to.have.length(2);
+      expect(editButtons[0].value).to.equal(String(id1));
+      expect(editButtons[1].value).to.equal(String(id2));
+    });
+
+    it("omits the image accessory when a reward has no imageURL", function () {
+      const id = new ObjectId();
+      const view = rewardAdmin.buildMainView([
+        { _id: id, name: "NoImg", cost: 1, sortOrder: 0, active: true },
+      ]);
+      const section = view.blocks.find(
+        (b) => b.type === "section" && b.text.text.includes("*NoImg*"),
+      );
+      expect(section.accessory).to.equal(undefined);
     });
   });
 
@@ -290,7 +297,7 @@ describe("service/rewardAdmin", function () {
   });
 
   describe("buildEditView", function () {
-    it("pre-populates initial_value, stores _id in private_metadata, and includes a Soft-delete button", function () {
+    it("pre-populates initial_value and stores _id in private_metadata", function () {
       const id = new ObjectId();
       const reward = {
         _id: id,
@@ -321,18 +328,6 @@ describe("service/rewardAdmin", function () {
         "https://example.com/gadget.png",
       );
       expect(byBlockId.active.element.initial_options).to.equal(undefined);
-
-      const dangerBlock = view.blocks.find(
-        (b) => b.block_id === "reward_admin_danger",
-      );
-      expect(dangerBlock).to.exist;
-      const deleteBtn = dangerBlock.elements[0];
-      expect(deleteBtn.action_id).to.equal("reward_admin_softdelete");
-      expect(deleteBtn.style).to.equal("danger");
-      expect(deleteBtn.value).to.equal(String(id));
-      expect(deleteBtn.confirm.text.text).to.equal(
-        "Hide this reward from the redemption list? Historical redemptions are not affected.",
-      );
     });
   });
 

@@ -113,6 +113,8 @@ app.command(slashCommand, async ({ command, ack, respond }) => {
   try {
     await client.connect();
 
+    await require("./service/rewardSeed").seedRewards();
+
     var normalizedPath = require("path").join(__dirname, "features");
     require("fs")
       .readdirSync(normalizedPath)

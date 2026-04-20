@@ -1,0 +1,152 @@
+=== Seed verification transcript (Unit 1, Task 1.12) ===
+
+Captured 2026-04-20 against the local docker-compose stack (mongo:4.4).
+
+Note: mongo:4.4 ships the legacy `mongo` shell (no `mongosh`); commands
+below use `docker exec -i gratibot-mongodb-1 mongo --quiet gratibot`.
+
+-----------------------------------------------------------------
+Step 1 — Fresh start: docker-compose down -v && docker-compose up --build -d
+-----------------------------------------------------------------
+
+gratibot startup log (relevant lines):
+  {"func":"seedRewards","insertedCount":14,"level":"info","message":"Reward collection seeded","timestamp":"2026-04-20T18:29:29.803Z"}
+  {"level":"info","message":"⚡️ Bolt app is running!","timestamp":"2026-04-20T18:29:30.582Z"}
+
+-----------------------------------------------------------------
+Step 2 — First-run count + shape
+-----------------------------------------------------------------
+$ docker exec -i gratibot-mongodb-1 mongo --quiet gratibot <<'EOF'
+  print("--- first-run count ---")
+  print(db.rewards.countDocuments({}))
+  print("--- names + kind + sortOrder ---")
+  printjson(db.rewards.find({}, {name:1, kind:1, sortOrder:1, active:1, createdBy:1, _id:0}).sort({sortOrder:1}).toArray())
+  EOF
+
+--- first-run count ---
+14
+--- names + kind + sortOrder ---
+[
+	{
+		"name" : "Liatrio Store",
+		"active" : true,
+		"sortOrder" : 0,
+		"createdBy" : "system-seed",
+		"kind" : "liatrio-store"
+	},
+	{
+		"name" : "Neon Liatrio Sign",
+		"active" : true,
+		"sortOrder" : 1,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Custom Nike Air Force 1's",
+		"active" : true,
+		"sortOrder" : 2,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Hawaiian Shirt",
+		"active" : true,
+		"sortOrder" : 3,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Microphone",
+		"active" : true,
+		"sortOrder" : 4,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Microphone Arm",
+		"active" : true,
+		"sortOrder" : 5,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Visa Gift Card",
+		"active" : true,
+		"sortOrder" : 6,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Donation: Electronic Frontier Foundation",
+		"active" : true,
+		"sortOrder" : 7,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Donation: Feeding America",
+		"active" : true,
+		"sortOrder" : 8,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Donation: Open Source Mental Health",
+		"active" : true,
+		"sortOrder" : 9,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Donation: National Alliance to End Homelessness",
+		"active" : true,
+		"sortOrder" : 10,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Donation: Girls Who Code",
+		"active" : true,
+		"sortOrder" : 11,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Donation: Go Climate Neutral",
+		"active" : true,
+		"sortOrder" : 12,
+		"createdBy" : "system-seed"
+	},
+	{
+		"name" : "Donation: 4ocean",
+		"active" : true,
+		"sortOrder" : 13,
+		"createdBy" : "system-seed"
+	}
+]
+
+Confirmed:
+- countDocuments({}) == 14 == rewards.json.length
+- kind: "liatrio-store" is present on Liatrio Store only; every other doc omits the field
+- sortOrder is monotonic 0..13 and matches rewards.json ordering
+- All docs have active: true and createdBy: "system-seed"
+
+-----------------------------------------------------------------
+Step 3 — Idempotency: docker-compose restart gratibot (volume preserved)
+-----------------------------------------------------------------
+
+gratibot restart log (relevant lines):
+  {"level":"info","message":"⚡️ Bolt app is running!","timestamp":"2026-04-20T18:30:43.272Z"}
+
+No "Reward collection seeded" log on the second start. The seed module's
+`existingCount > 0` guard logs at debug level (filtered by LOG_LEVEL=info
+in this run) and returns without inserting.
+
+-----------------------------------------------------------------
+Step 4 — Post-restart count (should still be 14)
+-----------------------------------------------------------------
+$ docker exec -i gratibot-mongodb-1 mongo --quiet gratibot <<'EOF'
+  print("--- post-restart count (should still be 14) ---")
+  print(db.rewards.countDocuments({}))
+  print("--- liatrio-store kind count (should still be 1) ---")
+  print(db.rewards.countDocuments({kind: "liatrio-store"}))
+  EOF
+
+--- post-restart count (should still be 14) ---
+14
+--- liatrio-store kind count (should still be 1) ---
+1
+
+=== Conclusion ===
+Seed correctness (14 docs, correct shape, `kind: "liatrio-store"` only on the
+Liatrio Store entry) and idempotency (count unchanged across a bot restart
+against the populated DB) are both demonstrated.

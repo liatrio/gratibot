@@ -1,20 +1,20 @@
 const config = require("../config");
-const fs = require("fs");
-
-const path = require("path");
-// TODO: Long term this should be sourced from DB
-let rawdata = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
-const gratibotRewards = JSON.parse(rawdata);
+const rewardCollection = require("../database/rewardCollection");
 
 const { redemptionAdmins } = config;
 
-function createRedeemBlocks(currentBalance) {
+async function createRedeemBlocks(currentBalance) {
+  const rewards = await rewardCollection
+    .find({ active: true })
+    .sort({ sortOrder: 1, name: 1 })
+    .toArray();
+
   let blocks = [];
 
   blocks.push(redeemHeader());
   blocks.push(redeemHelpText(currentBalance));
-  blocks.push(...redeemItems(gratibotRewards));
-  blocks.push(redeemSelector(gratibotRewards));
+  blocks.push(...redeemItems(rewards));
+  blocks.push(redeemSelector(rewards));
 
   return blocks;
 }
@@ -64,6 +64,7 @@ function redeemSelector(gratibotRewards) {
     const item = {
       name: `${gratibotRewards[i].name}`,
       cost: `${gratibotRewards[i].cost}`,
+      kind: gratibotRewards[i].kind || null,
     };
     options.push({
       text: {
@@ -123,6 +124,7 @@ function getSelectedItemDetails(selectedItem) {
   return {
     itemName: item.name,
     itemCost: item.cost,
+    kind: item.kind || null,
   };
 }
 

@@ -39,7 +39,7 @@ async function redeemItem({ ack, body, context, client }) {
       token: context.botToken,
       types: "mpim, im",
     });
-    const { itemName, itemCost } = redeem.getSelectedItemDetails(
+    const { itemName, itemCost, kind } = redeem.getSelectedItemDetails(
       body.actions[0].selected_option.value,
     );
 
@@ -52,7 +52,7 @@ async function redeemItem({ ack, body, context, client }) {
     }
 
     let redemptionMessage = `<@${userID}> has selected ${itemName}`;
-    if (itemName === "Liatrio Store") {
+    if (kind === "liatrio-store") {
       redemptionMessage += `. Please provide the link of the item from the <https://liatrio.axomo.com/|Liatrio Store>.`;
     } else {
       redemptionMessage += ` for ${itemCost} fistbumps.`;

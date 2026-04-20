@@ -6,13 +6,17 @@ const rewardAdmin = require("../../service/rewardAdmin");
 const { GratitudeError } = require("../../service/errors");
 const { createMockApp } = require("../mocks/bolt-app");
 
-const ADMIN_MATCHER = /^\s*admin\s*$/i;
+const ADMIN_MATCHER = /\badmin\b/i;
 
 function buildClient() {
   return {
     views: {
       open: sinon.stub().resolves({ ok: true }),
       update: sinon.stub().resolves({ ok: true }),
+    },
+    chat: {
+      postMessage: sinon.stub().resolves({ ok: true }),
+      postEphemeral: sinon.stub().resolves({ ok: true }),
     },
   };
 }
@@ -23,7 +27,7 @@ describe("features/reward-admin", function () {
   });
 
   describe("handleAdmin", function () {
-    it("replies with the no-admin-access message and does not open a modal when the user has no admin roles", async function () {
+    it("posts the no-admin-access message as a direct message when called in a DM", async function () {
       const { app, findHandler } = createMockApp();
       rewardAdminFeature(app);
       const handler = findHandler("message", ADMIN_MATCHER);
@@ -32,7 +36,6 @@ describe("features/reward-admin", function () {
       const listStub = sinon.stub(rewardAdmin, "listRewards").resolves([]);
 
       const client = buildClient();
-      const say = sinon.stub().resolves();
       const message = {
         user: "Uouter",
         text: "admin",
@@ -40,20 +43,43 @@ describe("features/reward-admin", function () {
         channel_type: "im",
       };
 
-      await handler({
-        message,
-        body: { trigger_id: "T1" },
-        client,
-        say,
-      });
+      await handler({ message, body: { trigger_id: "T1" }, client });
 
-      expect(say.calledOnce).to.equal(true);
-      expect(say.firstCall.args[0]).to.equal("You do not have admin access.");
+      expect(client.chat.postMessage.calledOnce).to.equal(true);
+      expect(client.chat.postEphemeral.called).to.equal(false);
+      const arg = client.chat.postMessage.firstCall.args[0];
+      expect(arg.channel).to.equal("Ddm");
+      expect(arg.text).to.equal("You do not have admin access.");
       expect(client.views.open.called).to.equal(false);
       expect(listStub.called).to.equal(false);
     });
 
-    it("replies with a 'Manage Rewards' button for a redemption admin (message events have no trigger_id)", async function () {
+    it("posts the no-admin-access message ephemerally when called in a channel", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("message", ADMIN_MATCHER);
+
+      sinon.stub(rewardAdmin, "isAuthorized").returns(false);
+
+      const client = buildClient();
+      const message = {
+        user: "Uouter",
+        text: "@gratibot admin",
+        channel: "Cchan",
+        channel_type: "channel",
+      };
+
+      await handler({ message, body: {}, client });
+
+      expect(client.chat.postEphemeral.calledOnce).to.equal(true);
+      expect(client.chat.postMessage.called).to.equal(false);
+      const arg = client.chat.postEphemeral.firstCall.args[0];
+      expect(arg.channel).to.equal("Cchan");
+      expect(arg.user).to.equal("Uouter");
+      expect(arg.text).to.equal("You do not have admin access.");
+    });
+
+    it("posts the 'Manage Rewards' button as a direct message for an admin in a DM", async function () {
       const { app, findHandler } = createMockApp();
       rewardAdminFeature(app);
       const handler = findHandler("message", ADMIN_MATCHER);
@@ -63,26 +89,58 @@ describe("features/reward-admin", function () {
       const buildStub = sinon.stub(rewardAdmin, "buildMainView").returns({});
 
       const client = buildClient();
-      const say = sinon.stub().resolves();
 
       await handler({
-        message: { user: "Uadmin", text: "admin", channel_type: "im" },
+        message: {
+          user: "Uadmin",
+          text: "admin",
+          channel: "Ddm",
+          channel_type: "im",
+        },
         body: {},
         client,
-        say,
       });
 
       expect(client.views.open.called).to.equal(false);
       expect(listStub.called).to.equal(false);
       expect(buildStub.called).to.equal(false);
-      expect(say.calledOnce).to.equal(true);
-      const arg = say.firstCall.args[0];
+      expect(client.chat.postMessage.calledOnce).to.equal(true);
+      expect(client.chat.postEphemeral.called).to.equal(false);
+      const arg = client.chat.postMessage.firstCall.args[0];
+      expect(arg.channel).to.equal("Ddm");
       expect(arg.text).to.equal("Admin controls");
       expect(arg.blocks).to.be.an("array").with.lengthOf(1);
-      expect(arg.blocks[0].type).to.equal("actions");
       const button = arg.blocks[0].elements[0];
-      expect(button.type).to.equal("button");
-      expect(button.text.text).to.equal("Manage Rewards");
+      expect(button.action_id).to.equal("reward_admin_open");
+    });
+
+    it("posts the 'Manage Rewards' button ephemerally for an admin in a channel", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("message", ADMIN_MATCHER);
+
+      sinon.stub(rewardAdmin, "isAuthorized").returns(true);
+
+      const client = buildClient();
+
+      await handler({
+        message: {
+          user: "Uadmin",
+          text: "@gratibot admin",
+          channel: "Cchan",
+          channel_type: "channel",
+        },
+        body: {},
+        client,
+      });
+
+      expect(client.chat.postEphemeral.calledOnce).to.equal(true);
+      expect(client.chat.postMessage.called).to.equal(false);
+      const arg = client.chat.postEphemeral.firstCall.args[0];
+      expect(arg.channel).to.equal("Cchan");
+      expect(arg.user).to.equal("Uadmin");
+      expect(arg.text).to.equal("Admin controls");
+      const button = arg.blocks[0].elements[0];
       expect(button.action_id).to.equal("reward_admin_open");
     });
   });
@@ -120,7 +178,7 @@ describe("features/reward-admin", function () {
       expect(args.view).to.equal(fakeView);
     });
 
-    it("responds with the not-authorized message and does not open the modal for a non-admin", async function () {
+    it("posts the not-authorized message ephemerally when the button was clicked from a channel", async function () {
       const { app, findHandler } = createMockApp();
       rewardAdminFeature(app);
       const handler = findHandler("action", "reward_admin_open");
@@ -130,22 +188,53 @@ describe("features/reward-admin", function () {
 
       const client = buildClient();
       const ack = sinon.stub().resolves();
-      const respond = sinon.stub().resolves();
 
       await handler({
         ack,
-        body: { user: { id: "Uouter" }, trigger_id: "T-trig" },
+        body: {
+          user: { id: "Uouter" },
+          trigger_id: "T-trig",
+          channel: { id: "Cchan" },
+        },
         client,
-        respond,
       });
 
       expect(ack.calledOnce).to.equal(true);
       expect(client.views.open.called).to.equal(false);
       expect(listStub.called).to.equal(false);
-      expect(respond.calledOnce).to.equal(true);
-      const arg = respond.firstCall.args[0];
+      expect(client.chat.postEphemeral.calledOnce).to.equal(true);
+      expect(client.chat.postMessage.called).to.equal(false);
+      const arg = client.chat.postEphemeral.firstCall.args[0];
+      expect(arg.channel).to.equal("Cchan");
+      expect(arg.user).to.equal("Uouter");
       expect(arg.text).to.equal("You are not authorized to manage rewards.");
-      expect(arg.response_type).to.equal("ephemeral");
+    });
+
+    it("posts the not-authorized message as a direct message when the button was clicked from a DM", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("action", "reward_admin_open");
+
+      sinon.stub(rewardAdmin, "isAuthorized").returns(false);
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+
+      await handler({
+        ack,
+        body: {
+          user: { id: "Uouter" },
+          trigger_id: "T-trig",
+          channel: { id: "Ddm" },
+        },
+        client,
+      });
+
+      expect(client.chat.postMessage.calledOnce).to.equal(true);
+      expect(client.chat.postEphemeral.called).to.equal(false);
+      const arg = client.chat.postMessage.firstCall.args[0];
+      expect(arg.channel).to.equal("Ddm");
+      expect(arg.text).to.equal("You are not authorized to manage rewards.");
     });
   });
 

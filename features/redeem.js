@@ -72,6 +72,10 @@ async function redeemItem({ ack, body, context, client }) {
       text: redemptionMessage,
     });
   } catch (error) {
-    console.error(error);
+    winston.error("redeemItem failed", {
+      func: "feature.redeem.redeemItem",
+      callingUser: userID,
+      error: error.message,
+    });
   }
 }

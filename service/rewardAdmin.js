@@ -4,14 +4,7 @@ const config = require("../config");
 const winston = require("../winston");
 const { GratitudeError } = require("./errors");
 
-const EDITABLE_FIELDS = [
-  "name",
-  "description",
-  "cost",
-  "imageURL",
-  "sortOrder",
-  "active",
-];
+const EDITABLE_FIELDS = ["name", "description", "cost", "imageURL", "active"];
 
 const FILTERS = {
   active: "Active",

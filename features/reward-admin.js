@@ -2,11 +2,12 @@ const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
 const { anyOf, directMessage } = require("../middleware");
 const rewardAdmin = require("../service/rewardAdmin");
+const { respondToUser } = require("../service/messageutils");
 const { GratitudeError } = require("../service/errors");
 
 const NOT_AUTHORIZED_MESSAGE = "You are not authorized to manage rewards.";
 const NO_ADMIN_ACCESS_MESSAGE = "You do not have admin access.";
-const ADMIN_MATCHER = /^\s*admin\s*$/i;
+const ADMIN_MATCHER = /\badmin\b/i;
 
 module.exports = function (app) {
   app.message(
@@ -24,6 +25,18 @@ module.exports = function (app) {
   app.view("reward_admin_edit_submit", handleEditSubmit);
 };
 
+// Build a respondToUser-compatible context from a block_actions body.
+// Slack channel IDs starting with "D" are IMs; everything else is a channel
+// or group where an ephemeral reply is the correct default.
+function messageContextFromAction(body) {
+  const channelId = body.channel && body.channel.id;
+  return {
+    channel: channelId,
+    user: body.user.id,
+    channel_type: channelId && channelId.startsWith("D") ? "im" : "channel",
+  };
+}
+
 function adminButtonsFor(userId) {
   const buttons = [];
   if (rewardAdmin.isAuthorized(userId)) {
@@ -37,7 +50,7 @@ function adminButtonsFor(userId) {
   return buttons;
 }
 
-async function handleAdmin({ message, say }) {
+async function handleAdmin({ message, client }) {
   winston.info("@gratibot admin Called", {
     func: "feature.rewardAdmin.handleAdmin",
     callingUser: message.user,
@@ -45,29 +58,27 @@ async function handleAdmin({ message, say }) {
 
   const buttons = adminButtonsFor(message.user);
   if (buttons.length === 0) {
-    await say(NO_ADMIN_ACCESS_MESSAGE);
+    await respondToUser(client, message, { text: NO_ADMIN_ACCESS_MESSAGE });
     return;
   }
 
   // Message events do not carry a trigger_id, so a modal cannot be opened
   // directly from the "admin" message. Reply with buttons; the subsequent
   // action click supplies the trigger_id used to open the modal.
-  await say({
+  await respondToUser(client, message, {
     text: "Admin controls",
     blocks: [{ type: "actions", elements: buttons }],
   });
 }
 
-async function handleOpenAction({ ack, body, client, respond }) {
+async function handleOpenAction({ ack, body, client }) {
   await ack();
   if (!rewardAdmin.isAuthorized(body.user.id)) {
     winston.warn("non-admin attempted reward_admin_open", {
       func: "feature.rewardAdmin.handleOpenAction",
       callingUser: body.user.id,
     });
-    await respond({
-      response_type: "ephemeral",
-      replace_original: false,
+    await respondToUser(client, messageContextFromAction(body), {
       text: NOT_AUTHORIZED_MESSAGE,
     });
     return;

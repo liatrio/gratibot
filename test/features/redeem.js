@@ -20,6 +20,8 @@ function buildClient() {
   };
 }
 
+const USER_REDEEM_MATCHER = /redeem/i;
+
 describe("features/redeem", () => {
   afterEach(() => {
     sinon.restore();
@@ -29,11 +31,13 @@ describe("features/redeem", () => {
     it("should post Gratibot Rewards blocks via respondToUser", async () => {
       const { app, findHandler } = createMockApp();
       redeemFeature(app);
-      const handler = findHandler("message", /redeem/i);
+      const handler = findHandler("message", USER_REDEEM_MATCHER);
 
       sinon.stub(balance, "currentBalance").resolves(17);
+      const fakeRewards = [{ name: "Widget" }];
       const fakeBlocks = [{ type: "section" }];
-      sinon.stub(redeem, "createRedeemBlocks").returns(fakeBlocks);
+      sinon.stub(redeem, "fetchActiveRewards").resolves(fakeRewards);
+      sinon.stub(redeem, "buildRedeemBlocks").returns(fakeBlocks);
 
       const client = buildClient();
       const message = {
@@ -46,7 +50,9 @@ describe("features/redeem", () => {
       await handler({ message, client });
 
       expect(balance.currentBalance.calledOnce).to.equal(true);
-      expect(redeem.createRedeemBlocks.firstCall.args[0]).to.equal(17);
+      expect(redeem.fetchActiveRewards.calledOnce).to.equal(true);
+      expect(redeem.buildRedeemBlocks.firstCall.args[0]).to.equal(fakeRewards);
+      expect(redeem.buildRedeemBlocks.firstCall.args[1]).to.equal(17);
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       const args = client.chat.postMessage.firstCall.args[0];
       expect(args.text).to.equal("Gratibot Rewards");
@@ -62,7 +68,7 @@ describe("features/redeem", () => {
 
       sinon
         .stub(redeem, "getSelectedItemDetails")
-        .returns({ itemName: "Sticker", itemCost: 5 });
+        .returns({ itemName: "Sticker", itemCost: 5, kind: null });
       sinon.stub(deduction, "isBalanceSufficent").resolves(true);
       sinon.stub(deduction, "createDeduction").resolves("DED-1");
 
@@ -90,14 +96,18 @@ describe("features/redeem", () => {
       );
     });
 
-    it("should not create a deduction when the Liatrio Store is selected and should include the store link prompt", async () => {
+    it("should branch on kind === 'liatrio-store' (not on itemName) and skip createDeduction", async () => {
       const { app, findHandler } = createMockApp();
       redeemFeature(app);
       const actionHandler = findHandler("action", { action_id: "redeem" });
 
-      sinon
-        .stub(redeem, "getSelectedItemDetails")
-        .returns({ itemName: "Liatrio Store", itemCost: 100 });
+      // Note: itemName intentionally does NOT equal "Liatrio Store" —
+      // this asserts the branch uses kind, not the display name.
+      sinon.stub(redeem, "getSelectedItemDetails").returns({
+        itemName: "Some Other Display Name",
+        itemCost: 0,
+        kind: "liatrio-store",
+      });
       sinon.stub(deduction, "isBalanceSufficent").resolves(true);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
 
@@ -109,7 +119,8 @@ describe("features/redeem", () => {
         actions: [
           {
             selected_option: {
-              value: '{"name":"Liatrio Store","cost":"100"}',
+              value:
+                '{"name":"Some Other Display Name","cost":"0","kind":"liatrio-store"}',
             },
           },
         ],
@@ -123,6 +134,44 @@ describe("features/redeem", () => {
       expect(text).to.include("Please provide the link");
     });
 
+    it("should call createDeduction for a regular (non-Liatrio-Store) kind", async () => {
+      const { app, findHandler } = createMockApp();
+      redeemFeature(app);
+      const actionHandler = findHandler("action", { action_id: "redeem" });
+
+      sinon.stub(redeem, "getSelectedItemDetails").returns({
+        itemName: "Liatrio Store",
+        itemCost: 50,
+        kind: null,
+      });
+      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      const createDeductionStub = sinon
+        .stub(deduction, "createDeduction")
+        .resolves("DED-2");
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+      const body = {
+        user: { id: "Ucaller" },
+        channel: { id: "Ddm" },
+        actions: [
+          {
+            selected_option: {
+              value: '{"name":"Liatrio Store","cost":"50","kind":null}',
+            },
+          },
+        ],
+      };
+
+      await actionHandler({ ack, body, context: { botToken: "xoxb" }, client });
+
+      expect(createDeductionStub.calledOnce).to.equal(true);
+      expect(client.chat.postMessage.calledOnce).to.equal(true);
+      const text = client.chat.postMessage.firstCall.args[0].text;
+      expect(text).to.include("for 50 fistbumps");
+      expect(text).to.include("DED-2");
+    });
+
     it("should post an ephemeral insufficient-balance warning when balance is too low", async () => {
       const { app, findHandler } = createMockApp();
       redeemFeature(app);
@@ -130,7 +179,7 @@ describe("features/redeem", () => {
 
       sinon
         .stub(redeem, "getSelectedItemDetails")
-        .returns({ itemName: "Sticker", itemCost: 500 });
+        .returns({ itemName: "Sticker", itemCost: 500, kind: null });
       sinon.stub(deduction, "isBalanceSufficent").resolves(false);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
 

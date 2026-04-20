@@ -20,10 +20,13 @@ async function respondToRedeem({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  const currentBalance = await balance.currentBalance(message.user);
+  const [currentBalance, rewards] = await Promise.all([
+    balance.currentBalance(message.user),
+    redeem.fetchActiveRewards(),
+  ]);
   await respondToUser(client, message, {
     text: "Gratibot Rewards",
-    blocks: await redeem.createRedeemBlocks(currentBalance),
+    blocks: redeem.buildRedeemBlocks(rewards, currentBalance),
   });
 }
 
@@ -39,7 +42,7 @@ async function redeemItem({ ack, body, context, client }) {
       token: context.botToken,
       types: "mpim, im",
     });
-    const { itemName, itemCost } = redeem.getSelectedItemDetails(
+    const { itemName, itemCost, kind } = redeem.getSelectedItemDetails(
       body.actions[0].selected_option.value,
     );
 
@@ -52,7 +55,7 @@ async function redeemItem({ ack, body, context, client }) {
     }
 
     let redemptionMessage = `<@${userID}> has selected ${itemName}`;
-    if (itemName === "Liatrio Store") {
+    if (kind === "liatrio-store") {
       redemptionMessage += `. Please provide the link of the item from the <https://liatrio.axomo.com/|Liatrio Store>.`;
     } else {
       redemptionMessage += ` for ${itemCost} fistbumps.`;
@@ -69,6 +72,10 @@ async function redeemItem({ ack, body, context, client }) {
       text: redemptionMessage,
     });
   } catch (error) {
-    console.error(error);
+    winston.error("redeemItem failed", {
+      func: "feature.redeem.redeemItem",
+      callingUser: userID,
+      error: error.message,
+    });
   }
 }

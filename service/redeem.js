@@ -1,22 +1,22 @@
 const config = require("../config");
-const fs = require("fs");
-
-const path = require("path");
-// TODO: Long term this should be sourced from DB
-let rawdata = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
-const gratibotRewards = JSON.parse(rawdata);
+const rewardCollection = require("../database/rewardCollection");
 
 const { redemptionAdmins } = config;
 
-function createRedeemBlocks(currentBalance) {
-  let blocks = [];
+function fetchActiveRewards() {
+  return rewardCollection
+    .find({ active: true })
+    .sort({ sortOrder: 1, name: 1 })
+    .toArray();
+}
 
-  blocks.push(redeemHeader());
-  blocks.push(redeemHelpText(currentBalance));
-  blocks.push(...redeemItems(gratibotRewards));
-  blocks.push(redeemSelector(gratibotRewards));
-
-  return blocks;
+function buildRedeemBlocks(rewards, currentBalance) {
+  return [
+    redeemHeader(),
+    redeemHelpText(currentBalance),
+    ...redeemItems(rewards),
+    redeemSelector(rewards),
+  ];
 }
 
 function redeemHeader() {
@@ -64,6 +64,7 @@ function redeemSelector(gratibotRewards) {
     const item = {
       name: `${gratibotRewards[i].name}`,
       cost: `${gratibotRewards[i].cost}`,
+      kind: gratibotRewards[i].kind || null,
     };
     options.push({
       text: {
@@ -123,11 +124,13 @@ function getSelectedItemDetails(selectedItem) {
   return {
     itemName: item.name,
     itemCost: item.cost,
+    kind: item.kind || null,
   };
 }
 
 module.exports = {
-  createRedeemBlocks,
+  fetchActiveRewards,
+  buildRedeemBlocks,
   redeemNotificationUsers,
   getSelectedItemDetails,
   redeemHeader,

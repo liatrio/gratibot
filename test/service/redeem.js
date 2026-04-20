@@ -1,6 +1,14 @@
 const sinon = require("sinon");
 const expect = require("chai").expect;
 const redeem = require("../../service/redeem");
+const rewardCollection = require("../../database/rewardCollection");
+
+function stubFindSortToArray(results) {
+  const toArray = sinon.stub().resolves(results);
+  const sort = sinon.stub().returns({ toArray });
+  const find = sinon.stub(rewardCollection, "find").returns({ sort });
+  return { find, sort, toArray };
+}
 
 describe("service/redeem", () => {
   afterEach(() => {
@@ -18,44 +26,96 @@ describe("service/redeem", () => {
   });
 
   describe("getSelectedItemDetails", () => {
-    it("should return comma seperated list of users", async () => {
+    it("should parse name, cost, and kind from the payload", async () => {
       const expectedItemDetails = {
         itemName: "testName",
         itemCost: 100,
+        kind: "liatrio-store",
       };
       const actualSelectedItemDetails = redeem.getSelectedItemDetails(
-        '{"name": "testName", "cost": 100}',
+        '{"name": "testName", "cost": 100, "kind": "liatrio-store"}',
       );
       expect(actualSelectedItemDetails).to.deep.eq(expectedItemDetails);
     });
+
+    it("should default kind to null when not present on the payload", async () => {
+      const actual = redeem.getSelectedItemDetails(
+        '{"name":"Sticker","cost":5}',
+      );
+      expect(actual).to.deep.eq({
+        itemName: "Sticker",
+        itemCost: 5,
+        kind: null,
+      });
+    });
   });
 
-  describe("createRedeemBlocks", () => {
-    it("returns expected blocks", async () => {
-      let expectedBlocks = [];
-      const expectedHeader = {
+  describe("fetchActiveRewards", () => {
+    it("queries active rewards sorted by sortOrder then name", async () => {
+      const { find, sort, toArray } = stubFindSortToArray([]);
+
+      await redeem.fetchActiveRewards();
+
+      expect(find.calledWith({ active: true })).to.equal(true);
+      expect(sort.calledWith({ sortOrder: 1, name: 1 })).to.equal(true);
+      expect(toArray.calledOnce).to.equal(true);
+    });
+  });
+
+  describe("buildRedeemBlocks", () => {
+    it("returns header and help-text blocks with the given balance", () => {
+      const actualBlocks = redeem.buildRedeemBlocks([], 100);
+
+      expect(actualBlocks[0]).to.deep.eq({
         type: "header",
-        text: {
-          type: "plain_text",
-          text: "Gratibot Rewards",
-        },
-      };
-
-      expectedBlocks.push(expectedHeader);
-
-      const expectedHelpText = {
+        text: { type: "plain_text", text: "Gratibot Rewards" },
+      });
+      expect(actualBlocks[1]).to.deep.eq({
         type: "section",
         text: {
           type: "mrkdwn",
           text: `Take a look at the currently available rewards!\nBalance: 100`,
         },
-      };
+      });
+    });
 
-      expectedBlocks.push(expectedHelpText);
+    it("renders rewards in the order given", () => {
+      const rewards = [
+        {
+          name: "Alpha",
+          description: "a",
+          cost: 1,
+          imageURL: "http://a",
+          sortOrder: 0,
+        },
+        {
+          name: "Bravo",
+          description: "b",
+          cost: 2,
+          imageURL: "http://b",
+          sortOrder: 1,
+        },
+        {
+          name: "Charlie",
+          description: "c",
+          cost: 3,
+          imageURL: "http://c",
+          sortOrder: 1,
+        },
+      ];
 
-      const actualBlocks = redeem.createRedeemBlocks(100);
-      expect(actualBlocks[0]).to.deep.eq(expectedHeader);
-      expect(actualBlocks[1]).to.deep.eq(expectedHelpText);
+      const blocks = redeem.buildRedeemBlocks(rewards, 10);
+
+      const itemTexts = blocks
+        .slice(2, 2 + rewards.length)
+        .map((b) => b.text.text);
+      expect(itemTexts[0]).to.include("*Alpha*");
+      expect(itemTexts[1]).to.include("*Bravo*");
+      expect(itemTexts[2]).to.include("*Charlie*");
+
+      const selector = blocks[blocks.length - 1];
+      const optionNames = selector.accessory.options.map((o) => o.text.text);
+      expect(optionNames).to.deep.equal(["Alpha", "Bravo", "Charlie"]);
     });
   });
 
@@ -121,61 +181,51 @@ describe("service/redeem", () => {
   });
 
   describe("redeemSelector", () => {
-    it("returns expected block", async () => {
+    it("serializes option.value including kind when present", async () => {
       const gratibotRewards = [
         {
-          name: "test",
-          description: "test description",
-          cost: "10",
-          imageUUL: "http://test.com",
+          name: "Liatrio Store",
+          cost: "0",
+          kind: "liatrio-store",
         },
       ];
 
-      const expectedSelectorBlocks = {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "Pick an item from the dropdown list",
-        },
-        accessory: {
-          type: "static_select",
-          placeholder: {
-            type: "plain_text",
-            text: "Select an item",
-          },
-          options: [
-            {
-              text: {
-                type: "plain_text",
-                text: "test",
-              },
-              value: '{"name":"test","cost":"10"}',
-            },
-          ],
-          confirm: {
-            title: {
-              type: "plain_text",
-              text: "Are you sure?",
-            },
-            text: {
-              type: "mrkdwn",
-              text: "You're sure you want to buy?",
-            },
-            confirm: {
-              type: "plain_text",
-              text: "Yes",
-            },
-            deny: {
-              type: "plain_text",
-              text: "Stop, I've changed my mind!",
-            },
-          },
-          action_id: "redeem",
-        },
-      };
+      const block = redeem.redeemSelector(gratibotRewards);
+      expect(block.accessory.options).to.have.length(1);
+      const parsed = JSON.parse(block.accessory.options[0].value);
+      expect(parsed).to.deep.equal({
+        name: "Liatrio Store",
+        cost: "0",
+        kind: "liatrio-store",
+      });
+    });
 
-      const actualSelectorBlocks = redeem.redeemSelector(gratibotRewards);
-      expect(actualSelectorBlocks).to.deep.eq(expectedSelectorBlocks);
+    it("serializes option.value with kind: null when absent", async () => {
+      const gratibotRewards = [{ name: "Sticker", cost: "5" }];
+
+      const block = redeem.redeemSelector(gratibotRewards);
+      const parsed = JSON.parse(block.accessory.options[0].value);
+      expect(parsed).to.deep.equal({
+        name: "Sticker",
+        cost: "5",
+        kind: null,
+      });
+    });
+
+    it("returns expected selector shell", async () => {
+      const gratibotRewards = [
+        {
+          name: "test",
+          cost: "10",
+        },
+      ];
+
+      const block = redeem.redeemSelector(gratibotRewards);
+      expect(block.type).to.equal("section");
+      expect(block.accessory.type).to.equal("static_select");
+      expect(block.accessory.action_id).to.equal("redeem");
+      expect(block.accessory.placeholder.text).to.equal("Select an item");
+      expect(block.accessory.options[0].text.text).to.equal("test");
     });
   });
 });

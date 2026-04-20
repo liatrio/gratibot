@@ -207,6 +207,187 @@ describe("features/reward-admin", function () {
     });
   });
 
+  describe("reward_admin_moveup action", function () {
+    it("calls moveReward('up') for an admin and updates the main view", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("action", "reward_admin_moveup");
+
+      const fakeMainView = { type: "modal", callback_id: "reward_admin_main" };
+      sinon.stub(rewardAdmin, "isAuthorized").returns(true);
+      const moveStub = sinon.stub(rewardAdmin, "moveReward").resolves({});
+      sinon.stub(rewardAdmin, "listRewards").resolves([]);
+      sinon.stub(rewardAdmin, "buildMainView").returns(fakeMainView);
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+
+      await handler({
+        ack,
+        body: {
+          user: { id: "Uadmin" },
+          actions: [{ value: "REWARDID" }],
+          view: { id: "V1", hash: "H1" },
+        },
+        client,
+      });
+
+      expect(moveStub.calledOnce).to.equal(true);
+      expect(moveStub.firstCall.args[0]).to.equal("REWARDID");
+      expect(moveStub.firstCall.args[1]).to.equal("up");
+      expect(moveStub.firstCall.args[2]).to.equal("Uadmin");
+      expect(moveStub.firstCall.args[3]).to.equal("active");
+      expect(client.views.update.firstCall.args[0].view).to.equal(fakeMainView);
+    });
+
+    it("threads the current filter from view.private_metadata through moveReward and buildMainView", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("action", "reward_admin_moveup");
+
+      sinon.stub(rewardAdmin, "isAuthorized").returns(true);
+      const moveStub = sinon.stub(rewardAdmin, "moveReward").resolves({});
+      sinon.stub(rewardAdmin, "listRewards").resolves([]);
+      const buildStub = sinon
+        .stub(rewardAdmin, "buildMainView")
+        .returns({ type: "modal" });
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+
+      await handler({
+        ack,
+        body: {
+          user: { id: "Uadmin" },
+          actions: [{ value: "REWARDID" }],
+          view: {
+            id: "V1",
+            hash: "H1",
+            private_metadata: JSON.stringify({ filter: "inactive" }),
+          },
+        },
+        client,
+      });
+
+      expect(moveStub.firstCall.args[3]).to.equal("inactive");
+      expect(buildStub.firstCall.args[1]).to.equal("inactive");
+    });
+
+    it("does not move for a non-admin", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("action", "reward_admin_moveup");
+
+      sinon.stub(rewardAdmin, "isAuthorized").returns(false);
+      const moveStub = sinon.stub(rewardAdmin, "moveReward").resolves({});
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+
+      await handler({
+        ack,
+        body: {
+          user: { id: "Uouter" },
+          actions: [{ value: "REWARDID" }],
+          view: { id: "V1", hash: "H1" },
+        },
+        client,
+      });
+
+      expect(moveStub.called).to.equal(false);
+      expect(client.views.update.called).to.equal(false);
+    });
+  });
+
+  describe("reward_admin_movedown action", function () {
+    it("calls moveReward('down') for an admin and updates the main view", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("action", "reward_admin_movedown");
+
+      const fakeMainView = { type: "modal", callback_id: "reward_admin_main" };
+      sinon.stub(rewardAdmin, "isAuthorized").returns(true);
+      const moveStub = sinon.stub(rewardAdmin, "moveReward").resolves({});
+      sinon.stub(rewardAdmin, "listRewards").resolves([]);
+      sinon.stub(rewardAdmin, "buildMainView").returns(fakeMainView);
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+
+      await handler({
+        ack,
+        body: {
+          user: { id: "Uadmin" },
+          actions: [{ value: "REWARDID" }],
+          view: { id: "V1", hash: "H1" },
+        },
+        client,
+      });
+
+      expect(moveStub.firstCall.args[1]).to.equal("down");
+      expect(client.views.update.firstCall.args[0].view).to.equal(fakeMainView);
+    });
+  });
+
+  describe("reward_admin_filter action", function () {
+    it("re-renders the main view with the selected filter for an admin", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("action", "reward_admin_filter");
+
+      const rewards = [{ _id: "R1", name: "Alpha", active: false }];
+      const fakeMainView = { type: "modal", callback_id: "reward_admin_main" };
+      sinon.stub(rewardAdmin, "isAuthorized").returns(true);
+      const listStub = sinon.stub(rewardAdmin, "listRewards").resolves(rewards);
+      const buildStub = sinon
+        .stub(rewardAdmin, "buildMainView")
+        .returns(fakeMainView);
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+
+      await handler({
+        ack,
+        body: {
+          user: { id: "Uadmin" },
+          actions: [{ selected_option: { value: "inactive" } }],
+          view: { id: "V1", hash: "H1" },
+        },
+        client,
+      });
+
+      expect(listStub.calledOnce).to.equal(true);
+      expect(buildStub.firstCall.args[0]).to.equal(rewards);
+      expect(buildStub.firstCall.args[1]).to.equal("inactive");
+      expect(client.views.update.firstCall.args[0].view).to.equal(fakeMainView);
+    });
+
+    it("does nothing for a non-admin", async function () {
+      const { app, findHandler } = createMockApp();
+      rewardAdminFeature(app);
+      const handler = findHandler("action", "reward_admin_filter");
+
+      sinon.stub(rewardAdmin, "isAuthorized").returns(false);
+      const listStub = sinon.stub(rewardAdmin, "listRewards").resolves([]);
+
+      const client = buildClient();
+      const ack = sinon.stub().resolves();
+
+      await handler({
+        ack,
+        body: {
+          user: { id: "Uouter" },
+          actions: [{ selected_option: { value: "inactive" } }],
+          view: { id: "V1", hash: "H1" },
+        },
+        client,
+      });
+
+      expect(listStub.called).to.equal(false);
+      expect(client.views.update.called).to.equal(false);
+    });
+  });
+
   describe("reward_admin_add_submit view_submission", function () {
     it("re-checks authorization and rejects a non-admin replay", async function () {
       const { app, findHandler } = createMockApp();
@@ -330,7 +511,10 @@ describe("features/reward-admin", function () {
         body: { user: { id: "Uadmin" } },
         view: {
           state: { values: {} },
-          private_metadata: "REWARDID",
+          private_metadata: JSON.stringify({
+            filter: "active",
+            rewardId: "REWARDID",
+          }),
         },
       });
 

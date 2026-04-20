@@ -13,6 +13,48 @@ const EDITABLE_FIELDS = [
   "active",
 ];
 
+const FILTERS = {
+  active: "Active",
+  inactive: "Inactive",
+  all: "All",
+};
+
+function normalizeFilter(filter) {
+  return Object.prototype.hasOwnProperty.call(FILTERS, filter)
+    ? filter
+    : "active";
+}
+
+function filterRewards(rewards, filter) {
+  const f = normalizeFilter(filter);
+  if (f === "inactive") return rewards.filter((r) => r.active === false);
+  if (f === "all") return rewards;
+  return rewards.filter((r) => r.active !== false);
+}
+
+function parseMainMetadata(raw) {
+  if (!raw) return { filter: "active" };
+  try {
+    const parsed = JSON.parse(raw);
+    return { filter: normalizeFilter(parsed.filter) };
+  } catch {
+    return { filter: "active" };
+  }
+}
+
+function parseEditMetadata(raw) {
+  if (!raw) return { filter: "active", rewardId: null };
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      filter: normalizeFilter(parsed.filter),
+      rewardId: parsed.rewardId || null,
+    };
+  } catch {
+    return { filter: "active", rewardId: null };
+  }
+}
+
 function isAuthorized(userId) {
   return config.redemptionAdmins.includes(userId);
 }
@@ -41,9 +83,6 @@ function validateReward(input) {
   if (!isInteger(input.cost) || input.cost < 0) {
     errors.cost = "Cost must be a non-negative integer.";
   }
-  if (!isInteger(input.sortOrder)) {
-    errors.sortOrder = "Sort order must be an integer.";
-  }
   if (!isNonEmptyString(input.imageURL)) {
     errors.imageURL = "Image URL is required.";
   }
@@ -52,6 +91,16 @@ function validateReward(input) {
     return { ok: false, errors };
   }
   return { ok: true };
+}
+
+async function nextSortOrder() {
+  const last = await rewardCollection
+    .find({})
+    .sort({ sortOrder: -1 })
+    .limit(1)
+    .toArray();
+  if (last.length === 0) return 0;
+  return (last[0].sortOrder ?? -1) + 1;
 }
 
 async function listRewards() {
@@ -71,7 +120,7 @@ async function createReward(input, actorUserId) {
     description: input.description,
     cost: input.cost,
     imageURL: input.imageURL,
-    sortOrder: input.sortOrder,
+    sortOrder: await nextSortOrder(),
     active: input.active !== false,
     createdBy: actorUserId,
     updatedBy: actorUserId,
@@ -111,11 +160,78 @@ async function updateReward(id, input, actorUserId) {
   return rewardCollection.updateOne({ _id: new ObjectId(id) }, { $set: set });
 }
 
-function buildMainView(rewards) {
+async function moveReward(id, direction, actorUserId, filter = "all") {
+  if (direction !== "up" && direction !== "down") {
+    throw new Error(`moveReward: invalid direction ${direction}`);
+  }
+
+  const rewards = await rewardCollection
+    .find({})
+    .sort({ sortOrder: 1, name: 1 })
+    .toArray();
+  // Move within the filtered view so the user sees a neighbor swap that
+  // matches what they clicked. Hidden rewards keep their sortOrder.
+  const visible = filterRewards(rewards, filter);
+  const targetIdx = visible.findIndex((r) => String(r._id) === String(id));
+  if (targetIdx === -1) return;
+
+  const neighborIdx = direction === "up" ? targetIdx - 1 : targetIdx + 1;
+  if (neighborIdx < 0 || neighborIdx >= visible.length) return;
+
+  const target = visible[targetIdx];
+  const neighbor = visible[neighborIdx];
+  const now = new Date();
+
+  winston.info("moving reward", {
+    func: "service.rewardAdmin.moveReward",
+    callingUser: actorUserId,
+    rewardId: String(target._id),
+    direction,
+  });
+
+  await rewardCollection.updateOne(
+    { _id: target._id },
+    {
+      $set: {
+        sortOrder: neighbor.sortOrder,
+        updatedBy: actorUserId,
+        updatedAt: now,
+      },
+    },
+  );
+  await rewardCollection.updateOne(
+    { _id: neighbor._id },
+    {
+      $set: {
+        sortOrder: target.sortOrder,
+        updatedBy: actorUserId,
+        updatedAt: now,
+      },
+    },
+  );
+}
+
+function filterSelectOption(filter) {
+  return {
+    text: { type: "plain_text", text: FILTERS[filter] },
+    value: filter,
+  };
+}
+
+function buildMainView(rewards, filter = "active") {
+  const activeFilter = normalizeFilter(filter);
+  const visibleRewards = filterRewards(rewards, activeFilter);
   const blocks = [
     {
       type: "actions",
       elements: [
+        {
+          type: "static_select",
+          action_id: "reward_admin_filter",
+          placeholder: { type: "plain_text", text: "Filter" },
+          initial_option: filterSelectOption(activeFilter),
+          options: Object.keys(FILTERS).map(filterSelectOption),
+        },
         {
           type: "button",
           text: { type: "plain_text", text: "Add new reward" },
@@ -126,19 +242,30 @@ function buildMainView(rewards) {
     { type: "divider" },
   ];
 
-  if (rewards.length === 0) {
+  if (visibleRewards.length === 0) {
     blocks.push({
       type: "section",
-      text: { type: "mrkdwn", text: "_No rewards exist yet._" },
+      text: {
+        type: "mrkdwn",
+        text:
+          activeFilter === "inactive"
+            ? "_No inactive rewards._"
+            : activeFilter === "all"
+              ? "_No rewards exist yet._"
+              : "_No active rewards._",
+      },
     });
   } else {
-    for (const reward of rewards) {
+    visibleRewards.forEach((reward) => {
       const inactiveSuffix = reward.active === false ? "  _(inactive)_" : "";
+      const descriptionLine = reward.description
+        ? `\n${reward.description}`
+        : "";
       const section = {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*${reward.name}*${inactiveSuffix}\nCost: ${reward.cost}  •  Sort order: ${reward.sortOrder}`,
+          text: `*${reward.name}*${inactiveSuffix}\nCost: ${reward.cost}${descriptionLine}`,
         },
       };
       if (reward.imageURL) {
@@ -149,23 +276,37 @@ function buildMainView(rewards) {
         };
       }
       blocks.push(section);
-      blocks.push({
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: { type: "plain_text", text: "Edit" },
-            action_id: "reward_admin_edit",
-            value: String(reward._id),
-          },
-        ],
-      });
-    }
+
+      // Slack Block Kit has no disabled-button state, so the move buttons
+      // always render; moveReward no-ops at edges (see service.moveReward).
+      const rowButtons = [
+        {
+          type: "button",
+          text: { type: "plain_text", text: "↑ Move up" },
+          action_id: "reward_admin_moveup",
+          value: String(reward._id),
+        },
+        {
+          type: "button",
+          text: { type: "plain_text", text: "↓ Move down" },
+          action_id: "reward_admin_movedown",
+          value: String(reward._id),
+        },
+        {
+          type: "button",
+          text: { type: "plain_text", text: "Edit" },
+          action_id: "reward_admin_edit",
+          value: String(reward._id),
+        },
+      ];
+      blocks.push({ type: "actions", elements: rowButtons });
+    });
   }
 
   return {
     type: "modal",
     callback_id: "reward_admin_main",
+    private_metadata: JSON.stringify({ filter: activeFilter }),
     title: { type: "plain_text", text: "Manage Rewards" },
     close: { type: "plain_text", text: "Close" },
     blocks,
@@ -209,17 +350,6 @@ function formInputBlocks(initial) {
         action_id: "cost_action",
         initial_value:
           values.cost !== undefined ? String(values.cost) : undefined,
-      },
-    },
-    {
-      type: "input",
-      block_id: "sortOrder",
-      label: { type: "plain_text", text: "Sort order" },
-      element: {
-        type: "plain_text_input",
-        action_id: "sortOrder_action",
-        initial_value:
-          values.sortOrder !== undefined ? String(values.sortOrder) : undefined,
       },
     },
     {
@@ -279,10 +409,11 @@ function stripUndefined(block) {
   return block;
 }
 
-function buildAddView() {
+function buildAddView(filter = "active") {
   return {
     type: "modal",
     callback_id: "reward_admin_add_submit",
+    private_metadata: JSON.stringify({ filter: normalizeFilter(filter) }),
     title: { type: "plain_text", text: "Add Reward" },
     submit: { type: "plain_text", text: "Save" },
     close: { type: "plain_text", text: "Cancel" },
@@ -290,11 +421,14 @@ function buildAddView() {
   };
 }
 
-function buildEditView(reward) {
+function buildEditView(reward, filter = "active") {
   return {
     type: "modal",
     callback_id: "reward_admin_edit_submit",
-    private_metadata: String(reward._id),
+    private_metadata: JSON.stringify({
+      filter: normalizeFilter(filter),
+      rewardId: String(reward._id),
+    }),
     title: { type: "plain_text", text: "Edit Reward" },
     submit: { type: "plain_text", text: "Save" },
     close: { type: "plain_text", text: "Cancel" },
@@ -314,7 +448,6 @@ function parseViewSubmission(view) {
   }
 
   const rawCost = readInput("cost", "cost_action");
-  const rawSortOrder = readInput("sortOrder", "sortOrder_action");
   const activeBlock = values.active && values.active.active_action;
   const activeSelected =
     activeBlock &&
@@ -325,7 +458,6 @@ function parseViewSubmission(view) {
     name: readInput("name", "name_action"),
     description: readInput("description", "description_action"),
     cost: toInteger(rawCost),
-    sortOrder: toInteger(rawSortOrder),
     imageURL: readInput("imageURL", "imageURL_action"),
     active: !!activeSelected,
   };
@@ -345,8 +477,11 @@ module.exports = {
   listRewards,
   createReward,
   updateReward,
+  moveReward,
   buildMainView,
   buildAddView,
   buildEditView,
   parseViewSubmission,
+  parseMainMetadata,
+  parseEditMetadata,
 };

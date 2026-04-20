@@ -128,6 +128,56 @@ service function and its tests, and the danger-button block from
 screenshot are preserved as history; the current Edit form has no
 Soft-delete button.
 
+**Post-Unit-2 update (2026-04, UX refinements):** three further changes
+landed after the initial Unit 2 commit:
+
+1. **`sortOrder` field removed from Add/Edit forms; replaced with
+   per-row up/down reorder buttons.** `createReward` now auto-assigns
+   `sortOrder = (max existing) + 1`. A new
+   `moveReward(id, direction, actorUserId, filter)` service function
+   swaps a reward's `sortOrder` with its adjacent visible neighbor
+   under the current filter. Two new action handlers in
+   `features/reward-admin.js` — `reward_admin_moveup` and
+   `reward_admin_movedown` — invoke it. The buttons always render
+   (Slack Block Kit has no disabled-button state); `moveReward`
+   no-ops at the edges. `validateReward` no longer validates
+   `sortOrder`.
+2. **Active / Inactive / All filter dropdown** at the top of the
+   main view (`static_select`, `action_id: reward_admin_filter`).
+   Defaults to Active. The selected filter is stored as JSON in the
+   view's `private_metadata` and threaded through every subsequent
+   action (Add, Edit, Move, Submit) so the admin returns to the same
+   filter after any round trip. Edit view `private_metadata` is now
+   JSON-encoded `{ filter, rewardId }` instead of a raw reward ID
+   string.
+3. **Reward `description` rendered in the main view row** alongside
+   name and cost, so admins can see catalog copy without opening
+   Edit.
+
+The following task bullets refer to the original shape and remain as
+a historical record of what was committed under Unit 2; the current
+implementation matches this update block:
+
+- **2.2 / 2.14** — `validateReward` no longer checks `sortOrder`.
+- **2.5** — Editable fields still include `sortOrder` (moveReward
+  mutates it), but it is no longer submitted from the form.
+- **2.7** — `buildMainView(rewards, filter)` now renders a filter
+  `static_select` and an Add button in the top actions block;
+  sections include the description line; each row's actions block
+  contains Move up, Move down, and Edit buttons (all three, always).
+- **2.8 / 2.15** — The Add/Edit forms no longer include a `sortOrder`
+  `block_id`. The Edit view's `private_metadata` is JSON
+  `{ filter, rewardId }`.
+- **2.9** — `parseViewSubmission` no longer reads `sortOrder`.
+
+New exports in `service/rewardAdmin.js`: `moveReward`,
+`parseMainMetadata`, `parseEditMetadata` (the last two are consumed
+by the feature layer to decode `private_metadata`).
+
+No new proof artifacts are required for these refinements beyond
+the unit-tests; `npm test` and `npm run lint` pass on the current
+tree.
+
 #### 2.0 Proof Artifact(s)
 
 - Test: `npm test` passes with new `test/service/rewardAdmin.js` cases covering

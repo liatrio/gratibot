@@ -137,6 +137,40 @@ function; the individual task bullets below are preserved as a record
 of what was committed under Unit 2. See also the post-Unit-2
 `admin redeem` → `admin` rename noted in the tasks file.
 
+**Post-Unit-2 update (2026-04, UX refinements):** three further
+refinements landed after the initial Unit 2 commit.
+
+1. **`sortOrder` text input replaced by up/down reorder buttons.**
+   The Add/Edit forms no longer expose a `sortOrder` field. On
+   create, `createReward` auto-assigns `sortOrder = (current max) + 1`
+   so new rewards append to the end. Each row in the main view
+   renders "↑ Move up" and "↓ Move down" buttons that call a new
+   `moveReward(id, direction, actorUserId, filter)` service function;
+   `moveReward` swaps the target's `sortOrder` with the adjacent
+   visible neighbor within the current filter. Slack Block Kit has
+   no disabled-button state, so the buttons always render and
+   `moveReward` no-ops at the edges of the filtered view.
+   `validateReward` no longer checks `sortOrder`.
+2. **Active/Inactive/All filter dropdown at the top of the main
+   view.** The modal defaults to showing only active rewards; a
+   `static_select` (`action_id: reward_admin_filter`) lets the admin
+   switch between Active, Inactive, and All. The selected filter is
+   stored on the view via `private_metadata` (JSON-encoded so Edit
+   submissions can also carry the reward `_id` alongside the filter)
+   and preserved across Add, Edit, move, and view-update round trips.
+3. **Reward description shown in the main view row.** Each row's
+   section text now includes the reward's `description` on a line
+   below the cost, so admins can compare catalog copy at a glance
+   without opening the Edit form.
+
+Task-file bullets below (2.7, 2.8, 2.9, 2.15) referred to the
+original `sortOrder` form field and the original `buildMainView`
+shape. Those bullets remain as a historical record of the Unit 2
+commit; the current implementation matches this post-Unit-2 update.
+See also **Non-Goals** item 4 below, which is partially superseded:
+up/down reordering is now in scope, though true drag-and-drop is
+still not supported.
+
 **Functional Requirements:**
 
 - The system shall register a new Bolt message matcher that fires on the
@@ -313,8 +347,9 @@ the catalog.
    type.
 3. **Bulk import/export UI** — no CSV import, no JSON export, no API
    endpoint to mutate the catalog from outside Slack.
-4. **Drag-and-drop reordering** — admins set `sortOrder` as a number;
-   tie-breaking is by name.
+4. **Drag-and-drop reordering** — admins reorder via "↑ Move up" /
+   "↓ Move down" buttons per row (see post-Unit-2 update); true
+   drag-and-drop is not supported. Tie-breaking is by name.
 5. **Mutating historical deductions** — `deductions` remain immutable
    snapshots. `rewardName` stored on a deduction is not retroactively
    renamed when the rewards catalog is edited.

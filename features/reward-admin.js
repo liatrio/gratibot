@@ -17,6 +17,9 @@ module.exports = function (app) {
   app.action("reward_admin_open", handleOpenAction);
   app.action("reward_admin_add", handleAddAction);
   app.action("reward_admin_edit", handleEditAction);
+  app.action("reward_admin_moveup", handleMoveUpAction);
+  app.action("reward_admin_movedown", handleMoveDownAction);
+  app.action("reward_admin_filter", handleFilterChange);
   app.view("reward_admin_add_submit", handleAddSubmit);
   app.view("reward_admin_edit_submit", handleEditSubmit);
 };
@@ -76,7 +79,27 @@ async function handleOpenAction({ ack, body, client, respond }) {
   const rewards = await rewardAdmin.listRewards();
   await client.views.open({
     trigger_id: body.trigger_id,
-    view: rewardAdmin.buildMainView(rewards),
+    view: rewardAdmin.buildMainView(rewards, "active"),
+  });
+}
+
+async function handleFilterChange({ ack, body, client }) {
+  await ack();
+  if (!rewardAdmin.isAuthorized(body.user.id)) {
+    winston.warn("non-admin attempted reward_admin_filter", {
+      func: "feature.rewardAdmin.handleFilterChange",
+      callingUser: body.user.id,
+    });
+    return;
+  }
+
+  const selected = body.actions[0].selected_option;
+  const filter = selected ? selected.value : "active";
+  const rewards = await rewardAdmin.listRewards();
+  await client.views.update({
+    view_id: body.view.id,
+    hash: body.view.hash,
+    view: rewardAdmin.buildMainView(rewards, filter),
   });
 }
 
@@ -90,10 +113,11 @@ async function handleAddAction({ ack, body, client }) {
     return;
   }
 
+  const { filter } = rewardAdmin.parseMainMetadata(body.view.private_metadata);
   await client.views.update({
     view_id: body.view.id,
     hash: body.view.hash,
-    view: rewardAdmin.buildAddView(),
+    view: rewardAdmin.buildAddView(filter),
   });
 }
 
@@ -118,11 +142,42 @@ async function handleEditAction({ ack, body, client }) {
     return;
   }
 
+  const { filter } = rewardAdmin.parseMainMetadata(body.view.private_metadata);
   await client.views.update({
     view_id: body.view.id,
     hash: body.view.hash,
-    view: rewardAdmin.buildEditView(reward),
+    view: rewardAdmin.buildEditView(reward, filter),
   });
+}
+
+async function handleMoveAction(direction, { ack, body, client }) {
+  await ack();
+  if (!rewardAdmin.isAuthorized(body.user.id)) {
+    winston.warn(`non-admin attempted reward_admin_move${direction}`, {
+      func: "feature.rewardAdmin.handleMoveAction",
+      callingUser: body.user.id,
+    });
+    return;
+  }
+
+  const rewardId = body.actions[0].value;
+  const { filter } = rewardAdmin.parseMainMetadata(body.view.private_metadata);
+  await rewardAdmin.moveReward(rewardId, direction, body.user.id, filter);
+
+  const rewards = await rewardAdmin.listRewards();
+  await client.views.update({
+    view_id: body.view.id,
+    hash: body.view.hash,
+    view: rewardAdmin.buildMainView(rewards, filter),
+  });
+}
+
+async function handleMoveUpAction(args) {
+  return handleMoveAction("up", args);
+}
+
+async function handleMoveDownAction(args) {
+  return handleMoveAction("down", args);
 }
 
 async function handleAddSubmit({ ack, body, view }) {
@@ -147,10 +202,11 @@ async function handleAddSubmit({ ack, body, view }) {
     }
 
     await rewardAdmin.createReward(input, body.user.id);
+    const { filter } = rewardAdmin.parseMainMetadata(view.private_metadata);
     const rewards = await rewardAdmin.listRewards();
     await ack({
       response_action: "update",
-      view: rewardAdmin.buildMainView(rewards),
+      view: rewardAdmin.buildMainView(rewards, filter),
     });
   } catch (error) {
     winston.error("reward_admin_add_submit failed", {
@@ -193,12 +249,14 @@ async function handleEditSubmit({ ack, body, view }) {
       return;
     }
 
-    const rewardId = view.private_metadata;
+    const { filter, rewardId } = rewardAdmin.parseEditMetadata(
+      view.private_metadata,
+    );
     await rewardAdmin.updateReward(rewardId, input, body.user.id);
     const rewards = await rewardAdmin.listRewards();
     await ack({
       response_action: "update",
-      view: rewardAdmin.buildMainView(rewards),
+      view: rewardAdmin.buildMainView(rewards, filter),
     });
   } catch (error) {
     winston.error("reward_admin_edit_submit failed", {

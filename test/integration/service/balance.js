@@ -32,9 +32,11 @@ describe("integration: service/balance", function () {
   });
 
   beforeEach(async () => {
-    await recognitionCollection.deleteMany({});
-    await goldenRecognitionCollection.deleteMany({});
-    await deductionCollection.deleteMany({});
+    await Promise.all([
+      recognitionCollection.deleteMany({}),
+      goldenRecognitionCollection.deleteMany({}),
+      deductionCollection.deleteMany({}),
+    ]);
   });
 
   afterEach(() => {

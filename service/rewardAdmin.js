@@ -32,18 +32,9 @@ function filterRewards(rewards, filter) {
   return rewards.filter((r) => r.active !== false);
 }
 
-function parseMainMetadata(raw) {
-  if (!raw) return { filter: "active" };
-  try {
-    const parsed = JSON.parse(raw);
-    return { filter: normalizeFilter(parsed.filter) };
-  } catch {
-    return { filter: "active" };
-  }
-}
-
-function parseEditMetadata(raw) {
-  if (!raw) return { filter: "active", rewardId: null };
+function parseMetadata(raw) {
+  const defaults = { filter: "active", rewardId: null };
+  if (!raw) return defaults;
   try {
     const parsed = JSON.parse(raw);
     return {
@@ -51,7 +42,7 @@ function parseEditMetadata(raw) {
       rewardId: parsed.rewardId || null,
     };
   } catch {
-    return { filter: "active", rewardId: null };
+    return defaults;
   }
 }
 
@@ -63,14 +54,6 @@ function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function isInteger(value) {
-  return (
-    typeof value === "number" &&
-    Number.isFinite(value) &&
-    Number.isInteger(value)
-  );
-}
-
 function validateReward(input) {
   const errors = {};
 
@@ -80,7 +63,7 @@ function validateReward(input) {
   if (!isNonEmptyString(input.description)) {
     errors.description = "Description is required.";
   }
-  if (!isInteger(input.cost) || input.cost < 0) {
+  if (!Number.isInteger(input.cost) || input.cost < 0) {
     errors.cost = "Cost must be a non-negative integer.";
   }
   if (!isNonEmptyString(input.imageURL)) {
@@ -313,56 +296,36 @@ function buildMainView(rewards, filter = "active") {
   };
 }
 
+function textInput(blockId, label, values, extra) {
+  const initial =
+    values[blockId] !== undefined
+      ? { initial_value: String(values[blockId]) }
+      : {};
+  return {
+    type: "input",
+    block_id: blockId,
+    label: { type: "plain_text", text: label },
+    element: {
+      type: "plain_text_input",
+      action_id: `${blockId}_action`,
+      ...(extra || {}),
+      ...initial,
+    },
+  };
+}
+
+const ACTIVE_OPTION = {
+  text: { type: "plain_text", text: "Show this reward to end users" },
+  value: "active",
+};
+
 function formInputBlocks(initial) {
   const values = initial || {};
   return [
-    {
-      type: "input",
-      block_id: "name",
-      label: { type: "plain_text", text: "Name" },
-      element: {
-        type: "plain_text_input",
-        action_id: "name_action",
-        initial_value:
-          values.name !== undefined ? String(values.name) : undefined,
-      },
-    },
-    {
-      type: "input",
-      block_id: "description",
-      label: { type: "plain_text", text: "Description" },
-      element: {
-        type: "plain_text_input",
-        action_id: "description_action",
-        multiline: true,
-        initial_value:
-          values.description !== undefined
-            ? String(values.description)
-            : undefined,
-      },
-    },
-    {
-      type: "input",
-      block_id: "cost",
-      label: { type: "plain_text", text: "Cost (fistbumps)" },
-      element: {
-        type: "plain_text_input",
-        action_id: "cost_action",
-        initial_value:
-          values.cost !== undefined ? String(values.cost) : undefined,
-      },
-    },
-    {
-      type: "input",
-      block_id: "imageURL",
-      label: { type: "plain_text", text: "Image URL" },
-      element: {
-        type: "plain_text_input",
-        action_id: "imageURL_action",
-        initial_value:
-          values.imageURL !== undefined ? String(values.imageURL) : undefined,
-      },
-    },
+    textInput("name", "Name", values),
+    textInput("description", "Description", values, { multiline: true }),
+    textInput("cost", "Cost (fistbumps)", values),
+    textInput("imageURL", "Image URL", values),
     {
       type: "input",
       block_id: "active",
@@ -371,42 +334,11 @@ function formInputBlocks(initial) {
       element: {
         type: "checkboxes",
         action_id: "active_action",
-        options: [
-          {
-            text: { type: "plain_text", text: "Show this reward to end users" },
-            value: "active",
-          },
-        ],
-        initial_options:
-          values.active !== false
-            ? [
-                {
-                  text: {
-                    type: "plain_text",
-                    text: "Show this reward to end users",
-                  },
-                  value: "active",
-                },
-              ]
-            : undefined,
+        options: [ACTIVE_OPTION],
+        ...(values.active !== false && { initial_options: [ACTIVE_OPTION] }),
       },
     },
   ];
-}
-
-function stripUndefined(block) {
-  if (Array.isArray(block)) {
-    return block.map(stripUndefined);
-  }
-  if (block && typeof block === "object") {
-    const out = {};
-    for (const key of Object.keys(block)) {
-      if (block[key] === undefined) continue;
-      out[key] = stripUndefined(block[key]);
-    }
-    return out;
-  }
-  return block;
 }
 
 function buildAddView(filter = "active") {
@@ -417,7 +349,7 @@ function buildAddView(filter = "active") {
     title: { type: "plain_text", text: "Add Reward" },
     submit: { type: "plain_text", text: "Save" },
     close: { type: "plain_text", text: "Cancel" },
-    blocks: stripUndefined(formInputBlocks({ active: true })),
+    blocks: formInputBlocks({ active: true }),
   };
 }
 
@@ -432,7 +364,7 @@ function buildEditView(reward, filter = "active") {
     title: { type: "plain_text", text: "Edit Reward" },
     submit: { type: "plain_text", text: "Save" },
     close: { type: "plain_text", text: "Cancel" },
-    blocks: stripUndefined(formInputBlocks(reward)),
+    blocks: formInputBlocks(reward),
   };
 }
 
@@ -482,6 +414,5 @@ module.exports = {
   buildAddView,
   buildEditView,
   parseViewSubmission,
-  parseMainMetadata,
-  parseEditMetadata,
+  parseMetadata,
 };

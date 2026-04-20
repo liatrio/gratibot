@@ -34,8 +34,10 @@ describe("features/redeem", () => {
       const handler = findHandler("message", USER_REDEEM_MATCHER);
 
       sinon.stub(balance, "currentBalance").resolves(17);
+      const fakeRewards = [{ name: "Widget" }];
       const fakeBlocks = [{ type: "section" }];
-      sinon.stub(redeem, "createRedeemBlocks").returns(fakeBlocks);
+      sinon.stub(redeem, "fetchActiveRewards").resolves(fakeRewards);
+      sinon.stub(redeem, "buildRedeemBlocks").returns(fakeBlocks);
 
       const client = buildClient();
       const message = {
@@ -48,7 +50,9 @@ describe("features/redeem", () => {
       await handler({ message, client });
 
       expect(balance.currentBalance.calledOnce).to.equal(true);
-      expect(redeem.createRedeemBlocks.firstCall.args[0]).to.equal(17);
+      expect(redeem.fetchActiveRewards.calledOnce).to.equal(true);
+      expect(redeem.buildRedeemBlocks.firstCall.args[0]).to.equal(fakeRewards);
+      expect(redeem.buildRedeemBlocks.firstCall.args[1]).to.equal(17);
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       const args = client.chat.postMessage.firstCall.args[0];
       expect(args.text).to.equal("Gratibot Rewards");

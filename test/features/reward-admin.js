@@ -3,6 +3,7 @@ const expect = require("chai").expect;
 
 const rewardAdminFeature = require("../../features/reward-admin");
 const rewardAdmin = require("../../service/rewardAdmin");
+const { GratitudeError } = require("../../service/errors");
 const { createMockApp } = require("../mocks/bolt-app");
 
 const ADMIN_MATCHER = /^\s*admin\s*$/i;
@@ -83,28 +84,6 @@ describe("features/reward-admin", function () {
       expect(button.type).to.equal("button");
       expect(button.text.text).to.equal("Manage Rewards");
       expect(button.action_id).to.equal("reward_admin_open");
-    });
-  });
-
-  describe("admin matcher", function () {
-    it("matches plain 'admin'", function () {
-      expect(ADMIN_MATCHER.test("admin")).to.equal(true);
-    });
-
-    it("matches 'ADMIN' (case-insensitive)", function () {
-      expect(ADMIN_MATCHER.test("ADMIN")).to.equal(true);
-    });
-
-    it("matches '  admin  ' (whitespace-tolerant)", function () {
-      expect(ADMIN_MATCHER.test("  admin  ")).to.equal(true);
-    });
-
-    it("does NOT match 'admin redeem'", function () {
-      expect(ADMIN_MATCHER.test("admin redeem")).to.equal(false);
-    });
-
-    it("does NOT match 'administrate'", function () {
-      expect(ADMIN_MATCHER.test("administrate")).to.equal(false);
     });
   });
 
@@ -429,7 +408,6 @@ describe("features/reward-admin", function () {
 
       sinon.stub(rewardAdmin, "isAuthorized").returns(true);
       sinon.stub(rewardAdmin, "parseViewSubmission").returns(parsed);
-      sinon.stub(rewardAdmin, "validateReward").returns({ ok: true });
       const createStub = sinon.stub(rewardAdmin, "createReward").resolves({});
       sinon.stub(rewardAdmin, "listRewards").resolves(rewards);
       sinon.stub(rewardAdmin, "buildMainView").returns(fakeMainView);
@@ -451,7 +429,7 @@ describe("features/reward-admin", function () {
       expect(ackArg.view).to.equal(fakeMainView);
     });
 
-    it("acks with response_action: 'errors' when validation fails", async function () {
+    it("acks with response_action: 'errors' when createReward throws GratitudeError", async function () {
       const { app, findHandler } = createMockApp();
       rewardAdminFeature(app);
       const handler = findHandler("view", "reward_admin_add_submit");
@@ -460,11 +438,12 @@ describe("features/reward-admin", function () {
       sinon
         .stub(rewardAdmin, "parseViewSubmission")
         .returns({ name: "", description: "", cost: -1 });
-      sinon.stub(rewardAdmin, "validateReward").returns({
-        ok: false,
-        errors: { name: "Name is required." },
-      });
-      const createStub = sinon.stub(rewardAdmin, "createReward").resolves({});
+      const validationErrors = { name: "Name is required." };
+      sinon
+        .stub(rewardAdmin, "createReward")
+        .rejects(
+          new GratitudeError(validationErrors, "Reward validation failed"),
+        );
 
       const ack = sinon.stub().resolves();
 
@@ -474,10 +453,9 @@ describe("features/reward-admin", function () {
         view: { state: { values: {} } },
       });
 
-      expect(createStub.called).to.equal(false);
       const ackArg = ack.firstCall.args[0];
       expect(ackArg.response_action).to.equal("errors");
-      expect(ackArg.errors).to.deep.equal({ name: "Name is required." });
+      expect(ackArg.errors).to.deep.equal(validationErrors);
     });
   });
 
@@ -499,7 +477,6 @@ describe("features/reward-admin", function () {
 
       sinon.stub(rewardAdmin, "isAuthorized").returns(true);
       sinon.stub(rewardAdmin, "parseViewSubmission").returns(parsed);
-      sinon.stub(rewardAdmin, "validateReward").returns({ ok: true });
       const updateStub = sinon.stub(rewardAdmin, "updateReward").resolves({});
       sinon.stub(rewardAdmin, "listRewards").resolves([]);
       sinon.stub(rewardAdmin, "buildMainView").returns(fakeMainView);

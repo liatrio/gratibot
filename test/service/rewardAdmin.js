@@ -329,44 +329,39 @@ describe("service/rewardAdmin", function () {
     });
   });
 
-  describe("parseMainMetadata", function () {
+  describe("parseMetadata", function () {
     it("returns the stored filter when valid", function () {
       const raw = JSON.stringify({ filter: "inactive" });
-      expect(rewardAdmin.parseMainMetadata(raw)).to.deep.equal({
+      expect(rewardAdmin.parseMetadata(raw)).to.deep.equal({
         filter: "inactive",
+        rewardId: null,
       });
     });
 
     it("defaults to active when raw is empty or unparseable", function () {
-      expect(rewardAdmin.parseMainMetadata("")).to.deep.equal({
+      expect(rewardAdmin.parseMetadata("")).to.deep.equal({
         filter: "active",
+        rewardId: null,
       });
-      expect(rewardAdmin.parseMainMetadata("not-json")).to.deep.equal({
+      expect(rewardAdmin.parseMetadata("not-json")).to.deep.equal({
         filter: "active",
+        rewardId: null,
       });
     });
 
     it("defaults to active when the filter value is unknown", function () {
       const raw = JSON.stringify({ filter: "bogus" });
-      expect(rewardAdmin.parseMainMetadata(raw)).to.deep.equal({
-        filter: "active",
-      });
-    });
-  });
-
-  describe("parseEditMetadata", function () {
-    it("returns filter and rewardId when both are set", function () {
-      const raw = JSON.stringify({ filter: "all", rewardId: "REWARDID" });
-      expect(rewardAdmin.parseEditMetadata(raw)).to.deep.equal({
-        filter: "all",
-        rewardId: "REWARDID",
-      });
-    });
-
-    it("returns defaults when raw is unparseable", function () {
-      expect(rewardAdmin.parseEditMetadata("garbage")).to.deep.equal({
+      expect(rewardAdmin.parseMetadata(raw)).to.deep.equal({
         filter: "active",
         rewardId: null,
+      });
+    });
+
+    it("returns filter and rewardId when both are set", function () {
+      const raw = JSON.stringify({ filter: "all", rewardId: "REWARDID" });
+      expect(rewardAdmin.parseMetadata(raw)).to.deep.equal({
+        filter: "all",
+        rewardId: "REWARDID",
       });
     });
   });

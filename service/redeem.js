@@ -3,20 +3,20 @@ const rewardCollection = require("../database/rewardCollection");
 
 const { redemptionAdmins } = config;
 
-async function createRedeemBlocks(currentBalance) {
-  const rewards = await rewardCollection
+function fetchActiveRewards() {
+  return rewardCollection
     .find({ active: true })
     .sort({ sortOrder: 1, name: 1 })
     .toArray();
+}
 
-  let blocks = [];
-
-  blocks.push(redeemHeader());
-  blocks.push(redeemHelpText(currentBalance));
-  blocks.push(...redeemItems(rewards));
-  blocks.push(redeemSelector(rewards));
-
-  return blocks;
+function buildRedeemBlocks(rewards, currentBalance) {
+  return [
+    redeemHeader(),
+    redeemHelpText(currentBalance),
+    ...redeemItems(rewards),
+    redeemSelector(rewards),
+  ];
 }
 
 function redeemHeader() {
@@ -129,7 +129,8 @@ function getSelectedItemDetails(selectedItem) {
 }
 
 module.exports = {
-  createRedeemBlocks,
+  fetchActiveRewards,
+  buildRedeemBlocks,
   redeemNotificationUsers,
   getSelectedItemDetails,
   redeemHeader,

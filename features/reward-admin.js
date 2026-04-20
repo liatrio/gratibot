@@ -24,9 +24,6 @@ module.exports = function (app) {
   app.view("reward_admin_edit_submit", handleEditSubmit);
 };
 
-// Collects the admin-control buttons the given user is permitted to see.
-// Future admin capabilities should append their own entry here gated by
-// the relevant authorization check.
 function adminButtonsFor(userId) {
   const buttons = [];
   if (rewardAdmin.isAuthorized(userId)) {
@@ -113,7 +110,7 @@ async function handleAddAction({ ack, body, client }) {
     return;
   }
 
-  const { filter } = rewardAdmin.parseMainMetadata(body.view.private_metadata);
+  const { filter } = rewardAdmin.parseMetadata(body.view.private_metadata);
   await client.views.update({
     view_id: body.view.id,
     hash: body.view.hash,
@@ -142,7 +139,7 @@ async function handleEditAction({ ack, body, client }) {
     return;
   }
 
-  const { filter } = rewardAdmin.parseMainMetadata(body.view.private_metadata);
+  const { filter } = rewardAdmin.parseMetadata(body.view.private_metadata);
   await client.views.update({
     view_id: body.view.id,
     hash: body.view.hash,
@@ -161,7 +158,7 @@ async function handleMoveAction(direction, { ack, body, client }) {
   }
 
   const rewardId = body.actions[0].value;
-  const { filter } = rewardAdmin.parseMainMetadata(body.view.private_metadata);
+  const { filter } = rewardAdmin.parseMetadata(body.view.private_metadata);
   await rewardAdmin.moveReward(rewardId, direction, body.user.id, filter);
 
   const rewards = await rewardAdmin.listRewards();
@@ -195,14 +192,8 @@ async function handleAddSubmit({ ack, body, view }) {
 
   try {
     const input = rewardAdmin.parseViewSubmission(view);
-    const validation = rewardAdmin.validateReward(input);
-    if (!validation.ok) {
-      await ack({ response_action: "errors", errors: validation.errors });
-      return;
-    }
-
     await rewardAdmin.createReward(input, body.user.id);
-    const { filter } = rewardAdmin.parseMainMetadata(view.private_metadata);
+    const { filter } = rewardAdmin.parseMetadata(view.private_metadata);
     const rewards = await rewardAdmin.listRewards();
     await ack({
       response_action: "update",
@@ -243,13 +234,7 @@ async function handleEditSubmit({ ack, body, view }) {
 
   try {
     const input = rewardAdmin.parseViewSubmission(view);
-    const validation = rewardAdmin.validateReward(input);
-    if (!validation.ok) {
-      await ack({ response_action: "errors", errors: validation.errors });
-      return;
-    }
-
-    const { filter, rewardId } = rewardAdmin.parseEditMetadata(
+    const { filter, rewardId } = rewardAdmin.parseMetadata(
       view.private_metadata,
     );
     await rewardAdmin.updateReward(rewardId, input, body.user.id);

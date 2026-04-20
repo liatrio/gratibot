@@ -50,15 +50,22 @@ describe("service/redeem", () => {
     });
   });
 
-  describe("createRedeemBlocks", () => {
-    it("returns header and help-text blocks and queries active rewards", async () => {
+  describe("fetchActiveRewards", () => {
+    it("queries active rewards sorted by sortOrder then name", async () => {
       const { find, sort, toArray } = stubFindSortToArray([]);
 
-      const actualBlocks = await redeem.createRedeemBlocks(100);
+      await redeem.fetchActiveRewards();
 
       expect(find.calledWith({ active: true })).to.equal(true);
       expect(sort.calledWith({ sortOrder: 1, name: 1 })).to.equal(true);
       expect(toArray.calledOnce).to.equal(true);
+    });
+  });
+
+  describe("buildRedeemBlocks", () => {
+    it("returns header and help-text blocks with the given balance", () => {
+      const actualBlocks = redeem.buildRedeemBlocks([], 100);
+
       expect(actualBlocks[0]).to.deep.eq({
         type: "header",
         text: { type: "plain_text", text: "Gratibot Rewards" },
@@ -72,10 +79,7 @@ describe("service/redeem", () => {
       });
     });
 
-    it("renders only active rewards, sorted by sortOrder then name", async () => {
-      // DB would sort for us; we feed in the already-sorted set here to
-      // assert the block order mirrors the DB sort (active-only, sortOrder
-      // ascending, name tiebreak).
+    it("renders rewards in the order given", () => {
       const rewards = [
         {
           name: "Alpha",
@@ -99,11 +103,9 @@ describe("service/redeem", () => {
           sortOrder: 1,
         },
       ];
-      stubFindSortToArray(rewards);
 
-      const blocks = await redeem.createRedeemBlocks(10);
+      const blocks = redeem.buildRedeemBlocks(rewards, 10);
 
-      // blocks[0] header, blocks[1] help, blocks[2..4] item rows, last = selector
       const itemTexts = blocks
         .slice(2, 2 + rewards.length)
         .map((b) => b.text.text);

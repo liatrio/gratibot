@@ -20,10 +20,13 @@ async function respondToRedeem({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  const currentBalance = await balance.currentBalance(message.user);
+  const [currentBalance, rewards] = await Promise.all([
+    balance.currentBalance(message.user),
+    redeem.fetchActiveRewards(),
+  ]);
   await respondToUser(client, message, {
     text: "Gratibot Rewards",
-    blocks: await redeem.createRedeemBlocks(currentBalance),
+    blocks: redeem.buildRedeemBlocks(rewards, currentBalance),
   });
 }
 

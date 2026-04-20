@@ -152,7 +152,7 @@ modal for reward CRUD`.
 - [x] 2.19 From a non-admin account, DM `admin redeem` and screenshot the reply showing `"You are not authorized to manage rewards."` to `04-proofs/2.0-non-admin-reject.png`.
 - [x] 2.20 Stage and commit Unit 2's files with message `feat(reward-admin): add in-Slack admin modal for reward CRUD`.
 
-### [~] 3.0 In-modal image upload via Slack `file_input` with public-URL conversion (Unit 3)
+### [x] 3.0 In-modal image upload via Slack `file_input` with public-URL conversion (Unit 3)
 
 Replace the plain-text `imageURL` field in Add/Edit forms with Slack's `file_input`
 element (single file; `jpg|jpeg|png|gif|webp`; `max_files: 1`). On submit, resolve the
@@ -205,7 +205,7 @@ in-modal image upload via file_input`.
 - [x] 3.9 ~~Update `validateReward` to no longer require `imageURL` when the caller indicates an Edit-with-no-new-file path (e.g., accept `imageURL: null` as "skip validation for this field").~~ **SKIPPED — SPIKE_FALLBACK per Task 3.2.**
 - [x] 3.10 ~~Update `test/service/rewardAdmin.js` with upload-flow cases: (a) success — stub `client.files.sharedPublicURL` to resolve with a `permalink_public` + file metadata, assert the returned URL is the expected public form; (b) Slack API failure — stub to resolve `{ ok: false, error: "not_allowed_token_type" }`, assert `resolveUploadedImageURL` throws `GratitudeError` with the spec-defined user message; (c) missing-file-on-create — exercise `parseViewSubmission` with an empty `imageFile` block, then `validateReward`, assert the returned errors map contains the `imageFile` key; (d) edit-preserves-existing-image — call `parseViewSubmission` on an Edit `view` whose `imageFile` block has no files, assert the returned object carries `imageURL: null`, then assert `updateReward` (or the Edit `view_submission` handler) issues an `updateOne` whose `$set` payload does **not** include `imageURL` (so the previously-seeded URL is preserved); (e) missing-fields-in-success-response — stub `client.files.sharedPublicURL` to resolve `{ ok: true, file: {} }` (no `permalink_public`), assert `resolveUploadedImageURL` throws `GratitudeError` with the spec-defined user message.~~ **SKIPPED — SPIKE_FALLBACK per Task 3.2.**
 - [x] 3.11 ~~Run `npm run lint` and `npm test`. Capture passing output to `04-proofs/3.0-test-output.txt`. Reinstall the dev Slack app to pick up the new scopes. Upload a reward image through the modal end-to-end, screenshot the file picker + the uploaded image rendering in a fresh `redeem` DM to `04-proofs/3.0-upload-end-to-end.png`. Force a failure (e.g., revoke scope mid-flow) and screenshot the modal error to `04-proofs/3.0-upload-error.png`. Capture `git diff main..HEAD -- slack_app_manifest.yml > 04-proofs/3.0-manifest.diff`.~~ **SKIPPED — SPIKE_FALLBACK per Task 3.2.** `npm run lint` + `npm test` still run at 3.12 as a sanity check against unrelated regressions.
-- [~] 3.12 Stage and commit Unit 3's files with message `feat(reward-admin): add in-modal image upload via file_input` (or `docs(spec-04): record file upload spike` if `SPIKE_FALLBACK`). **Applied: `docs(spec-04): record file upload spike`.**
+- [x] 3.12 Stage and commit Unit 3's files with message `feat(reward-admin): add in-modal image upload via file_input` (or `docs(spec-04): record file upload spike` if `SPIKE_FALLBACK`). **Applied: `docs(spec-04): record file upload spike` (commit `3f811a6`).**
 
 ### [ ] 4.0 Remove `rewards.json` and reduce `service/rewardSeed.js` to the Liatrio Store entry (Unit 4)
 

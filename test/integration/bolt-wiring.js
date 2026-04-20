@@ -1,12 +1,3 @@
-// Integration suite that drives a real @slack/bolt App through processEvent
-// against a no-op Receiver. Three assertions:
-//  (a) directMessage() routes only DM events; the channel-equivalent event
-//      is filtered out.
-//  (b) the regex matcher on app.message() filters by message text.
-//  (c) when service/recognition.validateAndSendGratitude rejects with
-//      GratitudeError, the feature's catch path responds via the captured
-//      Slack client stub with the expected user-facing message.
-//
 // Requires for feature/service modules live inside before() so they run
 // AFTER the root beforeAll in test/integration/setup.js patches the cached
 // config.mongo_url. Otherwise the transitive require of database/db.js
@@ -201,7 +192,7 @@ describe("integration: bolt-wiring", function () {
         body: eventBody({
           channelType: "channel",
           channel: "Cchannel",
-          text: ":fistbump: <@U2> awesome",
+          text: ":fistbump: <@Ureceiver> awesome",
           ts: "3.0",
           eventId: "Ev-grat",
         }),

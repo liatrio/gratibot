@@ -1,9 +1,3 @@
-// Integration tests for service/leaderboard against a real (in-memory) MongoDB.
-//
-// Follows the deferred-require pattern established in balance.js — service
-// and database modules must be required inside before() so they pick up the
-// URI that test/integration/setup.js patches onto the cached config module.
-
 const sinon = require("sinon");
 const expect = require("chai").expect;
 
@@ -30,9 +24,11 @@ describe("integration: service/leaderboard", function () {
   });
 
   beforeEach(async () => {
-    await recognitionCollection.deleteMany({});
-    await goldenRecognitionCollection.deleteMany({});
-    await deductionCollection.deleteMany({});
+    await Promise.all([
+      recognitionCollection.deleteMany({}),
+      goldenRecognitionCollection.deleteMany({}),
+      deductionCollection.deleteMany({}),
+    ]);
   });
 
   afterEach(() => {

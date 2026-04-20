@@ -76,7 +76,7 @@ describe("features/recognize", () => {
       expect(gratitude.receivers.map((r) => r.id)).to.deep.equal(["Ureceiver"]);
       expect(gratitude.giver_in_receivers).to.equal(false);
       expect(gratitude.channel).to.equal("Cchannel");
-      expect(gratitude.type).to.equal(":fistbump:");
+      expect(gratitude.type).to.equal(config.recognizeEmoji);
 
       expect(client.reactions.add.calledOnce).to.equal(true);
       const reactionArgs = client.reactions.add.firstCall.args[0];
@@ -324,8 +324,6 @@ describe("features/recognize", () => {
       expect(gratitude.count).to.equal(1);
       expect(gratitude.channel).to.equal("Cchannel");
 
-      // sendNotificationToReceivers + respondToUser — the reaction handler does
-      // not call client.reactions.add.
       expect(client.chat.postMessage.called).to.equal(true);
       expect(client.reactions.add.called).to.equal(false);
     });

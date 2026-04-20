@@ -1,5 +1,3 @@
-// Integration tests for service/report against a real (in-memory) MongoDB.
-
 const sinon = require("sinon");
 const expect = require("chai").expect;
 const moment = require("moment-timezone");
@@ -27,9 +25,11 @@ describe("integration: service/report", function () {
   });
 
   beforeEach(async () => {
-    await recognitionCollection.deleteMany({});
-    await goldenRecognitionCollection.deleteMany({});
-    await deductionCollection.deleteMany({});
+    await Promise.all([
+      recognitionCollection.deleteMany({}),
+      goldenRecognitionCollection.deleteMany({}),
+      deductionCollection.deleteMany({}),
+    ]);
   });
 
   afterEach(() => {

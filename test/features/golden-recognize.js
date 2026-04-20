@@ -66,11 +66,9 @@ describe("features/golden-recognize", () => {
 
       expect(recognition.validateAndSendGratitude.calledOnce).to.equal(true);
       const gratitude = recognition.validateAndSendGratitude.firstCall.args[0];
-      expect(gratitude.type).to.equal(":goldenfistbump:");
+      expect(gratitude.type).to.equal(config.goldenRecognizeEmoji);
       expect(gratitude.receivers.map((r) => r.id)).to.deep.equal(["Ureceiver"]);
 
-      // sendNotificationToReceivers + respondToUser (ephemeral for channel) +
-      // postMessage to the golden channel.
       expect(client.chat.postMessage.callCount).to.equal(2);
       const channelPost = client.chat.postMessage
         .getCalls()

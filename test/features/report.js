@@ -5,6 +5,8 @@ const reportFeature = require("../../features/report");
 const report = require("../../service/report");
 const { createMockApp } = require("../mocks/bolt-app");
 
+const REPORT_MATCHER = /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i;
+
 function buildClient({ usersInfoOk = true } = {}) {
   return {
     users: {
@@ -40,10 +42,7 @@ describe("features/report", () => {
       stubReportServiceHappy();
       const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = findHandler(
-        "message",
-        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
-      );
+      const handler = findHandler("message", REPORT_MATCHER);
 
       const client = buildClient();
       const message = {
@@ -71,10 +70,7 @@ describe("features/report", () => {
       stubReportServiceHappy();
       const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = findHandler(
-        "message",
-        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
-      );
+      const handler = findHandler("message", REPORT_MATCHER);
 
       const client = buildClient();
       const message = {
@@ -93,10 +89,7 @@ describe("features/report", () => {
       stubReportServiceHappy();
       const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = findHandler(
-        "message",
-        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
-      );
+      const handler = findHandler("message", REPORT_MATCHER);
 
       const client = buildClient();
       const message = {
@@ -119,10 +112,7 @@ describe("features/report", () => {
 
       const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = findHandler(
-        "message",
-        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
-      );
+      const handler = findHandler("message", REPORT_MATCHER);
 
       const client = buildClient({ usersInfoOk: false });
       const message = {
@@ -150,10 +140,7 @@ describe("features/report", () => {
 
       const { app, findHandler } = createMockApp();
       reportFeature(app);
-      const handler = findHandler(
-        "message",
-        /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
-      );
+      const handler = findHandler("message", REPORT_MATCHER);
 
       const client = buildClient();
       const message = {

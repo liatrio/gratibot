@@ -31,11 +31,11 @@ function setAdmins(admins) {
 describe("features/deduction", () => {
   let originalAdmins;
 
-  beforeEach(function () {
+  beforeEach(() => {
     originalAdmins = [...config.redemptionAdmins];
   });
 
-  afterEach(function () {
+  afterEach(() => {
     sinon.restore();
     setAdmins(originalAdmins);
   });
@@ -112,41 +112,26 @@ describe("features/deduction", () => {
         "isBalanceSufficent",
       );
 
-      // Too few tokens (3)
-      await handler({
-        message: {
-          user: "Uadmin",
-          text: "<@Ugratibot> deduct <@Uother>",
-          channel: "Ddm",
-          channel_type: "im",
-        },
-        client,
-      });
+      const malformedTexts = [
+        "<@Ugratibot> deduct <@Uother>",
+        "<@Ugratibot> deduct notauser 5",
+        "<@Ugratibot> deduct <@Uother> notanumber",
+      ];
 
-      // Bad user regex at index 2
-      await handler({
-        message: {
-          user: "Uadmin",
-          text: "<@Ugratibot> deduct notauser 5",
-          channel: "Ddm",
-          channel_type: "im",
-        },
-        client,
-      });
-
-      // Non-numeric value at index 3
-      await handler({
-        message: {
-          user: "Uadmin",
-          text: "<@Ugratibot> deduct <@Uother> notanumber",
-          channel: "Ddm",
-          channel_type: "im",
-        },
-        client,
-      });
+      for (const text of malformedTexts) {
+        await handler({
+          message: {
+            user: "Uadmin",
+            text,
+            channel: "Ddm",
+            channel_type: "im",
+          },
+          client,
+        });
+      }
 
       expect(isBalanceSufficentStub.called).to.equal(false);
-      expect(client.chat.postMessage.callCount).to.equal(3);
+      expect(client.chat.postMessage.callCount).to.equal(malformedTexts.length);
       client.chat.postMessage.getCalls().forEach((call) => {
         expect(call.args[0].text).to.include(
           "You must specify a user and value to deduct",

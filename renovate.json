@@ -7,6 +7,7 @@
   "labels": ["renovate"],
   "timezone": "America/Los_Angeles",
   "schedule": ["* * * * 0,6"],
+  "ignorePaths": ["docs/**"],
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],

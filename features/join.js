@@ -10,7 +10,7 @@ module.exports = function (app) {
 
 async function joinPublicChannel({ event, client }) {
   try {
-    client.conversations.join({ channel: event.channel.id });
+    await client.conversations.join({ channel: event.channel.id });
   } catch (e) {
     if (e instanceof SlackError) {
       return handleSlackError(client, event, e);

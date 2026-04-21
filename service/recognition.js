@@ -179,9 +179,7 @@ async function gratitudeReceiverIdsIn(client, text) {
 
 function gratitudeCountIn(text) {
   const emojiCount = (text.match(gratitudeEmojiRegex) || []).length;
-  const multiplierFinding = text.match(multiplierRegex)
-    ? text.match(multiplierRegex).filter(Boolean)
-    : null;
+  const multiplierFinding = text.match(multiplierRegex)?.filter(Boolean);
   const multiplier = multiplierFinding ? multiplierFinding[1] : 1;
   return emojiCount * multiplier;
 }
@@ -220,7 +218,7 @@ async function gratitudeErrors(gratitude) {
       ? "- Mention who you want to recognize with @user"
       : "",
 
-    gratitude.receivers.find((x) => x.id == gratitude.giver.id) &&
+    gratitude.receivers.find((x) => x.id === gratitude.giver.id) &&
     gratitude.receivers.length === 1
       ? "- You can't recognize yourself"
       : "",

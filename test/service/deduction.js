@@ -63,18 +63,18 @@ describe("deduction/balance", () => {
     });
   });
 
-  describe("isBalanceSufficent", () => {
+  describe("isBalanceSufficient", () => {
     it("should return true if balance is sufficient", async () => {
       sinon.stub(balance, "currentBalance").resolves(20);
 
-      const result = await deduction.isBalanceSufficent("testUser", 10);
+      const result = await deduction.isBalanceSufficient("testUser", 10);
       expect(result).to.be.true;
     });
 
     it("should return false if balance is not sufficient", async () => {
       sinon.stub(balance, "currentBalance").resolves(20);
 
-      const result = await deduction.isBalanceSufficent("testUser", 30);
+      const result = await deduction.isBalanceSufficient("testUser", 30);
       expect(result).to.be.false;
     });
   });

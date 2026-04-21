@@ -50,9 +50,9 @@ describe("features/deduction", () => {
       client.users.info = sinon
         .stub()
         .resolves({ ok: false, error: "user_not_found" });
-      const isBalanceSufficentStub = sinon.stub(
+      const isBalanceSufficientStub = sinon.stub(
         deduction,
-        "isBalanceSufficent",
+        "isBalanceSufficient",
       );
 
       const message = {
@@ -64,7 +64,7 @@ describe("features/deduction", () => {
 
       await handler({ message, client });
 
-      expect(isBalanceSufficentStub.called).to.equal(false);
+      expect(isBalanceSufficientStub.called).to.equal(false);
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       const args = client.chat.postMessage.firstCall.args[0];
       expect(args.text).to.include(
@@ -80,9 +80,9 @@ describe("features/deduction", () => {
       const handler = findHandler("message", /deduct/i);
 
       const client = buildClient();
-      const isBalanceSufficentStub = sinon.stub(
+      const isBalanceSufficientStub = sinon.stub(
         deduction,
-        "isBalanceSufficent",
+        "isBalanceSufficient",
       );
       const message = {
         user: "Unotadmin",
@@ -93,7 +93,7 @@ describe("features/deduction", () => {
 
       await handler({ message, client });
 
-      expect(isBalanceSufficentStub.called).to.equal(false);
+      expect(isBalanceSufficientStub.called).to.equal(false);
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       expect(client.chat.postMessage.firstCall.args[0].text).to.include(
         "You are not allowed to create deductions",
@@ -107,9 +107,9 @@ describe("features/deduction", () => {
       const handler = findHandler("message", /deduct/i);
 
       const client = buildClient();
-      const isBalanceSufficentStub = sinon.stub(
+      const isBalanceSufficientStub = sinon.stub(
         deduction,
-        "isBalanceSufficent",
+        "isBalanceSufficient",
       );
 
       const malformedTexts = [
@@ -130,7 +130,7 @@ describe("features/deduction", () => {
         });
       }
 
-      expect(isBalanceSufficentStub.called).to.equal(false);
+      expect(isBalanceSufficientStub.called).to.equal(false);
       expect(client.chat.postMessage.callCount).to.equal(malformedTexts.length);
       client.chat.postMessage.getCalls().forEach((call) => {
         expect(call.args[0].text).to.include(
@@ -139,13 +139,13 @@ describe("features/deduction", () => {
       });
     });
 
-    it("should post an insufficient-balance message when deduction.isBalanceSufficent returns false", async () => {
+    it("should post an insufficient-balance message when deduction.isBalanceSufficient returns false", async () => {
       setAdmins(["Uadmin"]);
       const { app, findHandler } = createMockApp();
       deductionFeature(app);
       const handler = findHandler("message", /deduct/i);
 
-      sinon.stub(deduction, "isBalanceSufficent").resolves(false);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(false);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
 
       const client = buildClient();
@@ -171,7 +171,7 @@ describe("features/deduction", () => {
       deductionFeature(app);
       const handler = findHandler("message", /deduct/i);
 
-      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(true);
       sinon
         .stub(deduction, "createDeduction")
         .resolves({ _id: "DEDUCTION-123" });

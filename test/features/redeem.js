@@ -69,7 +69,7 @@ describe("features/redeem", () => {
       sinon
         .stub(redeem, "getSelectedItemDetails")
         .returns({ itemName: "Sticker", itemCost: 5, kind: null });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(true);
       sinon.stub(deduction, "createDeduction").resolves("DED-1");
 
       const client = buildClient();
@@ -86,6 +86,7 @@ describe("features/redeem", () => {
 
       expect(ack.calledOnce).to.equal(true);
       expect(deduction.createDeduction.calledOnce).to.equal(true);
+      expect(client.conversations.list.called).to.equal(false);
       expect(client.chat.postMessage.calledOnce).to.equal(true);
       const text = client.chat.postMessage.firstCall.args[0].text;
       expect(text).to.include("<@Ucaller> has selected Sticker");
@@ -108,7 +109,7 @@ describe("features/redeem", () => {
         itemCost: 0,
         kind: "liatrio-store",
       });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(true);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
 
       const client = buildClient();
@@ -144,7 +145,7 @@ describe("features/redeem", () => {
         itemCost: 50,
         kind: null,
       });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(true);
       const createDeductionStub = sinon
         .stub(deduction, "createDeduction")
         .resolves("DED-2");
@@ -180,7 +181,7 @@ describe("features/redeem", () => {
       sinon
         .stub(redeem, "getSelectedItemDetails")
         .returns({ itemName: "Sticker", itemCost: 500, kind: null });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(false);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(false);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
 
       const client = buildClient();
@@ -201,6 +202,53 @@ describe("features/redeem", () => {
       expect(client.chat.postEphemeral.firstCall.args[0].text).to.include(
         "Your current balance isn't high enough",
       );
+    });
+
+    it("should notify the user via postEphemeral when the redemption flow throws", async () => {
+      const { app, findHandler } = createMockApp();
+      redeemFeature(app);
+      const actionHandler = findHandler("action", { action_id: "redeem" });
+
+      const client = buildClient();
+      client.conversations.open = sinon.stub().rejects(new Error("boom"));
+      const ack = sinon.stub().resolves();
+      const body = {
+        user: { id: "Ucaller" },
+        channel: { id: "Ddm" },
+        actions: [
+          { selected_option: { value: '{"name":"Sticker","cost":"5"}' } },
+        ],
+      };
+
+      await actionHandler({ ack, body, context: { botToken: "xoxb" }, client });
+
+      expect(client.chat.postEphemeral.calledOnce).to.equal(true);
+      const call = client.chat.postEphemeral.firstCall.args[0];
+      expect(call.channel).to.equal("Ddm");
+      expect(call.user).to.equal("Ucaller");
+      expect(call.text).to.include("Something went wrong");
+    });
+
+    it("should swallow a postEphemeral failure in the catch block without rejecting", async () => {
+      const { app, findHandler } = createMockApp();
+      redeemFeature(app);
+      const actionHandler = findHandler("action", { action_id: "redeem" });
+
+      const client = buildClient();
+      client.conversations.open = sinon.stub().rejects(new Error("boom"));
+      client.chat.postEphemeral = sinon.stub().rejects(new Error("also boom"));
+      const ack = sinon.stub().resolves();
+      const body = {
+        user: { id: "Ucaller" },
+        channel: { id: "Ddm" },
+        actions: [
+          { selected_option: { value: '{"name":"Sticker","cost":"5"}' } },
+        ],
+      };
+
+      await actionHandler({ ack, body, context: { botToken: "xoxb" }, client });
+
+      expect(client.chat.postEphemeral.calledOnce).to.equal(true);
     });
   });
 });

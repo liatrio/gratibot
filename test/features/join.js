@@ -78,5 +78,22 @@ describe("features/join", () => {
       expect(text).to.include("An unknown error occured in Gratibot");
       expect(text).to.include("boom");
     });
+
+    it("should await conversations.join so a rejected promise is caught (regression for missing await)", async () => {
+      const { app, findHandler } = createMockApp();
+      joinFeature(app);
+      const handler = findHandler("event", "channel_created");
+
+      const join = sinon
+        .stub()
+        .rejects(new SlackError("conversations.join", "not_authed", "Nope"));
+      const client = buildClient(join);
+      const event = buildEvent();
+
+      await handler({ event, client });
+
+      expect(client.chat.postEphemeral.calledOnce).to.equal(true);
+      expect(client.chat.postEphemeral.firstCall.args[0].text).to.equal("Nope");
+    });
   });
 });

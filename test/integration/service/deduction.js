@@ -35,7 +35,7 @@ describe("integration: service/deduction", function () {
     sinon.restore();
   });
 
-  describe("isBalanceSufficent", () => {
+  describe("isBalanceSufficient", () => {
     it("should return true when the user's balance is at least the deduction value", async () => {
       await recognitionCollection.insertMany([
         {
@@ -64,7 +64,7 @@ describe("integration: service/deduction", function () {
         },
       ]);
 
-      const sufficient = await deduction.isBalanceSufficent("Ureceiver", 2);
+      const sufficient = await deduction.isBalanceSufficient("Ureceiver", 2);
       expect(sufficient).to.equal(true);
     });
 
@@ -78,7 +78,7 @@ describe("integration: service/deduction", function () {
         values: [],
       });
 
-      const sufficient = await deduction.isBalanceSufficent("Ureceiver", 50);
+      const sufficient = await deduction.isBalanceSufficient("Ureceiver", 50);
       expect(sufficient).to.equal(false);
     });
   });

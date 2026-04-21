@@ -25,28 +25,27 @@ describe("service/redeem", () => {
     });
   });
 
-  describe("getSelectedItemDetails", () => {
-    it("should parse name, cost, and kind from the payload", async () => {
-      const expectedItemDetails = {
-        itemName: "testName",
-        itemCost: 100,
-        kind: "liatrio-store",
-      };
-      const actualSelectedItemDetails = redeem.getSelectedItemDetails(
-        '{"name": "testName", "cost": 100, "kind": "liatrio-store"}',
-      );
-      expect(actualSelectedItemDetails).to.deep.eq(expectedItemDetails);
+  describe("fetchActiveRewardById", () => {
+    it("queries by _id and active flag when id is a valid ObjectId", async () => {
+      const findOne = sinon
+        .stub(rewardCollection, "findOne")
+        .resolves({ _id: "stub" });
+
+      await redeem.fetchActiveRewardById("507f1f77bcf86cd799439011");
+
+      expect(findOne.calledOnce).to.equal(true);
+      const filter = findOne.firstCall.args[0];
+      expect(filter.active).to.equal(true);
+      expect(String(filter._id)).to.equal("507f1f77bcf86cd799439011");
     });
 
-    it("should default kind to null when not present on the payload", async () => {
-      const actual = redeem.getSelectedItemDetails(
-        '{"name":"Sticker","cost":5}',
-      );
-      expect(actual).to.deep.eq({
-        itemName: "Sticker",
-        itemCost: 5,
-        kind: null,
-      });
+    it("returns null for an invalid ObjectId without hitting the collection", async () => {
+      const findOne = sinon.stub(rewardCollection, "findOne");
+
+      const result = await redeem.fetchActiveRewardById("not-an-object-id");
+
+      expect(result).to.equal(null);
+      expect(findOne.called).to.equal(false);
     });
   });
 
@@ -181,42 +180,44 @@ describe("service/redeem", () => {
   });
 
   describe("redeemSelector", () => {
-    it("serializes option.value including kind when present", async () => {
+    it("serializes option.value as the reward _id string", async () => {
       const gratibotRewards = [
         {
+          _id: "507f1f77bcf86cd799439011",
           name: "Liatrio Store",
-          cost: "0",
+          cost: 0,
           kind: "liatrio-store",
         },
       ];
 
       const block = redeem.redeemSelector(gratibotRewards);
       expect(block.accessory.options).to.have.length(1);
-      const parsed = JSON.parse(block.accessory.options[0].value);
-      expect(parsed).to.deep.equal({
-        name: "Liatrio Store",
-        cost: "0",
-        kind: "liatrio-store",
-      });
+      expect(block.accessory.options[0].value).to.equal(
+        "507f1f77bcf86cd799439011",
+      );
     });
 
-    it("serializes option.value with kind: null when absent", async () => {
-      const gratibotRewards = [{ name: "Sticker", cost: "5" }];
+    it("coerces non-string _id (e.g. ObjectId) to a string", async () => {
+      const gratibotRewards = [
+        {
+          _id: { toString: () => "507f1f77bcf86cd799439011" },
+          name: "Sticker",
+          cost: 5,
+        },
+      ];
 
       const block = redeem.redeemSelector(gratibotRewards);
-      const parsed = JSON.parse(block.accessory.options[0].value);
-      expect(parsed).to.deep.equal({
-        name: "Sticker",
-        cost: "5",
-        kind: null,
-      });
+      expect(block.accessory.options[0].value).to.equal(
+        "507f1f77bcf86cd799439011",
+      );
     });
 
     it("returns expected selector shell", async () => {
       const gratibotRewards = [
         {
+          _id: "id-1",
           name: "test",
-          cost: "10",
+          cost: 10,
         },
       ];
 

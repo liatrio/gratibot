@@ -1,13 +1,24 @@
+const { ObjectId } = require("mongodb");
 const config = require("../config");
 const rewardCollection = require("../database/rewardCollection");
-
-const { redemptionAdmins } = config;
 
 function fetchActiveRewards() {
   return rewardCollection
     .find({ active: true })
     .sort({ sortOrder: 1, name: 1 })
     .toArray();
+}
+
+// Look up a single reward by id at redemption time, so an outdated dialog
+// cannot bypass admin edits to cost/name/kind or redeem a deactivated reward.
+async function fetchActiveRewardById(id) {
+  let objectId;
+  try {
+    objectId = new ObjectId(id);
+  } catch {
+    return null;
+  }
+  return rewardCollection.findOne({ _id: objectId, active: true });
 }
 
 function buildRedeemBlocks(rewards, currentBalance) {
@@ -61,17 +72,14 @@ function redeemItems(gratibotRewards) {
 function redeemSelector(gratibotRewards) {
   let options = [];
   for (let i = 0; i < gratibotRewards.length; i++) {
-    const item = {
-      name: `${gratibotRewards[i].name}`,
-      cost: `${gratibotRewards[i].cost}`,
-      kind: gratibotRewards[i].kind || null,
-    };
     options.push({
       text: {
         type: "plain_text",
         text: `${gratibotRewards[i].name}`,
       },
-      value: JSON.stringify(item),
+      // Serialize only the reward id; cost/name/kind are re-read from the DB
+      // at redemption time so an outdated dialog cannot apply a stale price.
+      value: String(gratibotRewards[i]._id),
     });
   }
   return {
@@ -110,7 +118,10 @@ function redeemSelector(gratibotRewards) {
   };
 }
 
-function redeemNotificationUsers(redeemingUser, admins = redemptionAdmins) {
+function redeemNotificationUsers(
+  redeemingUser,
+  admins = config.redemptionAdmins,
+) {
   let mpimGroup = `${redeemingUser}`;
   for (let i = 0; i < admins.length; i++) {
     mpimGroup += `, ${admins[i]}`;
@@ -118,21 +129,11 @@ function redeemNotificationUsers(redeemingUser, admins = redemptionAdmins) {
   return mpimGroup;
 }
 
-// Assumes value is json string
-function getSelectedItemDetails(selectedItem) {
-  const item = JSON.parse(selectedItem);
-  return {
-    itemName: item.name,
-    itemCost: item.cost,
-    kind: item.kind || null,
-  };
-}
-
 module.exports = {
   fetchActiveRewards,
+  fetchActiveRewardById,
   buildRedeemBlocks,
   redeemNotificationUsers,
-  getSelectedItemDetails,
   redeemHeader,
   redeemHelpText,
   redeemItems,

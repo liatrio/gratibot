@@ -42,8 +42,8 @@ npm run lint
 # Start the bot (requires .env with Slack tokens)
 npm start
 
-# Start the full stack locally (bot + MongoDB) via Docker
-docker-compose up --build
+# Start the full stack locally (bot + MongoDB) via Docker with hot reload
+docker compose up --build --watch
 ```
 
 Minimum environment to run the bot — create a `.env` file at the project root:

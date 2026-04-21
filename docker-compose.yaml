@@ -21,6 +21,26 @@ services:
       - REDEMPTION_ADMINS
       - BOT_NAME
       - SLASH_COMMAND
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /app
+          ignore:
+            - node_modules/
+            - test/
+            - docs/
+            - infra/
+            - .git/
+            - .github/
+            - .husky/
+            - coverage/
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: package-lock.json
+        - action: rebuild
+          path: Dockerfile
   mongodb:
     ports:
       - 27017:27017

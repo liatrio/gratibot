@@ -87,7 +87,9 @@ something like:
     not publish them online such as by pushing them to GitHub.***
 
 5. Now that your secrets are configured, run your local copy
-of Gratibot with `docker-compose up --build`
+of Gratibot with `docker compose up --build --watch`. The `--watch` flag
+syncs local edits into the running container and restarts the bot
+automatically.
 
 With all of these steps complete, your bot should be running in the Slack
 workspace you chose to develop for. You should now be ready to test your bot,

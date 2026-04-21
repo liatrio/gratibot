@@ -42,7 +42,7 @@ async function redeemItem({ ack, body, context, client }) {
       body.actions[0].selected_option.value,
     );
 
-    if (!(await deduction.isBalanceSufficent(userID, itemCost))) {
+    if (!(await deduction.isBalanceSufficient(userID, itemCost))) {
       return client.chat.postEphemeral({
         channel: body.channel.id,
         user: userID,

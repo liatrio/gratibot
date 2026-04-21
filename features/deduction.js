@@ -58,7 +58,7 @@ async function respondToDeduction({ message, client }) {
   const user = messageText[2].match(userRegex)[1];
   const value = +messageText[3];
 
-  if (!(await deduction.isBalanceSufficent(user, value))) {
+  if (!(await deduction.isBalanceSufficient(user, value))) {
     await respondToUser(client, message, {
       text: `<@${user}> does not have a large enough balance to deduct ${value} fistbumps.`,
     });

@@ -69,7 +69,7 @@ describe("features/redeem", () => {
       sinon
         .stub(redeem, "getSelectedItemDetails")
         .returns({ itemName: "Sticker", itemCost: 5, kind: null });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(true);
       sinon.stub(deduction, "createDeduction").resolves("DED-1");
 
       const client = buildClient();
@@ -109,7 +109,7 @@ describe("features/redeem", () => {
         itemCost: 0,
         kind: "liatrio-store",
       });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(true);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
 
       const client = buildClient();
@@ -145,7 +145,7 @@ describe("features/redeem", () => {
         itemCost: 50,
         kind: null,
       });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(true);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(true);
       const createDeductionStub = sinon
         .stub(deduction, "createDeduction")
         .resolves("DED-2");
@@ -181,7 +181,7 @@ describe("features/redeem", () => {
       sinon
         .stub(redeem, "getSelectedItemDetails")
         .returns({ itemName: "Sticker", itemCost: 500, kind: null });
-      sinon.stub(deduction, "isBalanceSufficent").resolves(false);
+      sinon.stub(deduction, "isBalanceSufficient").resolves(false);
       const createDeductionStub = sinon.stub(deduction, "createDeduction");
 
       const client = buildClient();

@@ -43,7 +43,7 @@ async function getDeductions(user, timezone = null, days = null) {
   }
 
   winston.debug(`retrieving ${user}'s deductions`, {
-    func: "service.deduction.createDeduction",
+    func: "service.deduction.getDeductions",
     callingUser: user,
     timezone: timezone,
     days: days,
@@ -52,7 +52,7 @@ async function getDeductions(user, timezone = null, days = null) {
   return await deductionCollection.find(filter).toArray();
 }
 
-async function isBalanceSufficent(user, deductionValue) {
+async function isBalanceSufficient(user, deductionValue) {
   return (await balance.currentBalance(user)) >= deductionValue;
 }
 
@@ -60,5 +60,5 @@ module.exports = {
   createDeduction,
   refundDeduction,
   getDeductions,
-  isBalanceSufficent,
+  isBalanceSufficient,
 };

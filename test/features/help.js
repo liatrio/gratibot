@@ -30,7 +30,8 @@ describe("features/help", () => {
       const args = postMessage.firstCall.args[0];
       expect(args.channel).to.equal("Ddm");
       expect(args.text).to.include("Give Recognition");
-      expect(args.text).to.include("View Balance");
+      expect(args.text).to.include("Check Your Status");
+      expect(args.text).to.include("Redeem Rewards");
     });
   });
 

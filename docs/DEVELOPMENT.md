@@ -70,10 +70,13 @@ See the [Environment Variables Reference](#environment-variables-reference) belo
 
 ### 5. Start the Bot
 
-**Full stack (recommended):** runs the bot and MongoDB together via Docker Compose:
+**Full stack (recommended):** runs the bot and MongoDB together via Docker Compose
+with hot reload. The `--watch` flag syncs local edits into the running container and
+restarts the bot automatically; changes to `package.json`, `package-lock.json`, or the
+`Dockerfile` trigger a rebuild.
 
 ```bash
-docker-compose up --build
+docker compose up --build --watch
 ```
 
 **Bot only** (requires a running MongoDB at `MONGO_URL`):

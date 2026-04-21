@@ -14,97 +14,52 @@ module.exports = function (app) {
   app.message(/(thunderfury|Thunderfury)/, respondToEasterEgg);
 };
 
+const divider = "━━━━━━━━━━━━━━━━━━━━";
+
 const helpMarkdown = `
-:wave: Hi there! Let's take a look at what I can do!
+:wave: Hi there! Here's what I can do.
 
+${divider}
 
+*Give Recognition* (up to ${maximum} per day)
 
-
-*Give Recognition*
-
-You can give up to ${maximum} recognitions per day.
-
-First, make sure I have been invited to the channel you want to recognize \
-someone in. Then, write a brief message describing what someone did, \
-\`@mention\` them and include the ${recognizeEmoji} emoji...I'll take it from there!
+Invite me to the channel, then mention someone, describe what they did, and add ${recognizeEmoji}.
 
 > Thanks @alice for helping me fix my pom.xml ${recognizeEmoji}
 
-Recognize multiple people at once!
+• Recognize multiple people at once — \`@bob and @alice crushed the showcase! ${recognizeEmoji}\`
+• Tag Liatrio values with \`#tags\` — \`I love the #energy in your demo @alice! ${recognizeEmoji}\`
+• Boost with extra emoji or a multiplier — \`${recognizeEmoji} ${recognizeEmoji} ${recognizeEmoji}\` or \`${recognizeEmoji} x2\`
+• Second someone else's shout-out by reacting with ${reactionEmoji}
 
-> @bob and @alice crushed that showcase! ${recognizeEmoji}
+${divider}
 
-Use \`#tags\` to call out specific Liatrio values!
+*Golden Fistbump* ${goldenRecognizeEmoji}
 
-> I love the #energy in your Terraform demo @alice! ${recognizeEmoji}
+Only the current holder can pass it on. Use it like any other fistbump:
 
-The more emojis you add, the more recognition they get!
+> Thanks @alice for fixing prod! ${goldenRecognizeEmoji}
 
-> @alice just pushed the cleanest code I've ever seen! ${recognizeEmoji} ${recognizeEmoji} ${recognizeEmoji}
+The new holder receives 20 ${recognizeEmoji} immediately, plus a 2x multiplier on all recognition they receive while holding it.
 
-Use multipliers to give more recognition!
+${divider}
 
-> @alice presented an amazing demo at a conference! ${recognizeEmoji} x2
+*Check Your Status* (DM me one of these)
 
-or
+• \`balance\` — how many ${recognizeEmoji} you've received and have left to give today
+• \`leaderboard\` — top givers, top receivers, and the current ${goldenRecognizeEmoji} holder
+• \`metrics\` — recognition activity over the last month
+• \`report\` — your top reasons for recognition over the past month, six months, or year. Use \`report @user\` to view someone else's — handy for biannual reviews.
 
-> @alice presented an amazing demo at a conference! x2 ${recognizeEmoji}
+${divider}
 
-If someone else has given a ${recognizeEmoji} to someone, and you'd like to \
-give one of your own for the same reason, you can react to the message with \
-a ${reactionEmoji}. Gratibot will record your shout-out as though you sent \
-the same message that you reacted to.
+*Redeem Rewards*
 
-*Redeeming*
+DM me \`redeem\` to browse prizes. Once you pick one, I'll loop in a redemption admin to finalize it.
 
-
-Send me a direct message with 'redeem' and I'll give you the options for prizes to redeem! Once you've selcted an item then I'll start a MPIM with the redemption admins to promote the dialog to acknowledge and receive your item.
-
-Refunds can be given via the 'refund' command if the item redeem can't be fulfilled for whatever reason. Only redemption admins can give refunds. Deduction ID is sent as part of the MPIM when an item is redeemed
+If a redemption can't be fulfilled, admins can refund it using the deduction ID from the redemption message:
 
 > @gratibot refund DEDUCTIONID
-
-
-*View Balance*
-
-Send me a direct message with 'balance' and I'll let you know how many \
-recognitions you have left to give and how many you have received.
-
-> You have received 0 ${recognizeEmoji} and you have ${maximum} ${recognizeEmoji} remaining to \
-give away today
-
-
-*View Leaderboard*
-
-Send me a direct message with 'leaderboard' and I'll show you who is giving \
-and receiving the most recognition. I'll also show who currently holds the :goldenfistbump:!
-
-
-*View Metrics*
-
-Send me a direct message with 'metrics' and I'll show you how many times \
-people have given recognitions over the last month.
-
-
-*View Report: Top Reasons for Recognition*
-
-Send me a direct message with 'report' to see the top reasons you've \
-received fistbumps over the past month, six months, or year.
-
-To see a report for someone else, use 'report @example-user'.
-
-Great for remembering accomplishments when writing biannual reviews.
-
-
-*Give Golden Recognition*
-
-The golden fistbump ${goldenRecognizeEmoji} is a special recognition that can only be held by one user at a time. Only the current holder of the golden recognition can give the golden recognition.
-
-Giving a golden fistbump is the same as giving a normal fistbump
-
-> Thanks @alice for helping fix the prod issues! ${goldenRecognizeEmoji}
-
-Upon receiving the golden fistbump, the user will receive 20 fistbumps and will have a 2X multiplier applied to all incoming fistbumps while the golden fistbump is held. 
 `;
 
 async function respondToHelp({ message, client }) {

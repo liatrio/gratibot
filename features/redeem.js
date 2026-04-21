@@ -38,10 +38,6 @@ async function redeemItem({ ack, body, context, client }) {
       token: context.botToken,
       users: redeem.redeemNotificationUsers(userID),
     });
-    await client.conversations.list({
-      token: context.botToken,
-      types: "mpim, im",
-    });
     const { itemName, itemCost, kind } = redeem.getSelectedItemDetails(
       body.actions[0].selected_option.value,
     );
@@ -77,5 +73,14 @@ async function redeemItem({ ack, body, context, client }) {
       callingUser: userID,
       error: error.message,
     });
+    try {
+      await client.chat.postEphemeral({
+        channel: body.channel.id,
+        user: userID,
+        text: "Something went wrong processing your redemption. Please try again or contact an admin.",
+      });
+    } catch {
+      // best-effort; nothing more we can do
+    }
   }
 }

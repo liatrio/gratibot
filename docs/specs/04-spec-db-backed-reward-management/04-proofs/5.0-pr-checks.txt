@@ -1,0 +1,29 @@
+# Task 5.5 — PR CI checks
+
+## PR
+
+https://github.com/liatrio/gratibot/pull/895
+
+## Final CI status (gh pr checks 895 --watch)
+
+```
+CodeQL	skipping	2s	https://github.com/liatrio/gratibot/runs/72566071548	
+Docker / build	pass	20s	https://github.com/liatrio/gratibot/actions/runs/24796016136/job/72565914766	
+Terraform Nonprod plan	pass	47s	https://github.com/liatrio/gratibot/actions/runs/24796016136/job/72565977658	
+Terraform validate check	pass	8s	https://github.com/liatrio/gratibot/actions/runs/24796016136/job/72565914696	
+Docker / publish	skipping	0	https://github.com/liatrio/gratibot/actions/runs/24796016136/job/72565915287	
+CodeRabbit	pass	0		Review completed
+Pipeline Setup	pass	3s	https://github.com/liatrio/gratibot/actions/runs/24796016136/job/72565896231	
+Terraform fmt check	pass	11s	https://github.com/liatrio/gratibot/actions/runs/24796016136/job/72565896212	
+codeql (javascript)	pass	1m11s	https://github.com/liatrio/gratibot/actions/runs/24796015983/job/72565896210	
+lint	pass	16s	https://github.com/liatrio/gratibot/actions/runs/24796015983/job/72565896179	
+test	pass	50s	https://github.com/liatrio/gratibot/actions/runs/24796015983/job/72565896256	
+```
+
+All required checks pass. `Docker / publish` and `CodeQL` both show
+"skipping" by design (publish runs only on `main`; CodeQL's matrix entry
+is the javascript job which passed).
+
+A PNG screenshot of the all-green checks panel will be captured by the
+maintainer and attached as `5.0-pr-checks.png` (the CLI tool here cannot
+render the GitHub UI).

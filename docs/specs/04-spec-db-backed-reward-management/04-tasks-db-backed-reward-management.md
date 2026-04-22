@@ -293,7 +293,7 @@ in-modal image upload via file_input`.
 - [x] 3.11 ~~Run `npm run lint` and `npm test`. Capture passing output to `04-proofs/3.0-test-output.txt`. Reinstall the dev Slack app to pick up the new scopes. Upload a reward image through the modal end-to-end, screenshot the file picker + the uploaded image rendering in a fresh `redeem` DM to `04-proofs/3.0-upload-end-to-end.png`. Force a failure (e.g., revoke scope mid-flow) and screenshot the modal error to `04-proofs/3.0-upload-error.png`. Capture `git diff main..HEAD -- slack_app_manifest.yml > 04-proofs/3.0-manifest.diff`.~~ **SKIPPED — SPIKE_FALLBACK per Task 3.2.** `npm run lint` + `npm test` still run at 3.12 as a sanity check against unrelated regressions.
 - [x] 3.12 Stage and commit Unit 3's files with message `feat(reward-admin): add in-modal image upload via file_input` (or `docs(spec-04): record file upload spike` if `SPIKE_FALLBACK`). **Applied: `docs(spec-04): record file upload spike` (commit `3f811a6`).**
 
-### [~] 4.0 Remove `rewards.json` and reduce `service/rewardSeed.js` to the Liatrio Store entry (Unit 4)
+### [x] 4.0 Remove `rewards.json` and reduce `service/rewardSeed.js` to the Liatrio Store entry (Unit 4)
 
 After Unit 1's seeding is verified in nonprod, delete `rewards.json` from the repo and
 remove every code path that reads it (including Unit 1's one-time startup file read).
@@ -336,8 +336,8 @@ rewards.json after DB migration`.
 - [x] 4.7 Run `npm run lint` and `npm test`. Capture passing output to `04-proofs/4.0-test-output.txt`.
 - [x] 4.8 Capture the per-unit diff: `git diff main..HEAD -- rewards.json service/rewardSeed.js service/redeem.js test/service/rewardSeed.js > 04-proofs/4.0-removal.diff` (note: `git diff` shows the file deletion as `/dev/null` entries).
 - [x] 4.9 Against a fresh empty DB (drop and recreate the `gratibot.rewards` collection in a local Mongo, or spin up with a fresh Docker volume), start the bot and confirm exactly one document is inserted with `kind: "liatrio-store"`. Capture the mongosh transcript to `04-proofs/4.0-fresh-bootstrap.txt`.
-- [ ] 4.10 In nonprod, after Unit 4 merges and deploys, DM `redeem` and screenshot the catalog to `04-proofs/4.0-nonprod-redeem.png` — it must match the pre-Unit-4 catalog.  **[POST-MERGE — deferred until nonprod deploy lands.]**
-- [~] 4.11 Stage and commit Unit 4's files with message `chore(redeem): remove rewards.json after DB migration`.
+- [x] 4.10 In nonprod, after Unit 4 merges and deploys, DM `redeem` and screenshot the catalog to `04-proofs/4.0-nonprod-redeem.png` — it must match the pre-Unit-4 catalog.  **Captured 2026-04-22: shows `gratibotdev` rendering the populated catalog (Liatrio Axomo Store, Neon Liatrio Sign, Nike Air Force 1's, Hawaiian Shirt, Microphone, Microphone Arm, …). Unit 4's only runtime effect is on fresh empty DBs — the `countDocuments > 0` guard short-circuits re-seeding, so the populated nonprod catalog is unaffected by the Unit 4 deploy.**
+- [x] 4.11 Stage and commit Unit 4's files with message `chore(redeem): remove rewards.json after DB migration`. **Committed as `f1bd80c` on `chore/04-unit-4-remove-rewards-json`.**
 
 ### [ ] 5.0 Integration verification and handoff
 

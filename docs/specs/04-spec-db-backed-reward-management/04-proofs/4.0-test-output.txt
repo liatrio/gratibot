@@ -1,0 +1,131 @@
+# Task 4.7 — npm run lint && npm test
+
+## Summary
+
+- Lint: PASS (zero errors)
+- Tests: PASS (245 unit tests + 18 integration tests = 263 passing)
+- service/rewardSeed.js: 100% coverage after the Unit 4 inline-seed refactor
+
+## Lint output
+
+```
+
+> gratibot@0.0.0-development lint
+> eslint '*.js' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**'
+
+```
+
+## Test output (tail)
+
+```
+      ✔ maps the active checkbox to false when no option is selected
+
+  service/rewardSeed
+    SEED_REWARDS
+      ✔ should contain exactly one entry, the Liatrio Store
+    seedRewards
+      ✔ should insert the inline seed entry when the collection is empty
+      ✔ should stamp active: true, system-seed audit fields, and sortOrder from the inline seed
+      ✔ should not insert when the collection already has documents
+      ✔ should rethrow when the underlying insert fails
+
+
+  245 passing (236ms)
+
+
+> gratibot@0.0.0-development test:integration
+> c8 --no-clean --no-check-coverage --reporter=none mocha 'test/integration/**/*.js' --require test/setup.js --require test/integration/setup.js
+
+
+
+  integration: bolt-wiring
+    directMessage routing
+      ✔ fires the balance handler for a DM event and not for a channel-equivalent event
+    regex / string message matcher
+      ✔ fires the balance handler when message text matches /balance/i and not when it does not match
+    GratitudeError propagation through recognize
+      ✔ posts the formatted user-facing message via postEphemeral when validateAndSendGratitude rejects with GratitudeError
+
+  integration: service/balance
+    dailyGratitudeRemaining
+      ✔ should count only today's recognitions from the given user in the given timezone and subtract from the daily maximum (342ms)
+    currentBalance
+      ✔ should sum recognitions received, golden recognitions times twenty, minus non-refunded deductions
+
+  integration: service/deduction
+    isBalanceSufficient
+      ✔ should return true when the user's balance is at least the deduction value
+      ✔ should return false when the user's balance is below the deduction value
+    createDeduction
+      ✔ should insert a deduction record visible via findOne
+    refundDeduction
+      ✔ should flip the refund flag to true on the matching record
+
+  integration: service/leaderboard
+    createLeaderboardBlocks
+      ✔ should return a blocks array whose topReceivers section names the seeded top recognizee
+
+  integration: service/metrics
+    createMetricsBlocks
+      ✔ should encode a chart whose daily bucket totals match the seeded recognitions
+
+  integration: service/recognition
+    getGoldenFistbumpHolder
+      ✔ should return the most recent golden recognition's recognizee
+    giveRecognition
+      ✔ should insert a normal recognition into recognitionCollection when type is the default fistbump
+      ✔ should insert a golden recognition into goldenRecognitionCollection when type is the golden emoji
+    countRecognitionsReceived
+      ✔ should count every recognition record whose recognizee matches the given user
+
+  integration: service/report
+    getTopMessagesForUser
+      ✔ should group by message and return entries sorted by count desc with MMM D, YYYY formatted dates
+      ✔ should return an empty array when the user has no recognitions in the time window
+    getTotalRecognitionsForUser
+      ✔ should return the total count of recognitions for the given user within the time window
+
+
+  18 passing (2s)
+
+---------------------------------|---------|----------|---------|---------|-------------------------
+File                             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s       
+---------------------------------|---------|----------|---------|---------|-------------------------
+All files                        |   97.22 |    94.78 |   99.25 |   97.22 |                         
+ database                        |     100 |      100 |     100 |     100 |                         
+  db.js                          |     100 |      100 |     100 |     100 |                         
+  deductionCollection.js         |     100 |      100 |     100 |     100 |                         
+  goldenRecognitionCollection.js |     100 |      100 |     100 |     100 |                         
+  recognitionCollection.js       |     100 |      100 |     100 |     100 |                         
+  rewardCollection.js            |     100 |      100 |     100 |     100 |                         
+ features                        |    94.4 |    95.45 |   97.56 |    94.4 |                         
+  balance.js                     |     100 |      100 |     100 |     100 |                         
+  deduction.js                   |     100 |      100 |     100 |     100 |                         
+  golden-recognize.js            |     100 |      100 |     100 |     100 |                         
+  help.js                        |     100 |      100 |     100 |     100 |                         
+  join.js                        |     100 |      100 |     100 |     100 |                         
+  leaderboard.js                 |     100 |      100 |     100 |     100 |                         
+  metrics.js                     |     100 |      100 |     100 |     100 |                         
+  recognize.js                   |   97.63 |    95.83 |     100 |   97.63 | 140-143                 
+  redeem.js                      |     100 |      100 |     100 |     100 |                         
+  refund.js                      |     100 |      100 |     100 |     100 |                         
+  report.js                      |   98.49 |    93.33 |     100 |   98.49 | 89-90                   
+  reward-admin.js                |   79.33 |    87.09 |    92.3 |   79.33 | ...-155,222-226,254-270 
+ middleware                      |     100 |      100 |     100 |     100 |                         
+  index.js                       |     100 |      100 |     100 |     100 |                         
+ service                         |   98.61 |    94.07 |     100 |   98.61 |                         
+  apiwrappers.js                 |   66.66 |    66.66 |     100 |   66.66 | 8-13                    
+  balance.js                     |     100 |      100 |     100 |     100 |                         
+  deduction.js                   |     100 |      100 |     100 |     100 |                         
+  errors.js                      |     100 |      100 |     100 |     100 |                         
+  leaderboard.js                 |     100 |      100 |     100 |     100 |                         
+  messageutils.js                |     100 |      100 |     100 |     100 |                         
+  metrics.js                     |     100 |      100 |     100 |     100 |                         
+  recognition.js                 |   95.81 |    93.47 |     100 |   95.81 | ...-263,320-321,346-347 
+  redeem.js                      |     100 |      100 |     100 |     100 |                         
+  refund.js                      |     100 |      100 |     100 |     100 |                         
+  report.js                      |     100 |      100 |     100 |     100 |                         
+  rewardAdmin.js                 |   99.51 |    89.02 |     100 |   99.51 | 141-142                 
+  rewardSeed.js                  |     100 |      100 |     100 |     100 |                         
+---------------------------------|---------|----------|---------|---------|-------------------------
+```

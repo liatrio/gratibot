@@ -1,0 +1,20 @@
+total 2392
+drwxr-xr-x  19 alicejones  staff     608 Apr 22 11:35 .
+drwxr-xr-x   6 alicejones  staff     192 Apr 22 11:35 ..
+-rw-r--r--   1 alicejones  staff   14347 Apr 21 08:17 1.0-diff.patch
+-rw-r--r--   1 alicejones  staff  238783 Apr 21 08:17 1.0-end-user-redeem.png
+-rw-r--r--   1 alicejones  staff    4540 Apr 21 08:17 1.0-seed-counts.txt
+-rw-r--r--   1 alicejones  staff   20696 Apr 21 08:17 1.0-test-output.txt
+-rw-r--r--   1 alicejones  staff  208860 Apr 21 08:17 2.0-modal-add.png
+-rw-r--r--   1 alicejones  staff  139049 Apr 21 08:17 2.0-modal-edit-softdelete.png
+-rw-r--r--   1 alicejones  staff  186712 Apr 21 08:17 2.0-modal-main-view.png
+-rw-r--r--   1 alicejones  staff   34806 Apr 21 08:17 2.0-non-admin-reject.png
+-rw-r--r--   1 alicejones  staff   23884 Apr 21 08:17 2.0-test-output.txt
+-rw-r--r--   1 alicejones  staff    9121 Apr 21 08:17 3.0-spike.md
+-rw-r--r--   1 alicejones  staff    1888 Apr 22 11:11 4.0-fresh-bootstrap.txt
+-rw-r--r--   1 alicejones  staff   10280 Apr 22 10:59 4.0-grep.txt
+-rw-r--r--@  1 alicejones  staff  251884 Apr 22 11:33 4.0-nonprod-redeem.png
+-rw-r--r--   1 alicejones  staff    9884 Apr 22 11:05 4.0-removal.diff
+-rw-r--r--   1 alicejones  staff    7528 Apr 22 11:05 4.0-test-output.txt
+-rw-r--r--   1 alicejones  staff   25768 Apr 22 11:35 5.0-ci-local.txt
+-rw-r--r--   1 alicejones  staff    1388 Apr 22 11:35 5.0-proofs-listing.txt

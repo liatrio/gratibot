@@ -1,0 +1,56 @@
+# Task 4.5 — grep for residual rewards.json references
+
+## JS-only scope (proof artifact required)
+
+$ grep -rn "rewards.json" . --include="*.js"
+(no matches — clean)
+
+## Markdown scope (informational)
+
+$ grep -rn "rewards.json" . --include="*.md"
+./AUDIT_ISSUES.md:294:`rewards.json`, `features/**`, `service/**`, `database/**`, `middleware/**`,
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:5:Today the Gratibot reward catalog lives in `rewards.json` and is baked into
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:25:  source of truth at runtime, replacing `rewards.json` as the read source.
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:59:  itself from `rewards.json` on first empty startup so that the catalog
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:67:`rewards.json` into MongoDB without changing the end-user UX. After this
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:68:unit, the running bot reads rewards from the database; `rewards.json`
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:78:  in the existing `rewards.json` with `sortOrder` reflecting the entry's
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:81:  and `updatedAt: now`. Existing `imageURL` values from `rewards.json`
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:89:  `rewards.json`-backed version for equivalent data.
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:121:  rewards.json after first nonprod startup; rerunning startup does not
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:280:  `rewards.json` keep their Azure-Blob-hosted `imageURL` values until
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:295:### Unit 4: Remove `rewards.json` from the repo
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:306:- The system shall delete `rewards.json` from the repo and remove
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:330:- `Git diff: rewards.json removed; no code path reads rewards.json;
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:539:- **Unit 1** (migration): the seed reads `rewards.json` at startup,
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:543:- **Unit 4** (post-migration cleanup): `rewards.json` is deleted
+./docs/specs/04-spec-db-backed-reward-management/04-spec-db-backed-reward-management.md:608:5. **`rewards.json` removal lands**: the file is deleted from the
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:8:| `service/rewardSeed.js` | **NEW.** Exports a `seedRewards()` function called from `app.js` at startup. Unit 1: reads `rewards.json`, adds `kind: "liatrio-store"` to the Liatrio Store entry, inserts when empty. Unit 4: reduced to an inline single-entry seed. |
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:10:| `service/redeem.js` | **MODIFY.** Replace the top-level `fs.readFileSync(rewards.json)` with an async `createRedeemBlocks(currentBalance)` that reads from `rewardCollection`, filters `active: true`, and sorts ascending by `sortOrder` then `name`. Selected-item payload gains `kind`. |
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:19:| `rewards.json` | **MODIFY then DELETE.** Unit 1 is the last reader of this file (via the seed). Unit 4 deletes it. |
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:40:Move the reward catalog source of truth from `rewards.json` into a new MongoDB `rewards`
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:43:`rewards.json` including the `kind: "liatrio-store"` marker on the Liatrio Store entry),
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:65:- Mongo: `db.rewards.countDocuments({})` equals `rewards.json.length` after first
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:77:- [x] 1.3 Create `service/rewardSeed.js` exporting an async `seedRewards()` function. It (a) imports `../database/rewardCollection`, `../winston`, `fs`, `path`, (b) calls `rewardCollection.countDocuments({})`, (c) if `0`, reads `../rewards.json`, builds documents with `kind: "liatrio-store"` on the `"Liatrio Store"` entry, `active: true`, `sortOrder` = array index, `createdBy/updatedBy: "system-seed"`, `createdAt/updatedAt: new Date()`, (d) calls `insertMany(docs)`, (e) logs at `info` with insert count on seed-runs, `debug` on already-seeded, (f) returns without inserting when count > 0. Never throws past the caller — log and rethrow so `app.js` can fail startup cleanly.
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:78:- [x] 1.4 Create `test/service/rewardSeed.js`. Use `describe("service/rewardSeed", function () { ... })` with `function` form. Cases: (a) seed-runs-when-empty — stub `countDocuments` to resolve `0`, stub `insertMany` to resolve, assert `insertMany` is called with an array of 14 docs whose Liatrio Store entry has `kind: "liatrio-store"` and whose other entries have no `kind` field; (b) seed-does-not-run-when-non-empty — stub `countDocuments` to resolve `1`, assert `insertMany` is not called; (c) assert each doc has `active: true`, `createdBy: "system-seed"`, `updatedBy: "system-seed"`, and a monotonic `sortOrder` matching its position in `rewards.json`. Restore stubs in `afterEach` with `sinon.restore()`.
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:79:- [x] 1.5 Refactor `service/redeem.js`: delete the top-of-file `fs.readFileSync(rewards.json)` + `JSON.parse`; remove the `gratibotRewards` module-level constant. Make `createRedeemBlocks(currentBalance)` async: query `rewardCollection.find({ active: true }).sort({ sortOrder: 1, name: 1 }).toArray()`, then build the same block sequence (`redeemHeader()`, `redeemHelpText(currentBalance)`, `...redeemItems(rewards)`, `redeemSelector(rewards)`) as today. Pass the DB rows into `redeemItems` / `redeemSelector` unchanged so their block output stays identical for equivalent data.
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:296:### [~] 4.0 Remove `rewards.json` and reduce `service/rewardSeed.js` to the Liatrio Store entry (Unit 4)
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:298:After Unit 1's seeding is verified in nonprod, delete `rewards.json` from the repo and
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:300:Replace the seed module's `rewards.json` dependency with an inline seed array
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:306:rewards.json after DB migration`.
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:315:- Git diff: `git diff main...<branch> -- rewards.json service/rewardSeed.js
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:316:  service/redeem.js` shows `rewards.json` deleted, no code path reads it, and
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:319:- CLI: `grep -rn "rewards.json" . --include="*.js"` returns zero matches —
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:330:- [x] 4.1 **[HUMAN GATE]** Confirm Unit 1 has merged to `main` and deployed to nonprod, and that `db.rewards.countDocuments({})` in nonprod matches `rewards.json.length`, before starting Unit 4 implementation. Record the check in a quick note at the top of `04-proofs/4.0-removal.diff` (later commits append the diff itself).
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:331:- [x] 4.2 Refactor `service/rewardSeed.js`: replace the `fs.readFileSync("../rewards.json")` + `JSON.parse` with an inline `const SEED_REWARDS = [ { name: "Liatrio Store", description: "Choose an item from the <https://liatrio.axomo.com/|Liatrio Store>. 2 Fistbumps = 1 Dollar.", imageURL: "<current-placeholder-or-existing-seeded-url>", cost: 0, sortOrder: 0, kind: "liatrio-store" } ];` Keep the `countDocuments > 0` guard unchanged so populated DBs are untouched. Keep the `active: true`, `createdBy/updatedBy: "system-seed"`, `createdAt/updatedAt` stamping.
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:333:- [x] 4.4 Delete `rewards.json` from the repo (`git rm rewards.json`).
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:334:- [~] 4.5 Grep the repo for any residual reference: `grep -rn "rewards.json" . --include="*.js" --include="*.md"`. Remove any leftover references. Save the (now-empty) `.js` grep output to `04-proofs/4.0-grep.txt`.
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:337:- [ ] 4.8 Capture the per-unit diff: `git diff main..HEAD -- rewards.json service/rewardSeed.js service/redeem.js test/service/rewardSeed.js > 04-proofs/4.0-removal.diff` (note: `git diff` shows the file deletion as `/dev/null` entries).
+./docs/specs/04-spec-db-backed-reward-management/04-tasks-db-backed-reward-management.md:340:- [ ] 4.11 Stage and commit Unit 4's files with message `chore(redeem): remove rewards.json after DB migration`.
+
+Notes:
+- JS scope returns zero matches — no code path reads rewards.json.
+- Markdown matches are all inside docs/specs/04-spec-db-backed-reward-management/
+  (historical spec/tasks/audit/proof narrative) plus the untracked AUDIT_ISSUES.md.
+  These are intentionally preserved as the migration record — they document
+  that rewards.json existed and was removed in this unit.

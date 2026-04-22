@@ -14,12 +14,6 @@ const rank = [
   "10th",
 ];
 
-/*
- * Generates leaderboard message data in Slack's Block Kit style format.
- * @param {number} timeRange A number denoting the number of days of data
- *     the created leaderboard will include.
- * @return {object} A Block Kit style object, storing a Gratibot leaderboard.
- */
 async function createLeaderboardBlocks(timeRange) {
   let blocks = [];
 
@@ -61,10 +55,6 @@ async function goldenFistbumpHolder() {
 
 /* Block Kit Content */
 
-/*
- * Generates a Block Kit style object, storing a leaderboard header.
- * @return {object} A Block Kit style object, storing a leaderboard header.
- */
 function leaderboardHeader() {
   return {
     type: "section",
@@ -76,14 +66,6 @@ function leaderboardHeader() {
   };
 }
 
-/*
- * Generates a Block Kit style object, storing a Top Givers section
- *    header, and leaderboard entries for provided scores.
- * @param {Array<object>} giverScores An array of objects containing a user ID
- *     and a score.
- * @return {object} A Block Kit style object, storing a
- *     section header and leaderboard entries.
- */
 function topGivers(giverScores) {
   let markdown = "*Top Givers*\n\n";
   markdown += giverScores.map(leaderboardEntry).join("\n");
@@ -98,14 +80,6 @@ function topGivers(giverScores) {
   };
 }
 
-/*
- * Generates a Block Kit style object, storing a Top Receivers section
- *    header, and leaderboard entries for provided scores.
- * @param {Array<object>} receiverScores An array of objects containing a user
- *     ID and a score.
- * @return {object} A Block Kit style object, storing a
- *     section header and leaderboard entries.
- */
 function topReceivers(receiverScores) {
   let markdown = "*Top Receivers*\n\n";
   markdown += receiverScores.map(leaderboardEntry).join("\n");
@@ -120,14 +94,6 @@ function topReceivers(receiverScores) {
   };
 }
 
-/*
- * Generates a Block Kit style object, storing information denoting the
- *     timeRange of the generated leaderboard.
- * @param {number} timeRange A number denoting the number of days of data
- *     the created leaderboard includes.
- * @return {object} A Block Kit style objects, storing information denoting
- *     the timeRange of the generated leaderboard.
- */
 function timeRangeInfo(timeRange) {
   return {
     type: "context",
@@ -142,12 +108,6 @@ function timeRangeInfo(timeRange) {
   };
 }
 
-/*
- * Generates a Block Kit style object, containing buttons for generating
- *     a leaderboard with different timeRanges.
- * @return {object} A Block Kit style objects, containing buttons for generating
- *     a leaderboard with different timeRanges.
- */
 function timeRangeButtons() {
   return {
     type: "actions",
@@ -197,16 +157,6 @@ function timeRangeButtons() {
   };
 }
 
-/*
- * Generates a markdown string, containing a single leaderboard
- *     entry. Used with Array.map() to format score data.
- * @param {object} entry An object containing a userID and a corresponding
- *    score for a leaderboard entry.
- * @param {number} index A number denoting the rank a particular entry should
- *    be marked with in the leaderboard entry. (Ex: 1st, 2nd 3rd, etc)
- * @return {string} A string of markdown, storing a single leaderboard
- *     entry.
- */
 function leaderboardEntry(entry, index) {
   return `<@${entry.userID}> *${rank[index]} - Score:* ${entry.score}`;
 }
@@ -270,6 +220,8 @@ function convertToScores(leaderboardData) {
   let scores = [];
   for (const user in leaderboardData) {
     let userStats = leaderboardData[user];
+    // Diversity-weighted: subtracting total/unique penalises concentration, so
+    // N recognitions from N distinct users score ~N, but N from one user score ~1.
     let score =
       1 +
       userStats.totalRecognition -

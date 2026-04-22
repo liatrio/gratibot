@@ -1,4 +1,3 @@
-// Reaches out to the Mongo DB database to get the top ten messages for a specified user
 const winston = require("../winston");
 const moment = require("moment-timezone");
 const recognitionCollection = require("../database/recognitionCollection");
@@ -23,14 +22,12 @@ async function getTopMessagesForUser(
     timezone,
   });
 
-  // Calculate the date range
   const userDate = moment(Date.now()).tz(timezone);
   const startDate = userDate
     .clone()
     .subtract(timeRange - 1, "days")
     .startOf("day");
 
-  // Create the filter for the date range and user
   const filter = {
     recognizee: userId,
     timestamp: {
@@ -39,32 +36,23 @@ async function getTopMessagesForUser(
   };
 
   try {
-    // Get top 10 messages for this user using MongoDB aggregation
     const topMessages = await recognitionCollection
       .aggregate([
-        // Match only recognitions for this user in the time period
         { $match: filter },
-        // Group by message and count occurrences
         {
           $group: {
             _id: "$message",
             count: { $sum: 1 },
-            // Keep the first timestamp for reference
             firstTimestamp: { $first: "$timestamp" },
-            // Keep a sample channel for reference
             channel: { $first: "$channel" },
-            // Collect all recognizers who gave this recognition
             recognizers: { $addToSet: "$recognizer" },
           },
         },
-        // Sort by count in descending order
         { $sort: { count: -1 } },
-        // Limit to top 10
         { $limit: 10 },
       ])
       .toArray();
 
-    // Format the results
     return topMessages.map((msg) => {
       return {
         message: msg._id,
@@ -97,14 +85,12 @@ async function getTotalRecognitionsForUser(
   timeRange = 30,
   timezone = "America/Los_Angeles",
 ) {
-  // Calculate the date range
   const userDate = moment(Date.now()).tz(timezone);
   const startDate = userDate
     .clone()
     .subtract(timeRange - 1, "days")
     .startOf("day");
 
-  // Create the filter for the date range and user
   const filter = {
     recognizee: userId,
     timestamp: {
@@ -140,7 +126,6 @@ async function createUserTopMessagesBlocks(
 ) {
   const blocks = [];
 
-  // Add header
   blocks.push({
     type: "header",
     text: {
@@ -150,7 +135,6 @@ async function createUserTopMessagesBlocks(
     },
   });
 
-  // Add user info
   blocks.push({
     type: "section",
     text: {
@@ -159,12 +143,10 @@ async function createUserTopMessagesBlocks(
     },
   });
 
-  // Add divider
   blocks.push({
     type: "divider",
   });
 
-  // If no data, show a message
   if (topMessages.length === 0) {
     blocks.push({
       type: "section",
@@ -174,7 +156,6 @@ async function createUserTopMessagesBlocks(
       },
     });
   } else {
-    // Add top messages section
     blocks.push({
       type: "section",
       text: {
@@ -183,7 +164,6 @@ async function createUserTopMessagesBlocks(
       },
     });
 
-    // Add each message with its count
     topMessages.forEach((msg, index) => {
       const recognizersText =
         msg.recognizers.length > 3
@@ -200,7 +180,6 @@ async function createUserTopMessagesBlocks(
     });
   }
 
-  // Add time range buttons
   blocks.push({
     type: "actions",
     block_id: "userTopMessagesTimeRange",

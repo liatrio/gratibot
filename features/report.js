@@ -5,14 +5,11 @@ const { directMessage, anyOf } = require("../middleware");
 const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
-  // Handle direct "report" command
   app.message(
     /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
-    anyOf(directMessage(), directMention),
+    anyOf(directMessage, directMention),
     respondToReport,
   );
-
-  // Handle button clicks for different time ranges
   app.action(/user-top-messages-\d+/, updateReportTimeRange);
 };
 
@@ -110,7 +107,6 @@ async function updateReportTimeRange({ ack, body, client, action, respond }) {
       parseInt(timeRange),
     );
 
-    // Update the message
     await respond({
       text: `Top recognized messages for <@${targetUserId}>`,
       blocks: blocks,

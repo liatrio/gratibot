@@ -136,14 +136,14 @@ calling an HTTP endpoint. This means:
 
 Three helper middleware functions compose Bolt listener conditions:
 
-- `directMessage()` — returns a filter that passes only DM events
+- `directMessage` — a bare middleware that passes only DM events
 - `anyOf(...filters)` — logical OR over multiple Bolt filters
 - `reactionMatches(emoji)` — returns a filter that checks reaction emoji name
 
 Example usage in a feature:
 
 ```javascript
-app.message(directMessage(), /^balance/, async ({ message, say }) => { ... });
+app.message(directMessage, /^balance/, async ({ message, say }) => { ... });
 ```
 
 ### Block Kit

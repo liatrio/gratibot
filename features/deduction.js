@@ -9,7 +9,7 @@ const { respondToUser } = require("../service/messageutils");
 module.exports = function (app) {
   app.message(
     /deduct/i,
-    anyOf(directMention, directMessage()),
+    anyOf(directMention, directMessage),
     respondToDeduction,
   );
 };

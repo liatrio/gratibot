@@ -7,7 +7,7 @@ const { respondToUser } = require("../service/messageutils");
 module.exports = function (app) {
   app.message(
     /balance/i,
-    anyOf(directMention, directMessage()),
+    anyOf(directMention, directMessage),
     respondToBalance,
   );
 };

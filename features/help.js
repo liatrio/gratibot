@@ -10,7 +10,7 @@ const { anyOf, directMessage } = require("../middleware");
 const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
-  app.message(/help/i, anyOf(directMention, directMessage()), respondToHelp);
+  app.message(/help/i, anyOf(directMention, directMessage), respondToHelp);
   app.message(/(thunderfury|Thunderfury)/, respondToEasterEgg);
 };
 

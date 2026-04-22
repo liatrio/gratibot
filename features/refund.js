@@ -5,7 +5,7 @@ const refund = require("../service/refund");
 module.exports = function (app) {
   app.message(
     /refund/i,
-    anyOf(directMention, directMessage()),
+    anyOf(directMention, directMessage),
     refund.respondToRefund,
   );
 };

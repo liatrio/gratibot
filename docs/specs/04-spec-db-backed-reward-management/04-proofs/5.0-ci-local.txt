@@ -1,0 +1,492 @@
+
+> gratibot@0.0.0-development test
+> npm run test:unit && npm run test:integration && c8 report --check-coverage
+
+
+> gratibot@0.0.0-development test:unit
+> c8 --no-check-coverage --reporter=none mocha 'test/**/*.js' --require test/setup.js --ignore 'test/integration/**'
+
+
+
+  features/balance
+    respondToBalance
+      ✔ should post the three-line balance text via respondToUser on the happy path
+      ✔ should post an error message when users.info returns ok: false
+
+  features/deduction
+    respondToDeduction
+      ✔ should post an error message when users.info returns ok: false
+      ✔ should reject a caller not in config.redemptionAdmins with a not-allowed message
+      ✔ should post the usage hint when the deduct command is malformed
+      ✔ should post an insufficient-balance message when deduction.isBalanceSufficient returns false
+      ✔ should post a confirmation with the deduction ID on the happy path
+
+  features/golden-recognize
+    respondToRecognitionMessage
+      ✔ should validate, notify receivers, and announce to the golden channel on the happy path
+      ✔ should dispatch handleGratitudeError when validateAndSendGratitude rejects with GratitudeError
+      ✔ should dispatch handleSlackError when validateAndSendGratitude rejects with SlackError
+      ✔ should dispatch handleGenericError when validateAndSendGratitude rejects with a plain Error
+
+  features/help
+    respondToHelp
+      ✔ should post the help markdown back to the user via chat.postMessage when the help command is sent as a DM
+    respondToEasterEgg
+      ✔ should reply with the thunderfury response via say()
+
+  features/join
+    joinPublicChannel
+      ✔ should invoke client.conversations.join with the new channel id on the happy path
+      ✔ should dispatch handleSlackError when conversations.join throws a SlackError
+      ✔ should dispatch handleGenericError when conversations.join throws a plain Error
+      ✔ should await conversations.join so a rejected promise is caught (regression for missing await)
+
+  features/leaderboard
+    respondToLeaderboard
+      ✔ should post Gratibot Leaderboard text with blocks from createLeaderboardBlocks
+    updateLeaderboardResponse
+      ✔ should ack and respond with new blocks keyed by action.value
+
+  features/metrics
+    respondToMetrics
+      ✔ should post Gratibot Metrics text with blocks from createMetricsBlocks
+    updateMetricsResponse
+      ✔ should ack and respond with new blocks keyed by action.value
+
+  features/recognize
+    respondToRecognitionMessage
+      ✔ should assemble the gratitude object and react to the message on the happy path
+      ✔ should flag giverInReceivers when the giver also appears in the receiver list
+      ✔ should route SlackError through handleSlackError and not react to the message
+      ✔ should route a plain Error through handleGenericError
+      ✔ should route GratitudeError through handleGratitudeError and not react to the message
+    respondToRecognitionReaction
+      ✔ should validate and respond to the giver when the reacted message contains :fistbump:
+      ✔ should short-circuit when the reacted message does not contain the recognize emoji
+      ✔ should dispatch handleSlackError when conversations.replies responds with ok:false
+      ✔ should set giverInReceivers when the reactor is also a receiver
+
+  features/redeem
+    respondToRedeem
+      ✔ should post Gratibot Rewards blocks via respondToUser
+    redeemItem
+      ✔ should look up the reward by id from the payload and use the DB cost/name for deduction
+      ✔ should bail with an ephemeral when the reward is no longer available
+      ✔ should branch on kind === 'liatrio-store' from the DB row and skip createDeduction
+      ✔ should call createDeduction for a regular (non-Liatrio-Store) kind
+      ✔ should use the current DB cost, not any prior value, when an admin has edited the reward
+      ✔ should post an ephemeral insufficient-balance warning when balance is too low
+      ✔ should notify the user via postEphemeral when the redemption flow throws
+      ✔ should swallow a postEphemeral failure in the catch block without rejecting
+
+  features/refund
+    ✔ should register refund.respondToRefund against the /refund/i message matcher
+
+  features/report
+    respondToReport
+      ✔ should default to the caller and 180-day range when no mention or time range is supplied
+      ✔ should target the mentioned user when <@Uother> appears in the text
+      ✔ should parse a trailing integer as the time range
+      ✔ should post the generic error text when users.info returns ok: false
+      ✔ should post the generic error text when getTopMessagesForUser rejects
+    updateReportTimeRange
+      ✔ should ack, fetch fresh data, and respond with the new blocks on the happy path
+      ✔ should respond with a 'Something went wrong' message and replace_original:false when users.info rejects
+
+  features/reward-admin
+    handleAdmin
+      ✔ posts the no-admin-access message as a direct message when called in a DM
+      ✔ posts the no-admin-access message ephemerally when called in a channel
+      ✔ posts the 'Manage Rewards' button as a direct message for an admin in a DM
+      ✔ posts the 'Manage Rewards' button ephemerally for an admin in a channel
+    reward_admin_open action
+      ✔ opens the main modal view using the action's trigger_id
+      ✔ posts the not-authorized message ephemerally when the button was clicked from a channel
+      ✔ posts the not-authorized message as a direct message when the button was clicked from a DM
+    reward_admin_add action
+      ✔ updates the modal with the Add view for an admin
+    reward_admin_moveup action
+      ✔ calls moveReward('up') for an admin and updates the main view
+      ✔ threads the current filter from view.private_metadata through moveReward and buildMainView
+      ✔ does not move for a non-admin
+    reward_admin_movedown action
+      ✔ calls moveReward('down') for an admin and updates the main view
+    reward_admin_filter action
+      ✔ re-renders the main view with the selected filter for an admin
+      ✔ does nothing for a non-admin
+    reward_admin_add_submit view_submission
+      ✔ re-checks authorization and rejects a non-admin replay
+      ✔ calls createReward and acks with response_action: 'update' on the happy path
+      ✔ acks with response_action: 'errors' when createReward throws GratitudeError
+    reward_admin_edit_submit view_submission
+      ✔ calls updateReward with the _id from private_metadata on the happy path
+      ✔ re-checks authorization and rejects a non-admin replay
+
+  middleware/index
+    ✔ should pass data on to nested functions
+    directMessage
+      ✔ should call next if message channel type is "im"
+      ✔ should not call next if message channel type is not "im"
+    anyOf
+      ✔ should call next if any of the passed functions call next
+      ✔ should not call next if none of the passed functions call next
+    reactionMatches
+      ✔ should only trigger the next middleware if the reaction matches the emoji
+      ✔ should not trigger the next middleware if the reaction does not match the emoji
+
+  service/apiwrappers
+    userInfo
+      ✔ should return the user on success
+      ✔ throw an error on unsuccessful response
+
+  service/balance
+    dailyGratitudeRemaining
+      ✔ should return Infinity for exempt users
+      ✔ should allow for configurable maximum
+    currentBalance
+      ✔ should return total earnings when users have no deductions
+      ✔ should return total earnings when users have no deductions and has received golden fistbumps
+    lifetimeSpendings
+      ✔ should sum the total deduction value returned from the db
+
+  deduction/balance
+    createDeduction
+      ✔ should insert data into db
+      ✔ should allow for message to be optional
+    refundDeduction
+      ✔ should call refund deduction
+    isBalanceSufficient
+      ✔ should return true if balance is sufficient
+      ✔ should return false if balance is not sufficient
+    getDeductions
+      ✔ should return deductions found in db
+      ✔ should filter results if times are specified
+
+  service/leaderboard
+    createLeaderboardBlocks
+      ✔ should respond with a well-formed leaderboard
+      ✔ should generate leaderboard from stored data
+      ✔ should sort leaderboard members
+      ✔ shouldn't include more than 10 leaderboard members per group
+      ✔ should display the selected time range
+      ✔ should display the golden fistbump holder
+
+  service/messageutils
+    respondToUser
+      ✔ should use postMessage when channel_type is im
+      ✔ should use postEphemeral when channel_type is not im
+      ✔ should use postEphemeral when channel_type is missing
+      ✔ should pass through blocks and extra options
+    handleSlackError
+      ✔ should return the proper message
+    handleGratitudeError
+      ✔ should return the proper message
+    handleGenericError
+      ✔ should return the proper message
+    sendNotificationToReceivers
+      ✔ should send a message to each receiver
+    getReceiverMessage
+      ✔ should get golden fistbump message
+      ✔ should get fistbump message
+
+  service/metrics
+    createMetricsBlocks
+      ✔ should respond with a well-formed metrics message
+      ✔ should generate metrics from stored data
+      ✔ should display the selected time range
+
+  service/recognition
+    getGoldenFistbumpHolder
+      ✔ should return relevant info about the golden fistbump holder
+    doesUserHoldGoldenRecognition
+      ✔ should return true if user holds the golden fistbump 
+      ✔ should return false if user doesn't hold the golden fistbump 
+      ✔ should return false if golden recognition doesn't exist
+    composeReceiverNotificationText
+      ✔ normal fistbump message
+      ✔ golden fistbump given
+      ✔ fistbump given to golden fistbump holder
+    giveRecognition
+      ✔ should insert data into db
+    countRecognitionsReceived
+      ✔ should return count of recognition in db
+      ✔ should filter results if times are specified
+    countRecognitionsGiven
+      ✔ should return count of recognition in db
+      ✔ should filter results if times are specified
+    getPreviousXDaysOfRecognition
+      ✔ should return recognition in db
+      ✔ should filter results if times are specified
+    groupUsers
+      ✔ should return a list of users from a mentioned group
+    gratitudeReceiverIdsIn
+      ✔ should find single user mentioned in message
+      ✔ should find multiple users mentioned in message
+      ✔ should return empty when no users are mentioned in message
+      ✔ should return the users within the group when a group is mentioned
+      ✔ should return the users within the group when a the short group syntax is used
+      ✔ should return the users within the group when a group is mentioned and other users
+      ✔ should return the users within all groups mentioned
+    gratitudeCountIn
+      ✔ should add all fistbumps in the message
+      ✔ should return zero when message has no fistbumps
+      ✔ should support multiplication
+      ✔ should support multiplication along with multiple emoji
+      ✔ shouldn't multiply by negative numbers
+      ✔ should use the multiplier found after the fistbump
+      ✔ should use the multiplier found before the fistbump
+      ✔ should use the multiplier found before the fistbump even with more than 3 x findings
+      ✔ should use the multiplier found before the fistbump even if there is a following multiplier
+      ✔ should count uppercase multiplier
+      ✔ shouldn't use an uppercase multiplier that's not 'X'
+    gratitudeTagsIn
+      ✔ should find a tag in message
+      ✔ should find multiple tags in message
+      ✔ should return empty with no tags
+    trimmedGratitudeMessage
+      ✔ should remove user mentions from message
+      ✔ should remove emojis from message
+      ✔ should return input if no user mentions or emojis are in message
+    isGratitudeAffordable
+      ✔ should return true for golden gratitude
+      ✔ should return true if daily gratitude remaining is greater than or equal to the gratitude cost
+      ✔ should return false if daily gratitude remaining is less than the gratitude cost
+      ✔ should remove the giver from receivers if giverInReceivers is true
+      ✔ should remove the giver from receivers and allow recognition if daily gratitude remaining is equal to the gratitude cost
+    gratitudeErrors
+      ✔ should return empty if gratitude is okay
+      ✔ should return error if no receivers
+      ✔ should return error on self-recognition
+      ✔ should return error if giver is a bot
+      ✔ should return error if giver is a guest user
+      ✔ should return error if receiver is a bot
+      ✔ should return error if receiver is a guest user
+      ✔ should return error if message is too short
+      ✔ should return error if gratitude count is 0
+      ✔ should return error if gratitude count is negative
+      ✔ should return error if giver can't afford recognition
+    goldenGratitudeErrors
+      ✔ should return empty if gratitude is okay
+      ✔ should return error if giver does not have golden fistbump
+    giveGratitude
+      ✔ should add gratitude to database
+      ✔ should add multiple gratitude to database
+      ✔ should give 2 fistbumps to the golden fistbump user if they receive one fistbump
+      ✔ should create a golden recognition if a golden fistbump was given
+    validateAndSendGratitude
+      ✔ should add gratitude to database if okay
+      ✔ should throw error if not okay
+    giverSlackNotification
+      ✔ should generate a markdown response for recognition
+      ✔ should use appropriate grammar for multiple fistbumps
+    giverGoldenSlackNotification
+      ✔ default path for golden fistbump
+    receiverSlackNotification
+      ✔ should generate a markdown response for recognition
+      ✔ should include additional message for first time earners
+
+  service/redeem
+    redeemNotificationUsers
+      ✔ should return comma seperated list of users
+    fetchActiveRewardById
+      ✔ queries by _id and active flag when id is a valid ObjectId
+      ✔ returns null for an invalid ObjectId without hitting the collection
+    fetchActiveRewards
+      ✔ queries active rewards sorted by sortOrder then name
+    buildRedeemBlocks
+      ✔ returns header and help-text blocks with the given balance
+      ✔ renders rewards in the order given
+    redeemHeader
+      ✔ returns expected block
+    redeemHelpText
+      ✔ returns expected block
+    redeemItems
+      ✔ returns expected block
+    redeemSelector
+      ✔ serializes option.value as the reward _id string
+      ✔ coerces non-string _id (e.g. ObjectId) to a string
+      ✔ returns expected selector shell
+
+  service/refund
+    respondToRefund
+      ✔ should return a successful refund message to user
+      ✔ should return a message informing user that they must be redemption admin
+
+  service/report
+    getTopMessagesForUser
+      ✔ should map aggregation results to the expected shape with a formatted date
+      ✔ should return an empty array when the aggregation returns no results
+      ✔ should rethrow when the aggregation fails
+    getTotalRecognitionsForUser
+      ✔ should return the count returned by the collection
+      ✔ should rethrow when countDocuments fails
+    createUserTopMessagesBlocks
+      ✔ should include the empty-state section when there are no top messages
+      ✔ should render recognizers inline when there are three or fewer
+      ✔ should collapse recognizers to the first plus a count when there are more than three
+      ✔ should finish with an actions block containing the three time-range buttons
+
+  service/rewardAdmin
+    isAuthorized
+      ✔ returns true for a configured admin
+      ✔ returns false for a non-admin
+    validateReward
+      ✔ returns ok: true on the happy path
+      ✔ fails when name is empty
+      ✔ fails when name is missing
+      ✔ fails when description is empty
+      ✔ fails when cost is negative
+      ✔ fails when cost is not an integer
+      ✔ fails when cost is NaN
+      ✔ fails when imageURL is empty
+    listRewards
+      ✔ calls find({}).sort({ sortOrder: 1, name: 1 }).toArray()
+    createReward
+      ✔ inserts a document with active: true, createdBy/updatedBy set to the actor, and no kind field
+      ✔ auto-assigns sortOrder one higher than the current max
+      ✔ assigns sortOrder 0 when the collection is empty
+      ✔ throws a GratitudeError when validation fails
+      ✔ respects active: false when passed explicitly
+    updateReward
+      ✔ calls updateOne with $set of editable fields + updatedBy/updatedAt only
+      ✔ throws a GratitudeError when validation fails
+    moveReward
+      ✔ swaps sortOrder with the previous row when moving up
+      ✔ swaps sortOrder with the next row when moving down
+      ✔ is a no-op when moving the first row up
+      ✔ is a no-op when moving the last row down
+      ✔ is a no-op when the target reward is not found
+      ✔ swaps with the next visible neighbor when filter hides items in between
+      ✔ is a no-op when the target is at the edge of the filtered view
+    parseMetadata
+      ✔ returns the stored filter when valid
+      ✔ defaults to active when raw is empty or unparseable
+      ✔ defaults to active when the filter value is unknown
+      ✔ returns filter and rewardId when both are set
+    buildMainView
+      ✔ returns a modal with a filter select and the Add button at the top, defaulting to active filter
+      ✔ shows active rewards by default, hiding inactive ones
+      ✔ shows only inactive rewards when filter=inactive
+      ✔ shows all rewards when filter=all
+      ✔ renders an empty-state message appropriate to the active filter
+      ✔ renders an empty-state message appropriate to the inactive filter
+      ✔ renders Move up, Move down, and Edit buttons on every row
+      ✔ omits the image accessory when a reward has no imageURL
+      ✔ includes the description in the row text when set
+    buildAddView
+      ✔ returns a modal with expected block IDs and a submit button
+    buildEditView
+      ✔ pre-populates initial_value and stores _id in private_metadata
+    parseViewSubmission
+      ✔ extracts all fields and coerces cost to an integer
+      ✔ returns NaN when cost is not a number
+      ✔ maps the active checkbox to false when no option is selected
+
+  service/rewardSeed
+    SEED_REWARDS
+      ✔ should contain exactly one entry, the Liatrio Store
+    seedRewards
+      ✔ should insert the inline seed entry when the collection is empty
+      ✔ should stamp active: true, system-seed audit fields, and sortOrder from the inline seed
+      ✔ should not insert when the collection already has documents
+      ✔ should rethrow when the underlying insert fails
+
+
+  245 passing (247ms)
+
+
+> gratibot@0.0.0-development test:integration
+> c8 --no-clean --no-check-coverage --reporter=none mocha 'test/integration/**/*.js' --require test/setup.js --require test/integration/setup.js
+
+
+
+  integration: bolt-wiring
+    directMessage routing
+      ✔ fires the balance handler for a DM event and not for a channel-equivalent event
+    regex / string message matcher
+      ✔ fires the balance handler when message text matches /balance/i and not when it does not match
+    GratitudeError propagation through recognize
+      ✔ posts the formatted user-facing message via postEphemeral when validateAndSendGratitude rejects with GratitudeError
+
+  integration: service/balance
+    dailyGratitudeRemaining
+      ✔ should count only today's recognitions from the given user in the given timezone and subtract from the daily maximum (241ms)
+    currentBalance
+      ✔ should sum recognitions received, golden recognitions times twenty, minus non-refunded deductions
+
+  integration: service/deduction
+    isBalanceSufficient
+      ✔ should return true when the user's balance is at least the deduction value (50ms)
+      ✔ should return false when the user's balance is below the deduction value (57ms)
+    createDeduction
+      ✔ should insert a deduction record visible via findOne
+    refundDeduction
+      ✔ should flip the refund flag to true on the matching record
+
+  integration: service/leaderboard
+    createLeaderboardBlocks
+      ✔ should return a blocks array whose topReceivers section names the seeded top recognizee
+
+  integration: service/metrics
+    createMetricsBlocks
+      ✔ should encode a chart whose daily bucket totals match the seeded recognitions
+
+  integration: service/recognition
+    getGoldenFistbumpHolder
+      ✔ should return the most recent golden recognition's recognizee
+    giveRecognition
+      ✔ should insert a normal recognition into recognitionCollection when type is the default fistbump
+      ✔ should insert a golden recognition into goldenRecognitionCollection when type is the golden emoji
+    countRecognitionsReceived
+      ✔ should count every recognition record whose recognizee matches the given user
+
+  integration: service/report
+    getTopMessagesForUser
+      ✔ should group by message and return entries sorted by count desc with MMM D, YYYY formatted dates
+      ✔ should return an empty array when the user has no recognitions in the time window
+    getTotalRecognitionsForUser
+      ✔ should return the total count of recognitions for the given user within the time window
+
+
+  18 passing (1s)
+
+---------------------------------|---------|----------|---------|---------|-------------------------
+File                             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s       
+---------------------------------|---------|----------|---------|---------|-------------------------
+All files                        |   97.22 |    94.78 |   99.25 |   97.22 |                         
+ database                        |     100 |      100 |     100 |     100 |                         
+  db.js                          |     100 |      100 |     100 |     100 |                         
+  deductionCollection.js         |     100 |      100 |     100 |     100 |                         
+  goldenRecognitionCollection.js |     100 |      100 |     100 |     100 |                         
+  recognitionCollection.js       |     100 |      100 |     100 |     100 |                         
+  rewardCollection.js            |     100 |      100 |     100 |     100 |                         
+ features                        |    94.4 |    95.45 |   97.56 |    94.4 |                         
+  balance.js                     |     100 |      100 |     100 |     100 |                         
+  deduction.js                   |     100 |      100 |     100 |     100 |                         
+  golden-recognize.js            |     100 |      100 |     100 |     100 |                         
+  help.js                        |     100 |      100 |     100 |     100 |                         
+  join.js                        |     100 |      100 |     100 |     100 |                         
+  leaderboard.js                 |     100 |      100 |     100 |     100 |                         
+  metrics.js                     |     100 |      100 |     100 |     100 |                         
+  recognize.js                   |   97.63 |    95.83 |     100 |   97.63 | 140-143                 
+  redeem.js                      |     100 |      100 |     100 |     100 |                         
+  refund.js                      |     100 |      100 |     100 |     100 |                         
+  report.js                      |   98.49 |    93.33 |     100 |   98.49 | 89-90                   
+  reward-admin.js                |   79.33 |    87.09 |    92.3 |   79.33 | ...-155,222-226,254-270 
+ middleware                      |     100 |      100 |     100 |     100 |                         
+  index.js                       |     100 |      100 |     100 |     100 |                         
+ service                         |   98.61 |    94.07 |     100 |   98.61 |                         
+  apiwrappers.js                 |   66.66 |    66.66 |     100 |   66.66 | 8-13                    
+  balance.js                     |     100 |      100 |     100 |     100 |                         
+  deduction.js                   |     100 |      100 |     100 |     100 |                         
+  errors.js                      |     100 |      100 |     100 |     100 |                         
+  leaderboard.js                 |     100 |      100 |     100 |     100 |                         
+  messageutils.js                |     100 |      100 |     100 |     100 |                         
+  metrics.js                     |     100 |      100 |     100 |     100 |                         
+  recognition.js                 |   95.81 |    93.47 |     100 |   95.81 | ...-263,320-321,346-347 
+  redeem.js                      |     100 |      100 |     100 |     100 |                         
+  refund.js                      |     100 |      100 |     100 |     100 |                         
+  report.js                      |     100 |      100 |     100 |     100 |                         
+  rewardAdmin.js                 |   99.51 |    89.02 |     100 |   99.51 | 141-142                 
+  rewardSeed.js                  |     100 |      100 |     100 |     100 |                         
+---------------------------------|---------|----------|---------|---------|-------------------------

@@ -339,7 +339,7 @@ rewards.json after DB migration`.
 - [x] 4.10 In nonprod, after Unit 4 merges and deploys, DM `redeem` and screenshot the catalog to `04-proofs/4.0-nonprod-redeem.png` — it must match the pre-Unit-4 catalog.  **Captured 2026-04-22: shows `gratibotdev` rendering the populated catalog (Liatrio Axomo Store, Neon Liatrio Sign, Nike Air Force 1's, Hawaiian Shirt, Microphone, Microphone Arm, …). Unit 4's only runtime effect is on fresh empty DBs — the `countDocuments > 0` guard short-circuits re-seeding, so the populated nonprod catalog is unaffected by the Unit 4 deploy.**
 - [x] 4.11 Stage and commit Unit 4's files with message `chore(redeem): remove rewards.json after DB migration`. **Committed as `f1bd80c` on `chore/04-unit-4-remove-rewards-json`.**
 
-### [ ] 5.0 Integration verification and handoff
+### [~] 5.0 Integration verification and handoff
 
 Confirm the full feature works end-to-end before requesting review. Run `npm run lint`
 and `npm test` against the final branch state; spin up the local stack via
@@ -370,10 +370,10 @@ post-merge proofs`.
 
 #### 5.0 Tasks
 
-- [ ] 5.1 From the final branch tip, run `npm run lint && npm test 2>&1 | tee 04-proofs/5.0-ci-local.txt`. Any failure → fix and re-run until green.
-- [ ] 5.2 `ls -la docs/specs/04-spec-db-backed-reward-management/04-proofs/ > 04-proofs/5.0-proofs-listing.txt`. Manually cross-check the list against every Proof Artifact bullet in this tasks file; add any missing artifact before proceeding.
-- [ ] 5.3 Run `grep -rni "xoxb\|xapp\|secret\|password\|bearer" docs/specs/04-spec-db-backed-reward-management/04-proofs/ > 04-proofs/5.0-secret-scan.txt || true`. Inspect the output — any hit that is not a placeholder must be redacted before PR.
-- [ ] 5.4 Push the branch: `git push -u origin feat/04-db-backed-rewards`. Open a PR to `main` with a description body that cross-links every spec FR (quote the FR text + link to the proof artifact path). Save the PR URL to `04-proofs/5.0-pr.txt`.
+- [x] 5.1 From the final branch tip, run `npm run lint && npm test 2>&1 | tee 04-proofs/5.0-ci-local.txt`. Any failure → fix and re-run until green.
+- [x] 5.2 `ls -la docs/specs/04-spec-db-backed-reward-management/04-proofs/ > 04-proofs/5.0-proofs-listing.txt`. Manually cross-check the list against every Proof Artifact bullet in this tasks file; add any missing artifact before proceeding.  **Cross-check: Unit 1–2 and Unit 4 proofs all present; Unit 3 artifacts (`3.0-test-output.txt`, `3.0-upload-end-to-end.png`, `3.0-upload-error.png`, `3.0-manifest.diff`) are intentionally absent per T3.2 SPIKE_FALLBACK; Unit 5 `5.0-secret-scan.txt`, `5.0-pr.txt`, `5.0-pr-checks.png` captured in subsequent tasks.**
+- [x] 5.3 Run `grep -rni "xoxb\|xapp\|secret\|password\|bearer" docs/specs/04-spec-db-backed-reward-management/04-proofs/ > 04-proofs/5.0-secret-scan.txt || true`. Inspect the output — any hit that is not a placeholder must be redacted before PR.  **Two hits; both verified as placeholders (not credentials). See `5.0-secret-scan.txt`.**
+- [~] 5.4 Push the branch: `git push -u origin feat/04-db-backed-rewards`. Open a PR to `main` with a description body that cross-links every spec FR (quote the FR text + link to the proof artifact path). Save the PR URL to `04-proofs/5.0-pr.txt`.  **Branch name used: `chore/04-unit-4-remove-rewards-json` (Unit 4 branches off main after Unit 1-3 already merged).**
 - [ ] 5.5 Wait for CI checks on the PR. Screenshot the all-green checks panel to `04-proofs/5.0-pr-checks.png`.
 - [ ] 5.6 If any artifact was added/updated during Unit 5, commit with `docs(spec-04): capture post-merge proofs` and push. Otherwise Unit 5 is diffless and no commit is required.
 - [ ] 5.7 Hand off for review. Note in the PR description any Unit 3 fallback decision and what a follow-up spec would cover.

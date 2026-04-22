@@ -132,7 +132,6 @@ async function doesUserHoldGoldenRecognition(userId, rec) {
 }
 
 async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
-  //get only the entries from the specifc day from midnight
   let filter = {};
   if (days && timezone) {
     let userDate = moment(Date.now()).tz(timezone);
@@ -163,7 +162,7 @@ async function groupUsers(client, groupId) {
   throw new SlackError(
     "usergroups.users.list",
     response.error,
-    `Something went wrong while sending recognition. When retreiving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
+    `Something went wrong while sending recognition. When retrieving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
   );
 }
 
@@ -203,7 +202,7 @@ async function isGratitudeAffordable(gratitude) {
     gratitude.giver.id,
     gratitude.giver.tz,
   );
-  if (gratitude.giver_in_receivers) {
+  if (gratitude.giverInReceivers) {
     gratitude.receivers = gratitude.receivers.filter(
       (x) => x.id !== gratitude.giver.id,
     );
@@ -258,7 +257,7 @@ async function goldenGratitudeErrors(gratitude) {
 async function giveGratitude(gratitude) {
   let results = [];
 
-  if (gratitude.giver_in_receivers) {
+  if (gratitude.giverInReceivers) {
     gratitude.receivers = gratitude.receivers.filter(
       (x) => x.id !== gratitude.giver.id,
     );
@@ -344,7 +343,7 @@ async function giverSlackNotification(gratitude) {
 
   // Notify the user if they are giving recognition to themselves when in the receiver list.
   let excludingGiver = "";
-  if (gratitude.giver_in_receivers) {
+  if (gratitude.giverInReceivers) {
     excludingGiver = ", excluding yourself";
   }
 

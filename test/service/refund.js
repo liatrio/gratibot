@@ -30,7 +30,7 @@ describe("service/refund", () => {
       sinon.assert.calledWith(testClient.chat.postMessage, {
         channel: testMessage.channel,
         user: testMessage.user,
-        text: "Refund Successfully given",
+        text: "Refund successfully given",
       });
     });
 

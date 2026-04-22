@@ -17,7 +17,7 @@ async function respondToRefund({ message, client, admins = redemptionAdmins }) {
     await client.chat.postMessage({
       channel: message.channel,
       user: message.user,
-      text: "Refund Successfully given",
+      text: "Refund successfully given",
     });
   } else {
     await client.chat.postMessage({

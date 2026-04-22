@@ -45,13 +45,10 @@ async function respondToRecognitionMessage({ message, client }) {
       channel: message.channel,
       tags: recognition.gratitudeTagsIn(message.text),
       type: recognizeEmoji,
-      giver_in_receivers: false,
     };
-
-    // Check if the user who reacted is also a receiver
-    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
-      gratitude.giver_in_receivers = true;
-    }
+    gratitude.giverInReceivers = gratitude.receivers.some(
+      (r) => r.id === gratitude.giver.id,
+    );
 
     await recognition.validateAndSendGratitude(gratitude);
 
@@ -121,13 +118,10 @@ async function respondToRecognitionReaction({ event, client }) {
       channel: event.channel,
       tags: recognition.gratitudeTagsIn(originalMessage.text),
       type: recognizeEmoji,
-      giver_in_receivers: false,
     };
-
-    // Check if the user who reacted is also a receiver
-    if (gratitude.receivers.some((r) => r.id === gratitude.giver.id)) {
-      gratitude.giver_in_receivers = true;
-    }
+    gratitude.giverInReceivers = gratitude.receivers.some(
+      (r) => r.id === gratitude.giver.id,
+    );
 
     await recognition.validateAndSendGratitude(gratitude);
 
@@ -170,6 +164,6 @@ async function messageReactedTo(client, message) {
   throw new SlackError(
     "conversations.replies",
     response.error,
-    `Something went wrong while sending recognition. When retreiving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
+    `Something went wrong while sending recognition. When retrieving message information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
   );
 }

@@ -28,7 +28,7 @@ async function respondToBalance({ message, client }) {
       error: userInfo.error,
     });
     await respondToUser(client, message, {
-      text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
+      text: `Something went wrong while obtaining your balance. When retrieving user information from Slack, the API responded with the following error: ${userInfo.error}`,
     });
     return;
   }

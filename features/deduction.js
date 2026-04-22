@@ -30,7 +30,7 @@ async function respondToDeduction({ message, client }) {
       error: userInfo.error,
     });
     await respondToUser(client, message, {
-      text: `Something went wrong while creating your deduction. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
+      text: `Something went wrong while creating your deduction. When retrieving user information from Slack, the API responded with the following error: ${userInfo.error}`,
     });
     return;
   }

@@ -75,7 +75,7 @@ describe("features/join", () => {
 
       expect(client.chat.postEphemeral.calledOnce).to.equal(true);
       const text = client.chat.postEphemeral.firstCall.args[0].text;
-      expect(text).to.include("An unknown error occured in Gratibot");
+      expect(text).to.include("An unknown error occurred in Gratibot");
       expect(text).to.include("boom");
     });
 

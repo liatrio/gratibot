@@ -39,7 +39,7 @@ async function handleGenericError(client, message, error) {
   winston.error("Slack API returned an error response", {
     error,
   });
-  const userMessage = `An unknown error occured in Gratibot: ${error.message}`;
+  const userMessage = `An unknown error occurred in Gratibot: ${error.message}`;
   return respondToUser(client, message, { text: userMessage });
 }
 
@@ -47,7 +47,7 @@ async function sendNotificationToReceivers(client, gratitude) {
   for (let i = 0; i < gratitude.receivers.length; i++) {
     await client.chat.postMessage({
       channel: gratitude.receivers[i].id,
-      text: getRecieverMessage(gratitude),
+      text: getReceiverMessage(gratitude),
       ...(await recognition.receiverSlackNotification(
         gratitude,
         gratitude.receivers[i].id,
@@ -56,7 +56,7 @@ async function sendNotificationToReceivers(client, gratitude) {
   }
 }
 
-function getRecieverMessage(gratitude) {
+function getReceiverMessage(gratitude) {
   if (gratitude.type === goldenRecognizeEmoji) {
     return `You earned a ${goldenRecognizeEmoji}!!!`;
   }
@@ -69,5 +69,5 @@ module.exports = {
   handleGratitudeError,
   handleGenericError,
   sendNotificationToReceivers,
-  getRecieverMessage,
+  getReceiverMessage,
 };

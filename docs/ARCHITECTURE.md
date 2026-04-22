@@ -44,7 +44,7 @@ lives in the service layer.
 | `metrics.js` | DM "metrics" | Show usage metrics |
 | `report.js` | DM "report" | Generate a recognition report |
 | `help.js` | DM "help" | Show help text |
-| `join.js` | `member_joined_channel` event | Welcome message when bot joins a channel |
+| `join.js` | `channel_created` event | Auto-join newly created public channels |
 
 All feature files are dynamically loaded at startup via `fs.readdirSync` in `app.js`.
 
@@ -77,7 +77,7 @@ native Collection object used directly by services.
 |---|---|---|
 | `db.js` | — | Connection singleton (`new MongoClient(config.mongo_url)`) |
 | `recognitionCollection.js` | `recognitions` | All `:fistbump:` recognition records |
-| `goldenRecognitionCollection.js` | `goldenrecognitions` | Golden fistbump transfer history |
+| `goldenRecognitionCollection.js` | `goldenrecognition` | Golden fistbump transfer history |
 | `deductionCollection.js` | `deductions` | Reward redemption and deduction records |
 
 ## Database Schema
@@ -91,12 +91,11 @@ native Collection object used directly by services.
   timestamp: Date,        // UTC timestamp
   message: String,        // Full message text
   channel: String,        // Slack channel ID
-  values: [String],       // Extracted #tags from the message
-  goldenFistbump: Boolean // true if this was a golden recognition
+  values: [String]        // Extracted #tags from the message
 }
 ```
 
-### `goldenrecognitions`
+### `goldenrecognition`
 
 ```javascript
 {
@@ -113,11 +112,11 @@ native Collection object used directly by services.
 
 ```javascript
 {
-  recognizee: String,   // User who redeemed
+  user: String,       // Slack ID of the redeemer
   timestamp: Date,
-  rewardName: String,   // Name of the redeemed item
-  rewardCost: Number,   // Cost in fistbumps
-  refunded: Boolean     // true after a refund is issued
+  refund: Boolean,    // true after a refund is issued
+  value: Number,      // Cost in fistbumps
+  message: String     // Human-readable redemption note
 }
 ```
 
@@ -137,14 +136,14 @@ calling an HTTP endpoint. This means:
 
 Three helper middleware functions compose Bolt listener conditions:
 
-- `directMessage()` — returns a filter that passes only DM events
+- `directMessage` — a bare middleware that passes only DM events
 - `anyOf(...filters)` — logical OR over multiple Bolt filters
 - `reactionMatches(emoji)` — returns a filter that checks reaction emoji name
 
 Example usage in a feature:
 
 ```javascript
-app.message(directMessage(), /^balance/, async ({ message, say }) => { ... });
+app.message(directMessage, /^balance/, async ({ message, say }) => { ... });
 ```
 
 ### Block Kit

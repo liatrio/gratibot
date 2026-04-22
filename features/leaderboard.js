@@ -7,7 +7,7 @@ const { respondToUser } = require("../service/messageutils");
 module.exports = function (app) {
   app.message(
     /leaderboard/i,
-    anyOf(directMessage(), directMention),
+    anyOf(directMessage, directMention),
     respondToLeaderboard,
   );
   app.action(/leaderboard-\d+/, updateLeaderboardResponse);
@@ -15,9 +15,9 @@ module.exports = function (app) {
 
 /*
  * Replies to a Slack user message with a leaderboard.
- * @param {object} bot A Botkit bot object.
- * @param {object} message A botkit message object, denoting the message triggering.
- *     this call.
+ * @param {object} args Bolt message listener args.
+ * @param {object} args.message The incoming Slack message event.
+ * @param {object} args.client A Slack WebClient instance.
  */
 async function respondToLeaderboard({ message, client }) {
   winston.info("@gratibot leaderboard Called", {
@@ -38,9 +38,11 @@ async function respondToLeaderboard({ message, client }) {
 
 /*
  * Replies to a Slack block_action on an existing leaderboard with updated info.
- * @param {object} bot A Botkit bot object.
- * @param {object} message A botkit message object, denoting the message triggering
- *     this call.
+ * @param {object} args Bolt action listener args.
+ * @param {Function} args.ack Acknowledges the action request.
+ * @param {object} args.body The full action payload.
+ * @param {object} args.action The triggered action (carries the selected time range in `value`).
+ * @param {Function} args.respond Replaces the original message with new content.
  */
 async function updateLeaderboardResponse({ ack, body, action, respond }) {
   await ack();

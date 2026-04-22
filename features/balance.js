@@ -7,7 +7,7 @@ const { respondToUser } = require("../service/messageutils");
 module.exports = function (app) {
   app.message(
     /balance/i,
-    anyOf(directMention, directMessage()),
+    anyOf(directMention, directMessage),
     respondToBalance,
   );
 };
@@ -28,7 +28,7 @@ async function respondToBalance({ message, client }) {
       error: userInfo.error,
     });
     await respondToUser(client, message, {
-      text: `Something went wrong while obtaining your balance. When retreiving user information from Slack, the API responded with the following error: ${userInfo.error}`,
+      text: `Something went wrong while obtaining your balance. When retrieving user information from Slack, the API responded with the following error: ${userInfo.error}`,
     });
     return;
   }
@@ -38,7 +38,6 @@ async function respondToBalance({ message, client }) {
   const remainingToday = await balance.dailyGratitudeRemaining(
     message.user,
     userInfo.user.tz,
-    1,
   );
 
   const response = [

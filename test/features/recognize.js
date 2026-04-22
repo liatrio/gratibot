@@ -74,7 +74,7 @@ describe("features/recognize", () => {
       const gratitude = recognition.validateAndSendGratitude.firstCall.args[0];
       expect(gratitude.giver.id).to.equal("Ugiver");
       expect(gratitude.receivers.map((r) => r.id)).to.deep.equal(["Ureceiver"]);
-      expect(gratitude.giver_in_receivers).to.equal(false);
+      expect(gratitude.giverInReceivers).to.equal(false);
       expect(gratitude.channel).to.equal("Cchannel");
       expect(gratitude.type).to.equal(config.recognizeEmoji);
 
@@ -84,7 +84,7 @@ describe("features/recognize", () => {
       expect(reactionArgs.timestamp).to.equal("1700000000.000100");
     });
 
-    it("should flag giver_in_receivers when the giver also appears in the receiver list", async () => {
+    it("should flag giverInReceivers when the giver also appears in the receiver list", async () => {
       const { app, findHandler } = createMockApp();
       recognizeFeature(app);
       const messageHandler = findHandler("message", config.recognizeEmoji);
@@ -116,7 +116,7 @@ describe("features/recognize", () => {
       await messageHandler({ message, client });
 
       const gratitude = recognition.validateAndSendGratitude.firstCall.args[0];
-      expect(gratitude.giver_in_receivers).to.equal(true);
+      expect(gratitude.giverInReceivers).to.equal(true);
     });
 
     it("should route SlackError through handleSlackError and not react to the message", async () => {
@@ -201,7 +201,7 @@ describe("features/recognize", () => {
       expect(client.reactions.add.called).to.equal(false);
       expect(client.chat.postEphemeral.calledOnce).to.equal(true);
       const text = client.chat.postEphemeral.firstCall.args[0].text;
-      expect(text).to.include("An unknown error occured in Gratibot");
+      expect(text).to.include("An unknown error occurred in Gratibot");
       expect(text).to.include("unexpected-boom");
     });
 
@@ -364,7 +364,7 @@ describe("features/recognize", () => {
       );
     });
 
-    it("should set giver_in_receivers when the reactor is also a receiver", async () => {
+    it("should set giverInReceivers when the reactor is also a receiver", async () => {
       const { app, findHandler } = createMockApp();
       recognizeFeature(app);
       const reactionHandler = findHandler("event", "reaction_added");
@@ -385,7 +385,7 @@ describe("features/recognize", () => {
       await reactionHandler({ event, client });
 
       const gratitude = recognition.validateAndSendGratitude.firstCall.args[0];
-      expect(gratitude.giver_in_receivers).to.equal(true);
+      expect(gratitude.giverInReceivers).to.equal(true);
     });
   });
 });

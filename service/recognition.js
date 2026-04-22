@@ -20,7 +20,7 @@ const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
 const gratitudeEmojiRegex = new RegExp(config.recognizeEmoji, "g");
 const multiplierRegex = new RegExp(
-  `${config.recognizeEmoji}\\s*[Xx]([0-9]+)|[Xx]([0-9]+)\\s${config.recognizeEmoji}`,
+  `${config.recognizeEmoji}\\s*[Xx](?<count>[0-9]+)|[Xx](?<count>[0-9]+)\\s${config.recognizeEmoji}`,
 );
 
 // TODO Can we add a 'count' field to the recognition?
@@ -132,7 +132,6 @@ async function doesUserHoldGoldenRecognition(userId, rec) {
 }
 
 async function getPreviousXDaysOfRecognition(timezone = null, days = null) {
-  //get only the entries from the specifc day from midnight
   let filter = {};
   if (days && timezone) {
     let userDate = moment(Date.now()).tz(timezone);
@@ -163,7 +162,7 @@ async function groupUsers(client, groupId) {
   throw new SlackError(
     "usergroups.users.list",
     response.error,
-    `Something went wrong while sending recognition. When retreiving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
+    `Something went wrong while sending recognition. When retrieving usergroup information from Slack, the API responded with the following error: ${response.message} \n Recognition has not been sent.`,
   );
 }
 
@@ -179,8 +178,7 @@ async function gratitudeReceiverIdsIn(client, text) {
 
 function gratitudeCountIn(text) {
   const emojiCount = (text.match(gratitudeEmojiRegex) || []).length;
-  const multiplierFinding = text.match(multiplierRegex)?.filter(Boolean);
-  const multiplier = multiplierFinding ? multiplierFinding[1] : 1;
+  const multiplier = Number(text.match(multiplierRegex)?.groups.count ?? 1);
   return emojiCount * multiplier;
 }
 
@@ -203,7 +201,7 @@ async function isGratitudeAffordable(gratitude) {
     gratitude.giver.id,
     gratitude.giver.tz,
   );
-  if (gratitude.giver_in_receivers) {
+  if (gratitude.giverInReceivers) {
     gratitude.receivers = gratitude.receivers.filter(
       (x) => x.id !== gratitude.giver.id,
     );
@@ -258,7 +256,7 @@ async function goldenGratitudeErrors(gratitude) {
 async function giveGratitude(gratitude) {
   let results = [];
 
-  if (gratitude.giver_in_receivers) {
+  if (gratitude.giverInReceivers) {
     gratitude.receivers = gratitude.receivers.filter(
       (x) => x.id !== gratitude.giver.id,
     );
@@ -344,7 +342,7 @@ async function giverSlackNotification(gratitude) {
 
   // Notify the user if they are giving recognition to themselves when in the receiver list.
   let excludingGiver = "";
-  if (gratitude.giver_in_receivers) {
+  if (gratitude.giverInReceivers) {
     excludingGiver = ", excluding yourself";
   }
 

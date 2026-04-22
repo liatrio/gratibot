@@ -7,14 +7,14 @@ describe("middleware/index", () => {
     it('should call next if message channel type is "im"', async () => {
       const next = sinon.spy();
       const message = { channel_type: "im" };
-      await directMessage()({ message, next });
+      await directMessage({ message, next });
       expect(next.calledOnce).to.be.true;
     });
 
     it('should not call next if message channel type is not "im"', async () => {
       const next = sinon.spy();
       const message = { channel_type: "not_im" };
-      await directMessage()({ message, next });
+      await directMessage({ message, next });
       expect(next.called).to.be.false;
     });
   });

@@ -161,7 +161,7 @@ describe("service/messageutils", () => {
       sinon.assert.calledWith(testClient.chat.postEphemeral, {
         channel: testMessage.channel,
         user: testMessage.user,
-        text: "An unknown error occured in Gratibot: test error",
+        text: "An unknown error occurred in Gratibot: test error",
       });
     });
   });
@@ -206,13 +206,13 @@ describe("service/messageutils", () => {
     });
   });
 
-  describe("getRecieverMessage", () => {
+  describe("getReceiverMessage", () => {
     it("should get golden fistbump message", () => {
       const testGratitude = {
         type: goldenRecognizeEmoji,
       };
       const actualReceiverMessage =
-        messageutils.getRecieverMessage(testGratitude);
+        messageutils.getReceiverMessage(testGratitude);
       expect(actualReceiverMessage).to.eq(
         `You earned a ${goldenRecognizeEmoji}!!!`,
       );
@@ -223,7 +223,7 @@ describe("service/messageutils", () => {
         type: recognizeEmoji,
       };
       const actualReceiverMessage =
-        messageutils.getRecieverMessage(testGratitude);
+        messageutils.getReceiverMessage(testGratitude);
       expect(actualReceiverMessage).to.eq(`You earned a ${recognizeEmoji}.`);
     });
   });

@@ -10,11 +10,7 @@ const NO_ADMIN_ACCESS_MESSAGE = "You do not have admin access.";
 const ADMIN_MATCHER = /\badmin\b/i;
 
 module.exports = function (app) {
-  app.message(
-    ADMIN_MATCHER,
-    anyOf(directMention, directMessage()),
-    handleAdmin,
-  );
+  app.message(ADMIN_MATCHER, anyOf(directMention, directMessage), handleAdmin);
   app.action("reward_admin_open", handleOpenAction);
   app.action("reward_admin_add", handleAddAction);
   app.action("reward_admin_edit", handleEditAction);

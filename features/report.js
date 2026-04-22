@@ -1,4 +1,3 @@
-// Renders the service/report.js when using the command "report" in Slack
 const report = require("../service/report");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
@@ -6,14 +5,11 @@ const { directMessage, anyOf } = require("../middleware");
 const { respondToUser } = require("../service/messageutils");
 
 module.exports = function (app) {
-  // Handle direct "report" command
   app.message(
     /^report(?:\s+<@([a-zA-Z0-9]+)>)?(?:\s+(\d+))?$/i,
-    anyOf(directMessage(), directMention),
+    anyOf(directMessage, directMention),
     respondToReport,
   );
-
-  // Handle button clicks for different time ranges
   app.action(/user-top-messages-\d+/, updateReportTimeRange);
 };
 
@@ -23,24 +19,18 @@ async function respondToReport({ message, client }) {
     callingUser: message.user,
     slackMessage: message.text,
   });
-  // Check if a specific user was mentioned in the command
   const mentionMatch = message.text.match(/<@([a-zA-Z0-9]+)>/i);
   const targetUserId = mentionMatch ? mentionMatch[1] : message.user;
-
-  // Check if a time range was specified
   const timeRangeMatch = message.text.match(/\s+(\d+)\s*$/i);
 
   try {
-    // Get user info to verify the user exists
     const userInfo = await client.users.info({ user: targetUserId });
     if (!userInfo.ok) {
       throw new Error(`Error retrieving user info: ${userInfo.error}`);
     }
 
-    // Use specified time range or default to 180 days
     const timeRange = timeRangeMatch ? parseInt(timeRangeMatch[1]) : 180;
 
-    // Get the top messages and total recognitions for the user
     const topMessages = await report.getTopMessagesForUser(
       targetUserId,
       timeRange,
@@ -52,7 +42,6 @@ async function respondToReport({ message, client }) {
       userInfo.user.tz,
     );
 
-    // Create the blocks for the message - now awaiting since it's async
     const blocks = await report.createUserTopMessagesBlocks(
       targetUserId,
       topMessages,
@@ -93,16 +82,13 @@ async function updateReportTimeRange({ ack, body, client, action, respond }) {
   });
 
   try {
-    // Parse the action value to get the user ID and time range
     const [targetUserId, timeRange] = action.value.split(":");
 
-    // Get user info to get timezone
     const userInfo = await client.users.info({ user: targetUserId });
     if (!userInfo.ok) {
       throw new Error(`Error retrieving user info: ${userInfo.error}`);
     }
 
-    // Get the updated data
     const topMessages = await report.getTopMessagesForUser(
       targetUserId,
       parseInt(timeRange),
@@ -114,7 +100,6 @@ async function updateReportTimeRange({ ack, body, client, action, respond }) {
       userInfo.user.tz,
     );
 
-    // Create the updated blocks - now awaiting since it's async
     const blocks = await report.createUserTopMessagesBlocks(
       targetUserId,
       topMessages,
@@ -122,7 +107,6 @@ async function updateReportTimeRange({ ack, body, client, action, respond }) {
       parseInt(timeRange),
     );
 
-    // Update the message
     await respond({
       text: `Top recognized messages for <@${targetUserId}>`,
       blocks: blocks,

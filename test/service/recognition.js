@@ -691,7 +691,7 @@ describe("service/recognition", () => {
       expect(result).to.be.false;
     });
 
-    it("should remove the giver from receivers if giver_in_receivers is true", async () => {
+    it("should remove the giver from receivers if giverInReceivers is true", async () => {
       const gratitude = {
         giver: {
           id: "Giver",
@@ -705,7 +705,7 @@ describe("service/recognition", () => {
         trimmedMessage: "  Test Message 1234567890",
         channel: "TestChannel",
         tags: [],
-        giver_in_receivers: true,
+        giverInReceivers: true,
       };
       const dailyGratitudeRemaining = 10;
       balanceStub
@@ -735,7 +735,7 @@ describe("service/recognition", () => {
         trimmedMessage: "  Test Message 1234567890",
         channel: "TestChannel",
         tags: [],
-        giver_in_receivers: true,
+        giverInReceivers: true,
       };
       const dailyGratitudeRemaining = 2;
       balanceStub

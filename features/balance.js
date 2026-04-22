@@ -38,7 +38,6 @@ async function respondToBalance({ message, client }) {
   const remainingToday = await balance.dailyGratitudeRemaining(
     message.user,
     userInfo.user.tz,
-    1,
   );
 
   const response = [

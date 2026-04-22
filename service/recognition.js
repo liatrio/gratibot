@@ -20,7 +20,7 @@ const tagRegex = /#(\S+)/g;
 const generalEmojiRegex = /:([a-z-_']+):/g;
 const gratitudeEmojiRegex = new RegExp(config.recognizeEmoji, "g");
 const multiplierRegex = new RegExp(
-  `${config.recognizeEmoji}\\s*[Xx]([0-9]+)|[Xx]([0-9]+)\\s${config.recognizeEmoji}`,
+  `${config.recognizeEmoji}\\s*[Xx](?<count>[0-9]+)|[Xx](?<count>[0-9]+)\\s${config.recognizeEmoji}`,
 );
 
 // TODO Can we add a 'count' field to the recognition?
@@ -178,8 +178,7 @@ async function gratitudeReceiverIdsIn(client, text) {
 
 function gratitudeCountIn(text) {
   const emojiCount = (text.match(gratitudeEmojiRegex) || []).length;
-  const multiplierFinding = text.match(multiplierRegex)?.filter(Boolean);
-  const multiplier = multiplierFinding ? multiplierFinding[1] : 1;
+  const multiplier = Number(text.match(multiplierRegex)?.groups.count ?? 1);
   return emojiCount * multiplier;
 }
 

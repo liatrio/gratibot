@@ -293,7 +293,7 @@ in-modal image upload via file_input`.
 - [x] 3.11 ~~Run `npm run lint` and `npm test`. Capture passing output to `04-proofs/3.0-test-output.txt`. Reinstall the dev Slack app to pick up the new scopes. Upload a reward image through the modal end-to-end, screenshot the file picker + the uploaded image rendering in a fresh `redeem` DM to `04-proofs/3.0-upload-end-to-end.png`. Force a failure (e.g., revoke scope mid-flow) and screenshot the modal error to `04-proofs/3.0-upload-error.png`. Capture `git diff main..HEAD -- slack_app_manifest.yml > 04-proofs/3.0-manifest.diff`.~~ **SKIPPED — SPIKE_FALLBACK per Task 3.2.** `npm run lint` + `npm test` still run at 3.12 as a sanity check against unrelated regressions.
 - [x] 3.12 Stage and commit Unit 3's files with message `feat(reward-admin): add in-modal image upload via file_input` (or `docs(spec-04): record file upload spike` if `SPIKE_FALLBACK`). **Applied: `docs(spec-04): record file upload spike` (commit `3f811a6`).**
 
-### [ ] 4.0 Remove `rewards.json` and reduce `service/rewardSeed.js` to the Liatrio Store entry (Unit 4)
+### [~] 4.0 Remove `rewards.json` and reduce `service/rewardSeed.js` to the Liatrio Store entry (Unit 4)
 
 After Unit 1's seeding is verified in nonprod, delete `rewards.json` from the repo and
 remove every code path that reads it (including Unit 1's one-time startup file read).
@@ -327,17 +327,17 @@ rewards.json after DB migration`.
 
 #### 4.0 Tasks
 
-- [ ] 4.1 **[HUMAN GATE]** Confirm Unit 1 has merged to `main` and deployed to nonprod, and that `db.rewards.countDocuments({})` in nonprod matches `rewards.json.length`, before starting Unit 4 implementation. Record the check in a quick note at the top of `04-proofs/4.0-removal.diff` (later commits append the diff itself).
-- [ ] 4.2 Refactor `service/rewardSeed.js`: replace the `fs.readFileSync("../rewards.json")` + `JSON.parse` with an inline `const SEED_REWARDS = [ { name: "Liatrio Store", description: "Choose an item from the <https://liatrio.axomo.com/|Liatrio Store>. 2 Fistbumps = 1 Dollar.", imageURL: "<current-placeholder-or-existing-seeded-url>", cost: 0, sortOrder: 0, kind: "liatrio-store" } ];` Keep the `countDocuments > 0` guard unchanged so populated DBs are untouched. Keep the `active: true`, `createdBy/updatedBy: "system-seed"`, `createdAt/updatedAt` stamping.
-- [ ] 4.3 Remove the `fs` and `path` imports from `service/rewardSeed.js` if no longer used.
-- [ ] 4.4 Delete `rewards.json` from the repo (`git rm rewards.json`).
-- [ ] 4.5 Grep the repo for any residual reference: `grep -rn "rewards.json" . --include="*.js" --include="*.md"`. Remove any leftover references. Save the (now-empty) `.js` grep output to `04-proofs/4.0-grep.txt`.
-- [ ] 4.6 Update `test/service/rewardSeed.js`: remove any fixtures that depended on the 14-entry JSON. Add/update cases: (a) the inline `SEED_REWARDS` array has length 1 and its single entry has `kind: "liatrio-store"`; (b) seed-inserts-when-empty — stub `countDocuments` to resolve `0`, assert `insertMany` is called with a single-element array; (c) seed-does-not-run-when-non-empty — stub `countDocuments` to resolve `1`, assert `insertMany` is not called.
-- [ ] 4.7 Run `npm run lint` and `npm test`. Capture passing output to `04-proofs/4.0-test-output.txt`.
-- [ ] 4.8 Capture the per-unit diff: `git diff main..HEAD -- rewards.json service/rewardSeed.js service/redeem.js test/service/rewardSeed.js > 04-proofs/4.0-removal.diff` (note: `git diff` shows the file deletion as `/dev/null` entries).
-- [ ] 4.9 Against a fresh empty DB (drop and recreate the `gratibot.rewards` collection in a local Mongo, or spin up with a fresh Docker volume), start the bot and confirm exactly one document is inserted with `kind: "liatrio-store"`. Capture the mongosh transcript to `04-proofs/4.0-fresh-bootstrap.txt`.
-- [ ] 4.10 In nonprod, after Unit 4 merges and deploys, DM `redeem` and screenshot the catalog to `04-proofs/4.0-nonprod-redeem.png` — it must match the pre-Unit-4 catalog.
-- [ ] 4.11 Stage and commit Unit 4's files with message `chore(redeem): remove rewards.json after DB migration`.
+- [x] 4.1 **[HUMAN GATE]** Confirm Unit 1 has merged to `main` and deployed to nonprod, and that `db.rewards.countDocuments({})` in nonprod matches `rewards.json.length`, before starting Unit 4 implementation. Record the check in a quick note at the top of `04-proofs/4.0-removal.diff` (later commits append the diff itself).
+- [x] 4.2 Refactor `service/rewardSeed.js`: replace the `fs.readFileSync("../rewards.json")` + `JSON.parse` with an inline `const SEED_REWARDS = [ { name: "Liatrio Store", description: "Choose an item from the <https://liatrio.axomo.com/|Liatrio Store>. 2 Fistbumps = 1 Dollar.", imageURL: "<current-placeholder-or-existing-seeded-url>", cost: 0, sortOrder: 0, kind: "liatrio-store" } ];` Keep the `countDocuments > 0` guard unchanged so populated DBs are untouched. Keep the `active: true`, `createdBy/updatedBy: "system-seed"`, `createdAt/updatedAt` stamping.
+- [x] 4.3 Remove the `fs` and `path` imports from `service/rewardSeed.js` if no longer used.
+- [x] 4.4 Delete `rewards.json` from the repo (`git rm rewards.json`).
+- [x] 4.5 Grep the repo for any residual reference: `grep -rn "rewards.json" . --include="*.js" --include="*.md"`. Remove any leftover references. Save the (now-empty) `.js` grep output to `04-proofs/4.0-grep.txt`.
+- [x] 4.6 Update `test/service/rewardSeed.js`: remove any fixtures that depended on the 14-entry JSON. Add/update cases: (a) the inline `SEED_REWARDS` array has length 1 and its single entry has `kind: "liatrio-store"`; (b) seed-inserts-when-empty — stub `countDocuments` to resolve `0`, assert `insertMany` is called with a single-element array; (c) seed-does-not-run-when-non-empty — stub `countDocuments` to resolve `1`, assert `insertMany` is not called.
+- [x] 4.7 Run `npm run lint` and `npm test`. Capture passing output to `04-proofs/4.0-test-output.txt`.
+- [x] 4.8 Capture the per-unit diff: `git diff main..HEAD -- rewards.json service/rewardSeed.js service/redeem.js test/service/rewardSeed.js > 04-proofs/4.0-removal.diff` (note: `git diff` shows the file deletion as `/dev/null` entries).
+- [x] 4.9 Against a fresh empty DB (drop and recreate the `gratibot.rewards` collection in a local Mongo, or spin up with a fresh Docker volume), start the bot and confirm exactly one document is inserted with `kind: "liatrio-store"`. Capture the mongosh transcript to `04-proofs/4.0-fresh-bootstrap.txt`.
+- [ ] 4.10 In nonprod, after Unit 4 merges and deploys, DM `redeem` and screenshot the catalog to `04-proofs/4.0-nonprod-redeem.png` — it must match the pre-Unit-4 catalog.  **[POST-MERGE — deferred until nonprod deploy lands.]**
+- [~] 4.11 Stage and commit Unit 4's files with message `chore(redeem): remove rewards.json after DB migration`.
 
 ### [ ] 5.0 Integration verification and handoff
 

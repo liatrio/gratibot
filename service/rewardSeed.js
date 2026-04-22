@@ -1,7 +1,18 @@
-const fs = require("fs");
-const path = require("path");
 const rewardCollection = require("../database/rewardCollection");
 const winston = require("../winston");
+
+const SEED_REWARDS = [
+  {
+    name: "Liatrio Store",
+    description:
+      "Choose an item from the <https://liatrio.axomo.com/|Liatrio Store>. 2 Fistbumps = 1 Dollar.",
+    imageURL:
+      "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Logo.png",
+    cost: 0,
+    sortOrder: 0,
+    kind: "liatrio-store",
+  },
+];
 
 async function seedRewards() {
   try {
@@ -14,26 +25,21 @@ async function seedRewards() {
       return;
     }
 
-    const rawData = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
-    const rewards = JSON.parse(rawData);
     const now = new Date();
-    const docs = rewards.map(function (reward, index) {
-      const doc = {
+    const docs = SEED_REWARDS.map(function (reward) {
+      return {
         name: reward.name,
         description: reward.description,
         imageURL: reward.imageURL,
         cost: reward.cost,
         active: true,
-        sortOrder: index,
+        sortOrder: reward.sortOrder,
+        kind: reward.kind,
         createdBy: "system-seed",
         updatedBy: "system-seed",
         createdAt: now,
         updatedAt: now,
       };
-      if (reward.name === "Liatrio Store") {
-        doc.kind = "liatrio-store";
-      }
-      return doc;
     });
 
     await rewardCollection.insertMany(docs);
@@ -50,4 +56,4 @@ async function seedRewards() {
   }
 }
 
-module.exports = { seedRewards };
+module.exports = { seedRewards, SEED_REWARDS };

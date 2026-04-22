@@ -1,0 +1,57 @@
+# Task 4.9 — Fresh-DB bootstrap verification
+
+## What this proves
+
+Starting the bot against a genuinely empty `rewards` collection results in
+exactly one document being inserted, with `kind: "liatrio-store"`, and a
+second invocation of `seedRewards()` does not change the count — confirming
+the Unit 4 inline seed behavior on fresh environments (nonprod/prod already
+populated, so their data is unaffected).
+
+## How this was run
+
+- Local MongoDB container (`gratibot-mongodb-1`, mongo:4.4) reachable at
+  `localhost:27017`.
+- A scratch database `gratibot_unit4_fresh` was dropped to guarantee an
+  empty starting state, then `seedRewards()` was invoked directly against
+  the real `database/rewardCollection` singleton (same code path the bot
+  uses at startup).
+- Re-ran `seedRewards()` a second time to verify the `countDocuments > 0`
+  guard prevents re-seeding.
+- Dropped the scratch DB at the end.
+
+## Transcript
+
+```
+=== Connected to fresh DB: gratibot_unit4_fresh ===
+[setup] dropped any prior gratibot_unit4_fresh DB to guarantee empty state
+[before seed] db.rewards.countDocuments({}) = 0
+
+--- running seedRewards() #1 ---
+{"func":"seedRewards","insertedCount":1,"level":"info","message":"Reward collection seeded","timestamp":"2026-04-22T18:11:18.095Z"}
+
+[after seed #1] db.rewards.countDocuments({}) = 1
+[after seed #1] docs: [
+  {
+    "_id": "<oid>",
+    "name": "Liatrio Store",
+    "kind": "liatrio-store",
+    "cost": 0,
+    "active": true,
+    "sortOrder": 0,
+    "createdBy": "system-seed"
+  }
+]
+
+--- running seedRewards() #2 (idempotency check) ---
+
+[after seed #2] db.rewards.countDocuments({}) = 1 (should still be 1)
+
+[cleanup] dropped gratibot_unit4_fresh
+```
+
+## Reviewer conclusion
+
+Fresh environments bootstrap with exactly one reward (the Liatrio Store).
+Existing populated DBs are untouched because the `countDocuments > 0` guard
+short-circuits the insert.

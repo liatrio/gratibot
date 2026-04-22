@@ -1,0 +1,263 @@
+# Task 4.1 — HUMAN GATE confirmation
+
+- Unit 1 merged to `main`: confirmed via commit history
+  - `227ad77 feat(redeem): DB-backed reward management (spec 04, units 1-3) (#890)`
+  - plus follow-ups `717826c`, `b9482ff`, `7a1e34d` on `main`
+- Unit 1 deployed to nonprod: confirmed by maintainer on 2026-04-22
+- `db.rewards.countDocuments({})` in nonprod: confirmed by maintainer to match
+  `rewards.json.length` (14) — all rewards continue to render in the nonprod
+  `redeem` DM, which is the proxy verification used at gate time.
+- Gate result: **PASS**. Unit 4 implementation may proceed.
+
+The per-unit `git diff` appears below this note once captured (task 4.8).
+
+---
+
+diff --git a/rewards.json b/rewards.json
+deleted file mode 100644
+index 8d83ac1..0000000
+--- a/rewards.json
++++ /dev/null
+@@ -1,86 +0,0 @@
+-[
+-  {
+-    "name": "Liatrio Store",
+-    "description": "Choose an item from the <https://liatrio.axomo.com/|Liatrio Store>. 2 Fistbumps = 1 Dollar.",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Logo.png",
+-    "cost": 0
+-  },
+-  {
+-    "name": "Neon Liatrio Sign",
+-    "description": "Neon Liatrio sign, 6.5\"x18\"",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Neon_Sign.jpg",
+-    "cost": 500
+-  },
+-  {
+-    "name": "Custom Nike Air Force 1's",
+-    "description": "Nike Air Force 1 Shoes",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Nike_Air_Force1.png",
+-    "cost": 500
+-  },
+-  {
+-    "name": "Hawaiian Shirt",
+-    "description": "Hawaiian Shirt.",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/5_HawaiianShirt.png",
+-    "cost": 80
+-  },
+-  {
+-    "name": "Microphone",
+-    "description": "<https://www.amazon.com/dp/B0CTJ7PVN1|Shure MV7+ Podcast Dynamic Microphone>",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Microphone.jpg",
+-    "cost": 538
+-  },
+-  {
+-    "name": "Microphone Arm",
+-    "description": "<https://www.amazon.com/dp/B097376LKF|Elgato Wave Mic Arm>",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Mic_Arm.jpg",
+-    "cost": 140
+-  },
+-  {
+-    "name": "Visa Gift Card",
+-    "description": "$25 Visa Gift Card",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (11).png",
+-    "cost": 100
+-  },
+-  {
+-    "name": "Donation: Electronic Frontier Foundation",
+-    "description": "Donate $50 to the Electronic Frontier Foundation",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/EFF_Logo.png",
+-    "cost": 100
+-  },
+-  {
+-    "name": "Donation: Feeding America",
+-    "description": "Donate $50 to Feeding America",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/Feeding_America_Logo.png",
+-    "cost": 100
+-  },
+-  {
+-    "name": "Donation: Open Source Mental Health",
+-    "description": "Donate $50 to Open Source Mental Health",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/OSMH logo.jpeg",
+-    "cost": 100
+-  },
+-  {
+-    "name": "Donation: National Alliance to End Homelessness",
+-    "description": "Donate $50 to National Alliance to End Homelessness",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/NAEH logo.png",
+-    "cost": 100
+-  },
+-  {
+-    "name": "Donation: Girls Who Code",
+-    "description": "Donate $50 to Girls Who Code",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (17).png",
+-    "cost": 100
+-  },
+-  {
+-    "name": "Donation: Go Climate Neutral",
+-    "description": "Donate $50 to Go Climate Neutral",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (16).png",
+-    "cost": 100
+-  },
+-  {
+-    "name": "Donation: 4ocean",
+-    "description": "Donate $20 to 4ocean",
+-    "imageURL": "https://gratibotjtest.blob.core.windows.net/gratibotimages/image (15).png",
+-    "cost": 40
+-  }
+-]
+diff --git a/service/rewardSeed.js b/service/rewardSeed.js
+index a42fba1..b110c85 100644
+--- a/service/rewardSeed.js
++++ b/service/rewardSeed.js
+@@ -1,8 +1,19 @@
+-const fs = require("fs");
+-const path = require("path");
+ const rewardCollection = require("../database/rewardCollection");
+ const winston = require("../winston");
+ 
++const SEED_REWARDS = [
++  {
++    name: "Liatrio Store",
++    description:
++      "Choose an item from the <https://liatrio.axomo.com/|Liatrio Store>. 2 Fistbumps = 1 Dollar.",
++    imageURL:
++      "https://gratibotjtest.blob.core.windows.net/gratibotimages/Liatrio_Logo.png",
++    cost: 0,
++    sortOrder: 0,
++    kind: "liatrio-store",
++  },
++];
++
+ async function seedRewards() {
+   try {
+     const existingCount = await rewardCollection.countDocuments({});
+@@ -14,26 +25,21 @@ async function seedRewards() {
+       return;
+     }
+ 
+-    const rawData = fs.readFileSync(path.resolve(__dirname, "../rewards.json"));
+-    const rewards = JSON.parse(rawData);
+     const now = new Date();
+-    const docs = rewards.map(function (reward, index) {
+-      const doc = {
++    const docs = SEED_REWARDS.map(function (reward) {
++      return {
+         name: reward.name,
+         description: reward.description,
+         imageURL: reward.imageURL,
+         cost: reward.cost,
+         active: true,
+-        sortOrder: index,
++        sortOrder: reward.sortOrder,
++        kind: reward.kind,
+         createdBy: "system-seed",
+         updatedBy: "system-seed",
+         createdAt: now,
+         updatedAt: now,
+       };
+-      if (reward.name === "Liatrio Store") {
+-        doc.kind = "liatrio-store";
+-      }
+-      return doc;
+     });
+ 
+     await rewardCollection.insertMany(docs);
+@@ -50,4 +56,4 @@ async function seedRewards() {
+   }
+ }
+ 
+-module.exports = { seedRewards };
++module.exports = { seedRewards, SEED_REWARDS };
+diff --git a/test/service/rewardSeed.js b/test/service/rewardSeed.js
+index dbbd705..4b636be 100644
+--- a/test/service/rewardSeed.js
++++ b/test/service/rewardSeed.js
+@@ -1,67 +1,49 @@
+ const sinon = require("sinon");
+ const expect = require("chai").expect;
+-const fs = require("fs");
+-const path = require("path");
+ 
+ const rewardCollection = require("../../database/rewardCollection");
+-const { seedRewards } = require("../../service/rewardSeed");
+-
+-const rewardsJsonPath = path.resolve(__dirname, "../../rewards.json");
+-const rewardsJson = JSON.parse(fs.readFileSync(rewardsJsonPath));
++const { seedRewards, SEED_REWARDS } = require("../../service/rewardSeed");
+ 
+ describe("service/rewardSeed", function () {
+   afterEach(function () {
+     sinon.restore();
+   });
+ 
+-  describe("seedRewards", function () {
+-    it("should insert all rewards when the collection is empty", async function () {
+-      sinon.stub(rewardCollection, "countDocuments").resolves(0);
+-      const insertMany = sinon.stub(rewardCollection, "insertMany").resolves();
+-
+-      await seedRewards();
+-
+-      expect(insertMany.calledOnce).to.equal(true);
+-      const docs = insertMany.firstCall.args[0];
+-      expect(docs).to.have.length(rewardsJson.length);
+-      expect(docs).to.have.length(14);
++  describe("SEED_REWARDS", function () {
++    it("should contain exactly one entry, the Liatrio Store", function () {
++      expect(SEED_REWARDS).to.have.length(1);
++      expect(SEED_REWARDS[0].name).to.equal("Liatrio Store");
++      expect(SEED_REWARDS[0].kind).to.equal("liatrio-store");
+     });
++  });
+ 
+-    it("should mark only the Liatrio Store entry with kind: 'liatrio-store'", async function () {
++  describe("seedRewards", function () {
++    it("should insert the inline seed entry when the collection is empty", async function () {
+       sinon.stub(rewardCollection, "countDocuments").resolves(0);
+       const insertMany = sinon.stub(rewardCollection, "insertMany").resolves();
+ 
+       await seedRewards();
+ 
++      expect(insertMany.calledOnce).to.equal(true);
+       const docs = insertMany.firstCall.args[0];
+-      const store = docs.find(function (d) {
+-        return d.name === "Liatrio Store";
+-      });
+-      expect(store.kind).to.equal("liatrio-store");
+-      const others = docs.filter(function (d) {
+-        return d.name !== "Liatrio Store";
+-      });
+-      others.forEach(function (d) {
+-        expect(d.kind).to.equal(undefined);
+-      });
++      expect(docs).to.have.length(1);
++      expect(docs[0].name).to.equal("Liatrio Store");
++      expect(docs[0].kind).to.equal("liatrio-store");
+     });
+ 
+-    it("should stamp active: true, system-seed audit fields, and monotonic sortOrder matching the JSON position", async function () {
++    it("should stamp active: true, system-seed audit fields, and sortOrder from the inline seed", async function () {
+       sinon.stub(rewardCollection, "countDocuments").resolves(0);
+       const insertMany = sinon.stub(rewardCollection, "insertMany").resolves();
+ 
+       await seedRewards();
+ 
+-      const docs = insertMany.firstCall.args[0];
+-      docs.forEach(function (doc, index) {
+-        expect(doc.active).to.equal(true);
+-        expect(doc.createdBy).to.equal("system-seed");
+-        expect(doc.updatedBy).to.equal("system-seed");
+-        expect(doc.sortOrder).to.equal(index);
+-        expect(doc.createdAt).to.be.an.instanceof(Date);
+-        expect(doc.updatedAt).to.be.an.instanceof(Date);
+-        expect(doc.name).to.equal(rewardsJson[index].name);
+-      });
++      const doc = insertMany.firstCall.args[0][0];
++      expect(doc.active).to.equal(true);
++      expect(doc.createdBy).to.equal("system-seed");
++      expect(doc.updatedBy).to.equal("system-seed");
++      expect(doc.sortOrder).to.equal(SEED_REWARDS[0].sortOrder);
++      expect(doc.createdAt).to.be.an.instanceof(Date);
++      expect(doc.updatedAt).to.be.an.instanceof(Date);
+     });
+ 
+     it("should not insert when the collection already has documents", async function () {

@@ -223,9 +223,6 @@ async function gratitudeErrors(gratitude) {
 
     gratitude.giver.is_bot ? "- Bots can't give recognition" : "",
     gratitude.giver.is_restricted ? "- Guest users can't give recognition" : "",
-    gratitude.receivers.find((x) => x.is_bot)
-      ? "- You can't give recognition to bots"
-      : "",
     gratitude.receivers.find((x) => x.is_restricted)
       ? "- You can't give recognition to guest users"
       : "",
@@ -314,6 +311,12 @@ async function giveGratitude(gratitude) {
 }
 
 async function validateAndSendGratitude(gratitude) {
+  // Silently filter out bot users from receivers. Bot @-mentions
+  // (including incidental ones such as the "Sent using @Claude" footer
+  // appended by Slack assistant integrations) should never trigger
+  // fistbump awards, even when mixed with human recipients.
+  gratitude.receivers = gratitude.receivers.filter((r) => !r.is_bot);
+
   const errors = await gratitudeErrors(gratitude);
   let goldenRecognizeErrors = [];
   if (gratitude.type === goldenRecognizeEmoji) {

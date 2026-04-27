@@ -5,6 +5,7 @@ const recognition = require("../../service/recognition");
 const balance = require("../../service/balance");
 const recognitionCollection = require("../../database/recognitionCollection");
 const goldenRecognitionCollection = require("../../database/goldenRecognitionCollection");
+const { GratitudeError } = require("../../service/errors");
 
 describe("service/recognition", () => {
   afterEach(() => {
@@ -1418,8 +1419,13 @@ describe("service/recognition", () => {
         tags: [],
       };
 
-      return expect(recognition.validateAndSendGratitude(gratitude)).to.be
-        .rejected;
+      await expect(recognition.validateAndSendGratitude(gratitude))
+        .to.be.rejectedWith(GratitudeError)
+        .then((err) => {
+          expect(err.gratitudeErrors).to.include(
+            "- Mention who you want to recognize with @user",
+          );
+        });
     });
   });
 

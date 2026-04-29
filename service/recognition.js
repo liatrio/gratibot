@@ -213,7 +213,9 @@ async function isGratitudeAffordable(gratitude) {
 async function gratitudeErrors(gratitude) {
   return [
     gratitude.receivers.length === 0
-      ? "- Mention who you want to recognize with @user"
+      ? gratitude.hadOnlyBotReceivers
+        ? "- Bots can't receive recognition. Mention a human teammate with @user"
+        : "- Mention who you want to recognize with @user"
       : "",
 
     gratitude.receivers.find((x) => x.id === gratitude.giver.id) &&
@@ -314,7 +316,12 @@ async function validateAndSendGratitude(gratitude) {
   // Silently filter out bot users from receivers. Bot @-mentions
   // (including incidental ones such as the "Sent using @Claude" footer
   // appended by Slack assistant integrations) should never trigger
-  // fistbump awards, even when mixed with human recipients.
+  // fistbump awards, even when mixed with human recipients. Track when
+  // the original receiver list contained only bots so we can surface a
+  // more informative error message below.
+  gratitude.hadOnlyBotReceivers =
+    gratitude.receivers.length > 0 &&
+    gratitude.receivers.every((r) => r.is_bot);
   gratitude.receivers = gratitude.receivers.filter((r) => !r.is_bot);
 
   const errors = await gratitudeErrors(gratitude);

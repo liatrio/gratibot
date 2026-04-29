@@ -1395,7 +1395,7 @@ describe("service/recognition", () => {
       ]);
     });
 
-    it("should reject with 'mention who you want to recognize' when only bot receivers are mentioned", async () => {
+    it("should reject with a bot-specific message when only bot receivers are mentioned", async () => {
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
       const gratitude = {
         giver: {
@@ -1423,6 +1423,9 @@ describe("service/recognition", () => {
         .to.be.rejectedWith(GratitudeError)
         .then((err) => {
           expect(err.gratitudeErrors).to.include(
+            "- Bots can't receive recognition. Mention a human teammate with @user",
+          );
+          expect(err.gratitudeErrors).to.not.include(
             "- Mention who you want to recognize with @user",
           );
         });

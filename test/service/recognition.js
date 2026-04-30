@@ -5,6 +5,7 @@ const recognition = require("../../service/recognition");
 const balance = require("../../service/balance");
 const recognitionCollection = require("../../database/recognitionCollection");
 const goldenRecognitionCollection = require("../../database/goldenRecognitionCollection");
+const { GratitudeError } = require("../../service/errors");
 
 describe("service/recognition", () => {
   afterEach(() => {
@@ -885,7 +886,7 @@ describe("service/recognition", () => {
       expect(result).to.deep.equal(["- Guest users can't give recognition"]);
     });
 
-    it("should return error if receiver is a bot", async () => {
+    it("should not return error if receiver is a bot (bots are filtered upstream in validateAndSendGratitude)", async () => {
       sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
       const gratitude = {
         giver: {
@@ -910,7 +911,7 @@ describe("service/recognition", () => {
       };
 
       const result = await recognition.gratitudeErrors(gratitude);
-      expect(result).to.deep.equal(["- You can't give recognition to bots"]);
+      expect(result).to.deep.equal([]);
     });
 
     it("should return error if receiver is a guest user", async () => {
@@ -1342,6 +1343,92 @@ describe("service/recognition", () => {
       };
 
       expect(recognition.validateAndSendGratitude(gratitude)).to.be.rejected;
+    });
+
+    it("should silently filter out bot receivers and still credit human receivers", async () => {
+      const insert = sinon
+        .stub(recognitionCollection, "insertOne")
+        .resolves({});
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      sinon.stub(recognition, "doesUserHoldGoldenRecognition").resolves(false);
+      sinon.stub(goldenRecognitionCollection, "findOne").resolves({});
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "HumanReceiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+          {
+            id: "BotReceiver",
+            tz: "America/Los_Angeles",
+            is_bot: true,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message:
+          ":fistbump: <@HumanReceiver> Test Message 1234567890\nSent using <@BotReceiver>",
+        trimmedMessage: "  Test Message 1234567890\nSent using ",
+        channel: "TestChannel",
+        tags: [],
+      };
+
+      await recognition.validateAndSendGratitude(gratitude);
+
+      expect(insert.callCount).to.equal(1);
+      expect(insert.firstCall.args[0].recognizee).to.equal("HumanReceiver");
+      expect(gratitude.receivers).to.deep.equal([
+        {
+          id: "HumanReceiver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+      ]);
+    });
+
+    it("should reject with a bot-specific message when only bot receivers are mentioned", async () => {
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+      const gratitude = {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        receivers: [
+          {
+            id: "BotReceiver",
+            tz: "America/Los_Angeles",
+            is_bot: true,
+            is_restricted: false,
+          },
+        ],
+        count: 1,
+        message: ":fistbump: <@BotReceiver> Test Message 1234567890",
+        trimmedMessage: "  Test Message 1234567890",
+        channel: "TestChannel",
+        tags: [],
+      };
+
+      await expect(recognition.validateAndSendGratitude(gratitude))
+        .to.be.rejectedWith(GratitudeError)
+        .then((err) => {
+          expect(err.gratitudeErrors).to.include(
+            "- Bots can't receive recognition. Mention a human teammate with @user",
+          );
+          expect(err.gratitudeErrors).to.not.include(
+            "- Mention who you want to recognize with @user",
+          );
+        });
     });
   });
 

@@ -44,7 +44,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenTofu and Terragrunt
-        uses: gruntwork-io/terragrunt-action@ad66bd184abd991249047d1f61bce1f29aaed2a6 # v3.3.0
+        uses: gruntwork-io/terragrunt-action@4ed5b7344c80315e5357f28f36159fc980bc2d5a # v3.4.0
       - name: Terraform fmt check
         run: tofu fmt -check -recursive
 
@@ -56,7 +56,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenTofu and Terragrunt
-        uses: gruntwork-io/terragrunt-action@ad66bd184abd991249047d1f61bce1f29aaed2a6 # v3.3.0
+        uses: gruntwork-io/terragrunt-action@4ed5b7344c80315e5357f28f36159fc980bc2d5a # v3.4.0
       - name: Terraform validate check
         run: |
           terragrunt init -backend=false
@@ -74,7 +74,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenTofu and Terragrunt
-        uses: gruntwork-io/terragrunt-action@ad66bd184abd991249047d1f61bce1f29aaed2a6 # v3.3.0
+        uses: gruntwork-io/terragrunt-action@4ed5b7344c80315e5357f28f36159fc980bc2d5a # v3.4.0
       - name: Plan Gratibot staging deployment
         id: plan_gratibot_staging_deployment
         working-directory: infra/terragrunt/nonprod/gratibot/

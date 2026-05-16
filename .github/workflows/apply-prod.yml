@@ -48,7 +48,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenTofu and Terragrunt
-        uses: gruntwork-io/terragrunt-action@ad66bd184abd991249047d1f61bce1f29aaed2a6 # v3.3.0
+        uses: gruntwork-io/terragrunt-action@4ed5b7344c80315e5357f28f36159fc980bc2d5a # v3.4.0
       - name: Plan Gratibot prod deployment
         working-directory: infra/terragrunt/prod/gratibot/
         shell: bash
@@ -87,7 +87,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenTofu and Terragrunt
-        uses: gruntwork-io/terragrunt-action@ad66bd184abd991249047d1f61bce1f29aaed2a6 # v3.3.0
+        uses: gruntwork-io/terragrunt-action@4ed5b7344c80315e5357f28f36159fc980bc2d5a # v3.4.0
       - name: Download plan artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:

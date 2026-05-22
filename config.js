@@ -24,6 +24,7 @@ config.usersExemptFromMaximum = process.env.EXEMPT_USERS?.split(",") || [
   "U0K32MUSF", // Robert Kelly
   "U05HA77CE5S", // Ryan McClish
   "U08PEV0SCLW", // Avery Green
+  "U04ALSRL5S7", // Andrew Barefield
   "U04MY32BRC5", // Dave Collins
   "U068XJMNYPR", // Mike Morain
   "U9N4VK0HM", // Bjorn Edwin

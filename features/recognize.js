@@ -12,7 +12,7 @@ const {
   sendNotificationToReceivers,
 } = require("../service/messageutils");
 
-const { recognizeEmoji, reactionEmoji } = config;
+const { recognizeEmoji, reactionEmoji, selfRecognizeEmoji } = config;
 
 module.exports = function (app) {
   app.message(recognizeEmoji, respondToRecognitionMessage);
@@ -99,14 +99,24 @@ async function respondToRecognitionReaction({ event, client }) {
   try {
     originalMessage = await messageReactedTo(client, event);
 
-    if (!originalMessage.text.includes(recognizeEmoji)) {
+    const hasRecognizeEmoji = originalMessage.text.includes(recognizeEmoji);
+    const hasSelfRecognizeEmoji =
+      originalMessage.text.includes(selfRecognizeEmoji);
+
+    if (!hasRecognizeEmoji && !hasSelfRecognizeEmoji) {
       return;
     }
 
-    allUsers = await recognition.gratitudeReceiverIdsIn(
-      client,
-      originalMessage.text,
-    );
+    if (hasRecognizeEmoji) {
+      allUsers = await recognition.gratitudeReceiverIdsIn(
+        client,
+        originalMessage.text,
+      );
+    } else {
+      // Self-fistbump messages don't @-mention a receiver — the receiver is
+      // the author. Reacting credits them with a regular fistbump.
+      allUsers = [originalMessage.user];
+    }
     gratitude = {
       giver: await userInfo(client, event.user),
       receivers: await Promise.all(

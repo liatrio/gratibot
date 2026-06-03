@@ -9,7 +9,9 @@ const winston = require("../winston");
 const {
   recognizeEmoji,
   goldenRecognizeEmoji,
+  selfRecognizeEmoji,
   maximum,
+  selfRecognitionMaximum,
   minimumMessageLength,
   botName,
 } = config;
@@ -252,6 +254,34 @@ async function goldenGratitudeErrors(gratitude) {
   ].filter((x) => x !== "");
 }
 
+async function selfGratitudeErrors(gratitude) {
+  const selfRecognitionRemaining = await balance.dailySelfRecognitionRemaining(
+    gratitude.giver.id,
+    gratitude.giver.tz,
+  );
+  const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
+    gratitude.giver.id,
+    gratitude.giver.tz,
+  );
+
+  return [
+    gratitude.giver.is_bot ? "- Bots can't give recognition" : "",
+    gratitude.giver.is_restricted ? "- Guest users can't give recognition" : "",
+    gratitude.channelType !== "channel"
+      ? `- ${selfRecognizeEmoji} can only be used in public channels`
+      : "",
+    gratitude.trimmedMessage.length < minimumMessageLength
+      ? `- Your message must be at least ${minimumMessageLength} characters`
+      : "",
+    selfRecognitionRemaining < 1
+      ? `- You can only give yourself ${selfRecognitionMaximum} ${selfRecognizeEmoji} per day`
+      : "",
+    dailyGratitudeRemaining < 1
+      ? `- A maximum of ${maximum} ${recognizeEmoji} can be sent per day`
+      : "",
+  ].filter((x) => x !== "");
+}
+
 async function giveGratitude(gratitude) {
   let results = [];
 
@@ -310,6 +340,44 @@ async function giveGratitude(gratitude) {
     }
   }
   return Promise.all(results);
+}
+
+async function validateAndSendSelfGratitude(gratitude) {
+  const errors = await selfGratitudeErrors(gratitude);
+  if (errors.length > 0) {
+    throw new GratitudeError(errors);
+  }
+
+  return giveRecognition(
+    gratitude.giver.id,
+    gratitude.giver.id,
+    gratitude.message,
+    gratitude.channel,
+    gratitude.tags,
+  );
+}
+
+async function giverSelfSlackNotification(gratitude) {
+  const selfRecognitionRemaining = await balance.dailySelfRecognitionRemaining(
+    gratitude.giver.id,
+    gratitude.giver.tz,
+  );
+  const dailyGratitudeRemaining = await balance.dailyGratitudeRemaining(
+    gratitude.giver.id,
+    gratitude.giver.tz,
+  );
+
+  return {
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Your ${selfRecognizeEmoji} has been sent. You have \`${selfRecognitionRemaining}\` ${selfRecognizeEmoji} and \`${dailyGratitudeRemaining}\` ${recognizeEmoji} left to give today.`,
+        },
+      },
+    ],
+  };
 }
 
 async function validateAndSendGratitude(gratitude) {
@@ -475,12 +543,15 @@ module.exports = {
   isGratitudeAffordable,
   gratitudeErrors,
   goldenGratitudeErrors,
+  selfGratitudeErrors,
   trimmedGratitudeMessage,
   gratitudeTagsIn,
   giveGratitude,
   validateAndSendGratitude,
+  validateAndSendSelfGratitude,
   giverSlackNotification,
   giverGoldenSlackNotification,
+  giverSelfSlackNotification,
   doesUserHoldGoldenRecognition,
   composeReceiverNotificationText,
   receiverSlackNotification,

@@ -1141,6 +1141,195 @@ describe("service/recognition", () => {
     });
   });
 
+  describe("selfGratitudeErrors", () => {
+    function selfGratitude(overrides = {}) {
+      return {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        count: 1,
+        message: ":self-fistbump: I crushed the demo today!!!",
+        trimmedMessage: " I crushed the demo today!!!",
+        channel: "TestChannel",
+        channelType: "channel",
+        tags: [],
+        type: ":self-fistbump:",
+        ...overrides,
+      };
+    }
+
+    it("should return empty when self-gratitude is okay", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      const result = await recognition.selfGratitudeErrors(selfGratitude());
+      expect(result).to.deep.equal([]);
+    });
+
+    it("should reject self-gratitude from outside a public channel", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      const result = await recognition.selfGratitudeErrors(
+        selfGratitude({ channelType: "im" }),
+      );
+      expect(result).to.deep.equal([
+        "- :self-fistbump: can only be used in public channels",
+      ]);
+    });
+
+    it("should reject self-gratitude from a private channel", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      const result = await recognition.selfGratitudeErrors(
+        selfGratitude({ channelType: "group" }),
+      );
+      expect(result).to.deep.equal([
+        "- :self-fistbump: can only be used in public channels",
+      ]);
+    });
+
+    it("should reject bot givers", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      const result = await recognition.selfGratitudeErrors(
+        selfGratitude({
+          giver: {
+            id: "Bot",
+            tz: "America/Los_Angeles",
+            is_bot: true,
+            is_restricted: false,
+          },
+        }),
+      );
+      expect(result).to.deep.equal(["- Bots can't give recognition"]);
+    });
+
+    it("should reject guest givers", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      const result = await recognition.selfGratitudeErrors(
+        selfGratitude({
+          giver: {
+            id: "Guest",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: true,
+          },
+        }),
+      );
+      expect(result).to.deep.equal(["- Guest users can't give recognition"]);
+    });
+
+    it("should reject short messages", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      const result = await recognition.selfGratitudeErrors(
+        selfGratitude({
+          message: ":self-fistbump: short",
+          trimmedMessage: " short",
+        }),
+      );
+      expect(result).to.deep.equal([
+        "- Your message must be at least 20 characters",
+      ]);
+    });
+
+    it("should reject when the daily self-fistbump has been used", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(0);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      const result = await recognition.selfGratitudeErrors(selfGratitude());
+      expect(result).to.deep.equal([
+        "- You can only give yourself 1 :self-fistbump: per day",
+      ]);
+    });
+
+    it("should reject when the daily fistbump budget is exhausted", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(0);
+
+      const result = await recognition.selfGratitudeErrors(selfGratitude());
+      expect(result).to.deep.equal([
+        "- A maximum of 5 :fistbump: can be sent per day",
+      ]);
+    });
+  });
+
+  describe("validateAndSendSelfGratitude", () => {
+    function selfGratitude(overrides = {}) {
+      return {
+        giver: {
+          id: "Giver",
+          tz: "America/Los_Angeles",
+          is_bot: false,
+          is_restricted: false,
+        },
+        count: 1,
+        message: ":self-fistbump: I crushed the demo today!!!",
+        trimmedMessage: " I crushed the demo today!!!",
+        channel: "TestChannel",
+        channelType: "channel",
+        tags: [],
+        type: ":self-fistbump:",
+        ...overrides,
+      };
+    }
+
+    it("should record a self-recognition when valid", async () => {
+      const insert = sinon
+        .stub(recognitionCollection, "insertOne")
+        .resolves({});
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(1);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      await recognition.validateAndSendSelfGratitude(selfGratitude());
+
+      expect(insert.calledOnce).to.be.true;
+      expect(insert.firstCall.args[0].recognizer).to.equal("Giver");
+      expect(insert.firstCall.args[0].recognizee).to.equal("Giver");
+    });
+
+    it("should reject when validation fails", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(0);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(5);
+
+      await expect(
+        recognition.validateAndSendSelfGratitude(selfGratitude()),
+      ).to.be.rejectedWith(GratitudeError);
+    });
+  });
+
+  describe("giverSelfSlackNotification", () => {
+    it("should report remaining self and daily fistbumps", async () => {
+      sinon.stub(balance, "dailySelfRecognitionRemaining").resolves(0);
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(4);
+
+      const response = await recognition.giverSelfSlackNotification({
+        giver: { id: "Giver", tz: "America/Los_Angeles" },
+      });
+
+      expect(response).to.deep.equal({
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "Your :self-fistbump: has been sent. You have `0` :self-fistbump: and `4` :fistbump: left to give today.",
+            },
+          },
+        ],
+      });
+    });
+  });
+
   describe("giveGratitude", () => {
     it("should add gratitude to database", async () => {
       const insert = sinon

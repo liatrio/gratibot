@@ -64,9 +64,32 @@ async function dailyGratitudeRemaining(user, timezone) {
   return config.maximum - recognitionGivenToday;
 }
 
+async function dailySelfRecognitionRemaining(user, timezone) {
+  const midnight = moment(Date.now()).tz(timezone).startOf("day");
+  const selfRecognitionGivenToday = await recognitionCollection.countDocuments({
+    recognizer: user,
+    recognizee: user,
+    timestamp: {
+      $gte: new Date(midnight),
+    },
+  });
+
+  winston.debug(
+    `${user} has [${config.selfRecognitionMaximum - selfRecognitionGivenToday}] self-fistbumps left`,
+    {
+      func: "service.balance.dailySelfRecognitionRemaining",
+      callingUser: user,
+      timezone: timezone,
+    },
+  );
+
+  return config.selfRecognitionMaximum - selfRecognitionGivenToday;
+}
+
 module.exports = {
   currentBalance,
   lifetimeEarnings,
   lifetimeSpendings,
   dailyGratitudeRemaining,
+  dailySelfRecognitionRemaining,
 };

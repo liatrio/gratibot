@@ -37,6 +37,49 @@ describe("service/balance", () => {
     });
   });
 
+  describe("dailySelfRecognitionRemaining", () => {
+    it("should return the configured maximum when no self-fistbump has been given today", async () => {
+      sinon.stub(config, "selfRecognitionMaximum").value(1);
+      sinon.stub(recognitionCollection, "countDocuments").resolves(0);
+
+      const result = await balance.dailySelfRecognitionRemaining(
+        "User",
+        "America/Los_Angeles",
+      );
+
+      expect(result).to.equal(1);
+    });
+
+    it("should return zero once the daily self-fistbump has been used", async () => {
+      sinon.stub(config, "selfRecognitionMaximum").value(1);
+      sinon.stub(recognitionCollection, "countDocuments").resolves(1);
+
+      const result = await balance.dailySelfRecognitionRemaining(
+        "User",
+        "America/Los_Angeles",
+      );
+
+      expect(result).to.equal(0);
+    });
+
+    it("should only count today's self-recognitions (recognizer === recognizee)", async () => {
+      const count = sinon
+        .stub(recognitionCollection, "countDocuments")
+        .resolves(0);
+      sinon.useFakeTimers(new Date(Date.UTC(2020, 1, 1)));
+
+      await balance.dailySelfRecognitionRemaining(
+        "User",
+        "America/Los_Angeles",
+      );
+
+      const filter = count.args[0][0];
+      expect(filter.recognizer).to.equal("User");
+      expect(filter.recognizee).to.equal("User");
+      expect(filter.timestamp).to.have.property("$gte");
+    });
+  });
+
   describe("currentBalance", () => {
     it("should return total earnings when users have no deductions", async () => {
       sinon.stub(recognitionCollection, "countDocuments").resolves(100);

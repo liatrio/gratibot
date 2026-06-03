@@ -16,6 +16,7 @@ Gratibot is a Slack bot that enables peer recognition at Liatrio. Core capabilit
 
 - Users give `:fistbump:` emojis to recognize colleagues (up to a daily limit)
 - A special `:goldenfistbump:` can only be held by one person at a time and is worth 20x
+- Users can give themselves a `:self-fistbump:` once per day in public channels
 - Balances, leaderboards, and metrics are queryable via DM
 - Users can redeem earned points for physical rewards; admins can issue deductions and refunds
 

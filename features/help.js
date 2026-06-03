@@ -3,6 +3,8 @@ const {
   maximum,
   reactionEmoji,
   goldenRecognizeEmoji,
+  selfRecognizeEmoji,
+  selfRecognitionMaximum,
 } = require("../config");
 const winston = require("../winston");
 const { directMention } = require("@slack/bolt");
@@ -41,6 +43,16 @@ Only the current holder can pass it on. Use it like any other fistbump:
 > Thanks @alice for fixing prod! ${goldenRecognizeEmoji}
 
 The new holder receives 20 ${recognizeEmoji} immediately, plus a 2x multiplier on all recognition they receive while holding it.
+
+${divider}
+
+*Self Fistbump* ${selfRecognizeEmoji} (${selfRecognitionMaximum} per day, public channels only)
+
+Recognize your own win by posting in a public channel with ${selfRecognizeEmoji}. Reactions don't count — it has to be a message.
+
+> I finally tracked down that flaky test ${selfRecognizeEmoji}
+
+A self fistbump also counts against your daily ${recognizeEmoji} budget.
 
 ${divider}
 

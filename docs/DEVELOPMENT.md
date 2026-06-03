@@ -107,6 +107,7 @@ DMing the bot with `balance` or `help`.
 | `LOG_LEVEL` | `info` | Winston log level (`debug`, `info`, `warn`, `error`) |
 | `RECOGNIZE_EMOJI` | `:fistbump:` | Emoji that triggers recognition |
 | `GOLDEN_RECOGNIZE_EMOJI` | `:goldenfistbump:` | Emoji for golden recognition |
+| `SELF_RECOGNIZE_EMOJI` | `:self-fistbump:` | Emoji for self recognition (public channels only, once per day) |
 | `GOLDEN_RECOGNIZE_CHANNEL` | `liatrio` | Channel where golden recognition is announced |
 | `REACTION_EMOJI` | `:nail_care:` | Emoji reaction that also triggers recognition |
 | `GRATIBOT_LIMIT` | `5` | Max recognitions a user can give per day |

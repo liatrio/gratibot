@@ -36,6 +36,7 @@ lives in the service layer.
 |---|---|---|
 | `recognize.js` | Message containing `:fistbump:` | Give recognition |
 | `golden-recognize.js` | Message containing `:goldenfistbump:` | Transfer golden fistbump |
+| `self-recognize.js` | Public-channel message containing `:self-fistbump:` | Give yourself a fistbump (once per day) |
 | `balance.js` | DM "balance" | Show recognition balance |
 | `leaderboard.js` | DM "leaderboard" | Show top givers/receivers |
 | `redeem.js` | DM "redeem" | Open reward redemption dialog |
@@ -56,7 +57,7 @@ via the wrappers in `service/apiwrappers.js`).
 
 | File | Responsibility |
 |---|---|
-| `recognition.js` | Validate and record recognitions; golden fistbump logic |
+| `recognition.js` | Validate and record recognitions; golden and self fistbump logic |
 | `balance.js` | Calculate earned/remaining balance from recognition records |
 | `deduction.js` | Record and query reward deductions |
 | `redeem.js` | Build redemption UI (Slack Block Kit) and process redemption requests |
@@ -76,7 +77,7 @@ native Collection object used directly by services.
 | File | MongoDB Collection | Contents |
 |---|---|---|
 | `db.js` | — | Connection singleton (`new MongoClient(config.mongo_url)`) |
-| `recognitionCollection.js` | `recognitions` | All `:fistbump:` recognition records |
+| `recognitionCollection.js` | `recognitions` | All `:fistbump:` and `:self-fistbump:` recognition records (self-fistbumps have `recognizer === recognizee`) |
 | `goldenRecognitionCollection.js` | `goldenrecognition` | Golden fistbump transfer history |
 | `deductionCollection.js` | `deductions` | Reward redemption and deduction records |
 
@@ -178,7 +179,9 @@ Feature flags and limits are runtime-configurable without code changes:
 |---|---|---|---|
 | `recognizeEmoji` | `RECOGNIZE_EMOJI` | `:fistbump:` | Trigger emoji for recognition |
 | `goldenRecognizeEmoji` | `GOLDEN_RECOGNIZE_EMOJI` | `:goldenfistbump:` | Golden fistbump emoji |
+| `selfRecognizeEmoji` | `SELF_RECOGNIZE_EMOJI` | `:self-fistbump:` | Trigger emoji for self recognition (public channels only) |
 | `maximum` | `GRATIBOT_LIMIT` | `5` | Max recognitions a user can give per day |
+| `selfRecognitionMaximum` | — | `1` | Max self-fistbumps a user can give per day |
 | `botName` | `BOT_NAME` | `gratibot` | Bot display name |
 | `slashCommand` | `SLASH_COMMAND` | `/gratibot` | Registered slash command |
 | `usersExemptFromMaximum` | `EXEMPT_USERS` | (hardcoded list) | Comma-separated Slack IDs |

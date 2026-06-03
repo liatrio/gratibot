@@ -249,6 +249,7 @@ describe("features/recognize", () => {
   describe("respondToRecognitionReaction", () => {
     function reactionClient({
       replyMessage = "thanks <@Ureceiver> :fistbump:",
+      replyAuthor,
       repliesOk = true,
       usersById = {
         Ugiver: {
@@ -265,6 +266,10 @@ describe("features/recognize", () => {
         },
       },
     } = {}) {
+      const message = { text: replyMessage };
+      if (replyAuthor !== undefined) {
+        message.user = replyAuthor;
+      }
       return {
         users: {
           info: sinon.stub().callsFake(async ({ user }) => ({
@@ -275,7 +280,7 @@ describe("features/recognize", () => {
         conversations: {
           replies: sinon.stub().resolves(
             repliesOk
-              ? { ok: true, messages: [{ text: replyMessage }] }
+              ? { ok: true, messages: [message] }
               : {
                   ok: false,
                   error: "not_in_channel",
@@ -385,6 +390,75 @@ describe("features/recognize", () => {
       await reactionHandler({ event, client });
 
       const gratitude = recognition.validateAndSendGratitude.firstCall.args[0];
+      expect(gratitude.giverInReceivers).to.equal(true);
+    });
+
+    it("should credit the original author when reacting to a :self-fistbump: message", async () => {
+      const { app, findHandler } = createMockApp();
+      recognizeFeature(app);
+      const reactionHandler = findHandler("event", "reaction_added");
+
+      sinon.stub(recognition, "validateAndSendGratitude").resolves();
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves({ blocks: [] });
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves({ blocks: [] });
+
+      const client = reactionClient({
+        replyMessage: "I crushed the demo today :self-fistbump:",
+        replyAuthor: "Uauthor",
+        usersById: {
+          Ugiver: {
+            id: "Ugiver",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+          Uauthor: {
+            id: "Uauthor",
+            tz: "America/Los_Angeles",
+            is_bot: false,
+            is_restricted: false,
+          },
+        },
+      });
+      const event = reactionEvent();
+
+      await reactionHandler({ event, client });
+
+      expect(recognition.validateAndSendGratitude.calledOnce).to.equal(true);
+      const gratitude = recognition.validateAndSendGratitude.firstCall.args[0];
+      expect(gratitude.giver.id).to.equal("Ugiver");
+      expect(gratitude.receivers.map((r) => r.id)).to.deep.equal(["Uauthor"]);
+      expect(gratitude.giverInReceivers).to.equal(false);
+      expect(gratitude.type).to.equal(config.recognizeEmoji);
+    });
+
+    it("should set giverInReceivers when the self-fistbump author reacts to their own message", async () => {
+      const { app, findHandler } = createMockApp();
+      recognizeFeature(app);
+      const reactionHandler = findHandler("event", "reaction_added");
+
+      sinon.stub(recognition, "validateAndSendGratitude").resolves();
+      sinon
+        .stub(recognition, "giverSlackNotification")
+        .resolves({ blocks: [] });
+      sinon
+        .stub(recognition, "receiverSlackNotification")
+        .resolves({ blocks: [] });
+
+      const client = reactionClient({
+        replyMessage: "I crushed the demo today :self-fistbump:",
+        replyAuthor: "Ugiver",
+      });
+      const event = reactionEvent();
+
+      await reactionHandler({ event, client });
+
+      const gratitude = recognition.validateAndSendGratitude.firstCall.args[0];
+      expect(gratitude.receivers.map((r) => r.id)).to.deep.equal(["Ugiver"]);
       expect(gratitude.giverInReceivers).to.equal(true);
     });
   });

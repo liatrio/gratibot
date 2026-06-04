@@ -42,6 +42,31 @@ describe("service/report", () => {
       expect(result[0].formattedDate).to.equal("Jan 1, 2024");
     });
 
+    it("should format the date in the caller's timezone, not the process timezone", async () => {
+      // 03:00 UTC on Jan 2 is still 19:00 LA on Jan 1. A user in LA should
+      // see "Jan 1, 2024" even when the process runs in UTC (as it does in CI).
+      const firstTimestamp = new Date("2024-01-02T03:00:00Z");
+      sinon.stub(recognitionCollection, "aggregate").returns({
+        toArray: sinon.stub().resolves([
+          {
+            _id: "great work",
+            count: 1,
+            firstTimestamp,
+            channel: "Cchannel",
+            recognizers: ["Ugiver"],
+          },
+        ]),
+      });
+
+      const result = await report.getTopMessagesForUser(
+        "Utarget",
+        30,
+        "America/Los_Angeles",
+      );
+
+      expect(result[0].formattedDate).to.equal("Jan 1, 2024");
+    });
+
     it("should return an empty array when the aggregation returns no results", async () => {
       sinon.stub(recognitionCollection, "aggregate").returns({
         toArray: sinon.stub().resolves([]),

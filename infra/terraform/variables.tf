@@ -56,6 +56,12 @@ variable "gratibot_recognize_emoji" {
   default     = ":fistbump:"
 }
 
+variable "gratibot_self_recognize_emoji" {
+  description = "Self-recognition emoji to use for self recognitions"
+  type        = string
+  default     = ":self-fistbump:"
+}
+
 variable "gratibot_reaction_emoji" {
   description = "Reaction emoji to use for recognitions"
   type        = string

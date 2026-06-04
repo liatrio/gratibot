@@ -9,10 +9,13 @@ config.recognizeEmoji =
   _.escapeRegExp(process.env.RECOGNIZE_EMOJI) || ":fistbump:";
 config.goldenRecognizeEmoji =
   process.env.GOLDEN_RECOGNIZE_EMOJI || ":goldenfistbump:";
+config.selfRecognizeEmoji =
+  _.escapeRegExp(process.env.SELF_RECOGNIZE_EMOJI) || ":self-fistbump:";
 config.goldenRecognizeChannel =
   process.env.GOLDEN_RECOGNIZE_CHANNEL || "liatrio";
 config.reactionEmoji = process.env.REACTION_EMOJI || ":nail_care:";
 config.maximum = process.env.GRATIBOT_LIMIT || 5;
+config.selfRecognitionMaximum = 1;
 config.minimumMessageLength = 20;
 config.botName = process.env.BOT_NAME || "gratibot";
 config.slashCommand = process.env.SLASH_COMMAND || "/gratibot";

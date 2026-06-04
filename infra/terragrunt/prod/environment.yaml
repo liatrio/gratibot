@@ -1,4 +1,5 @@
 gratibot_recognize_emoji: ":fistbump:"
+gratibot_self_recognize_emoji: ":self-fistbump:"
 state_storage_account: "gratibotazuredatatfpd"
 environment: "prod"
 instance_capacity: "2"

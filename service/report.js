@@ -58,7 +58,9 @@ async function getTopMessagesForUser(
         message: msg._id,
         count: msg.count,
         timestamp: msg.firstTimestamp,
-        formattedDate: moment(msg.firstTimestamp).format("MMM D, YYYY"),
+        formattedDate: moment(msg.firstTimestamp)
+          .tz(timezone)
+          .format("MMM D, YYYY"),
         channel: msg.channel,
         recognizers: msg.recognizers,
       };

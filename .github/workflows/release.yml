@@ -21,7 +21,7 @@ jobs:
     name: Build and Publish Image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Generate tag
         id: tag
@@ -47,9 +47,9 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install OpenTofu and Terragrunt
-        uses: gruntwork-io/terragrunt-action@4ed5b7344c80315e5357f28f36159fc980bc2d5a # v3.4.0
+        uses: gruntwork-io/terragrunt-action@8c1d96b76d445fd2e41475a3f0b63dcd1d9cc077 # v3.4.1
       - name: Deploy Gratibot to Nonprod
         working-directory: infra/terragrunt/nonprod/gratibot/
         run: |
@@ -66,7 +66,7 @@ jobs:
     needs: apply
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0

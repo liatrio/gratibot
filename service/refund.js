@@ -10,14 +10,32 @@ async function respondToRefund({ message, client, admins = redemptionAdmins }) {
   });
 
   if (admins.includes(message.user)) {
-    const messageText = message.text.split(" ");
-    const deductionId = messageText[messageText.indexOf("refund") + 1];
-    await deduction.refundDeduction(deductionId);
+    const match = message.text.match(
+      /\brefund\s+`?((?:[a-f\d]{24})|(?:stadium:[^\s`]+))`?\s*$/i,
+    );
+    if (!match) {
+      await client.chat.postMessage({
+        channel: message.channel,
+        user: message.user,
+        text: "Usage: `refund <deduction-id>`",
+      });
+      return;
+    }
+    const deductionId = match[1];
+    const result = await deduction.refundDeduction(deductionId);
+
+    const messages = {
+      refunded: "Refund successfully given",
+      already_refunded: "That deduction has already been refunded",
+      not_found: "That deduction could not be found",
+      stadium:
+        "Stadium deductions must be resolved with `stadium resolve <id> refund`.",
+    };
 
     await client.chat.postMessage({
       channel: message.channel,
       user: message.user,
-      text: "Refund successfully given",
+      text: messages[result.status],
     });
   } else {
     await client.chat.postMessage({

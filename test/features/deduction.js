@@ -33,6 +33,8 @@ describe("features/deduction", () => {
 
   beforeEach(() => {
     originalAdmins = [...config.redemptionAdmins];
+    sinon.stub(deduction, "acquireLock").resolves({ acquired: true });
+    sinon.stub(deduction, "releaseLock").resolves();
   });
 
   afterEach(() => {
@@ -172,9 +174,7 @@ describe("features/deduction", () => {
       const handler = findHandler("message", /deduct/i);
 
       sinon.stub(deduction, "isBalanceSufficient").resolves(true);
-      sinon
-        .stub(deduction, "createDeduction")
-        .resolves({ _id: "DEDUCTION-123" });
+      sinon.stub(deduction, "createDeduction").resolves("DEDUCTION-123");
 
       const client = buildClient();
       const message = {
@@ -197,6 +197,36 @@ describe("features/deduction", () => {
         "A deduction of 5 fistbumps has been made for <@Uother>",
       );
       expect(args.text).to.include("DEDUCTION-123");
+    });
+
+    it("should tell an admin when a Stadium review blocks a deduction", async () => {
+      setAdmins(["Uadmin"]);
+      const { app, findHandler } = createMockApp();
+      deductionFeature(app);
+      const handler = findHandler("message", /deduct/i);
+      deduction.acquireLock.resolves({
+        acquired: false,
+        reason: "stadium-review",
+        operationId: "stadium:T1:V1",
+      });
+      const client = buildClient();
+
+      await handler({
+        message: {
+          user: "Uadmin",
+          text: "<@Ugratibot> deduct <@Uother> 5",
+          channel: "Ddm",
+          channel_type: "im",
+        },
+        client,
+      });
+
+      expect(client.chat.postMessage.firstCall.args[0].text).to.include(
+        "stadium:T1:V1",
+      );
+      expect(client.chat.postMessage.firstCall.args[0].text).to.include(
+        "stadium review",
+      );
     });
   });
 });

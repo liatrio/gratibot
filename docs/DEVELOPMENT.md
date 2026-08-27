@@ -117,6 +117,49 @@ DMing the bot with `balance` or `help`.
 | `REDEMPTION_ADMINS` | (hardcoded list) | Comma-separated Slack user IDs who can manage redemptions |
 | `GOLDEN_RECOGNIZE_HOLDER` | `UE1QRFSSY` | Slack user ID of initial golden fistbump holder |
 | `PORT` | `3000` | HTTP port for the health check Express server |
+| `STADIUM_ENABLED` | `false` | Toggles Stadium redemption category visibility |
+| `STADIUM_API_BASE_URL` | — | Stadium API v2 base URL |
+| `STADIUM_CLIENT_ID` | — | OAuth client ID |
+| `STADIUM_CLIENT_SECRET` | — | OAuth client secret |
+| `STADIUM_STORE_NUMBER` | — | Global organization store number |
+| `STADIUM_STORE_URL` | — | SSO store URL shown after successful redemption |
+| `STADIUM_PAYMENT_METHOD` | — | `use_wallet_money`, `use_global_point`, or both comma-separated |
+| `STADIUM_BILLING_COUNTRY` | — | Billing country sent to Stadium |
+| `STADIUM_BILLING_ZIPCODE` | — | Billing postal code sent to Stadium |
+| `STADIUM_FISTBUMPS_PER_UNIT` | `1` | Fistbumps in one conversion unit |
+| `STADIUM_POINTS_PER_UNIT` | `1` | Stadium points issued per unit |
+| `STADIUM_MIN_FISTBUMPS` | `1` | Minimum redemption amount |
+| `STADIUM_MAX_FISTBUMPS` | current balance | Optional positive whole-number maximum |
+
+### Stadium sandbox verification
+
+Before enabling Stadium in an environment, reinstall the Slack app with the `users:read.email`
+scope and configure all non-secret Stadium settings above. The App Service reads
+`stadium-client-id` and `stadium-client-secret` directly from Azure Key Vault using versionless
+Key Vault references; Terraform does not read those values into state.
+
+For a manual sandbox test:
+
+1. Configure the nonprod store number, payment method, billing values, SSO URL, and desired
+   conversion ratio. Set `stadium_enabled: true` only in nonprod and apply its Terraform plan.
+2. DM Gratibot `redeem`, choose **Redeem with Stadium**, and submit a small whole-number
+   fistbump amount using a Slack user whose profile email ends exactly in `@liatrio.com`.
+3. Confirm the deduction is present, the Stadium response is paid, the points appear in the
+   same employee account reached through SSO, and no invitation flow is required. This also
+   confirms the assumed `auto_accept_points: true` behavior.
+4. Exercise a rejected request and verify the fistbumps are restored. Exercise an uncertain
+   response only in a controlled test: confirm `stadium review` lists it and resolve it with
+   `stadium resolve <id> fulfilled` or `stadium resolve <id> refund` after checking Stadium.
+5. Confirm the API response fields (`number` and `payment_state: paid`), fees/taxes, inventory
+   behavior, and refund policy with Stadium before enabling production.
+
+The application never retries `send_points`: a timeout, rate limit, server error, or malformed
+success response holds the fistbumps and requires admin review to avoid issuing points twice.
+Short-lived deduction locks use time-bounded ownership leases and can be atomically reclaimed after
+expiry. An unresolved Stadium deduction is the authoritative review hold, so it cannot leave a
+separate permanent lock behind. Periodic reconciliation restores interrupted local reservations,
+moves stale in-flight API requests to admin review, retries undelivered admin notifications with
+a leased backoff, and removes legacy review-lock records.
 
 ## Conventional Commits
 

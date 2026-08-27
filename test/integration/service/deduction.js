@@ -5,6 +5,7 @@ let deduction;
 let recognitionCollection;
 let goldenRecognitionCollection;
 let deductionCollection;
+let deductionLockCollection;
 let client;
 
 describe("integration: service/deduction", function () {
@@ -15,6 +16,7 @@ describe("integration: service/deduction", function () {
     recognitionCollection = require("../../../database/recognitionCollection");
     goldenRecognitionCollection = require("../../../database/goldenRecognitionCollection");
     deductionCollection = require("../../../database/deductionCollection");
+    deductionLockCollection = require("../../../database/deductionLockCollection");
     client = require("../../../database/db");
     await client.connect();
   });
@@ -28,6 +30,7 @@ describe("integration: service/deduction", function () {
       recognitionCollection.deleteMany({}),
       goldenRecognitionCollection.deleteMany({}),
       deductionCollection.deleteMany({}),
+      deductionLockCollection.deleteMany({}),
     ]);
   });
 
@@ -114,6 +117,84 @@ describe("integration: service/deduction", function () {
 
       const record = await deductionCollection.findOne({ user: "Ureceiver" });
       expect(record.refund).to.equal(true);
+    });
+
+    it("reports only one of two concurrent refunds as newly refunded", async () => {
+      const insertedId = await deduction.createDeduction(
+        "Ureceiver",
+        5,
+        "test reason",
+      );
+
+      const results = await Promise.all([
+        deduction.refundDeduction(insertedId),
+        deduction.refundDeduction(insertedId),
+      ]);
+
+      expect(results.map((result) => result.status).sort()).to.deep.equal([
+        "already_refunded",
+        "refunded",
+      ]);
+    });
+
+    it("protects a string-id Stadium deduction from generic refund", async () => {
+      await deductionCollection.insertOne({
+        _id: "stadium:T1:V1",
+        source: "stadium",
+        status: "fulfilled",
+        user: "Ureceiver",
+        refund: false,
+        value: 5,
+      });
+
+      expect(
+        (await deduction.refundDeduction("stadium:T1:V1")).status,
+      ).to.equal("stadium");
+      expect(
+        (await deductionCollection.findOne({ _id: "stadium:T1:V1" })).refund,
+      ).to.equal(false);
+    });
+  });
+
+  describe("deduction locks", () => {
+    it("serializes a user and atomically reclaims an expired lease", async () => {
+      expect(
+        (await deduction.acquireLock("Ulocked", "first")).acquired,
+      ).to.equal(true);
+      expect(
+        (await deduction.acquireLock("Ulocked", "second")).acquired,
+      ).to.equal(false);
+
+      await deductionLockCollection.updateOne(
+        { _id: "Ulocked" },
+        { $set: { expiresAt: new Date(Date.now() - 1000) } },
+      );
+      expect(
+        (await deduction.acquireLock("Ulocked", "second")).acquired,
+      ).to.equal(true);
+      const record = await deductionLockCollection.findOne({ _id: "Ulocked" });
+      expect(record).to.include({
+        operationId: "second",
+        kind: "ephemeral",
+      });
+    });
+
+    it("blocks new deductions while Stadium work needs review", async () => {
+      await deductionCollection.insertOne({
+        _id: "stadium:T1:V1",
+        source: "stadium",
+        status: "needs_review",
+        user: "Ulocked",
+      });
+
+      expect(await deduction.acquireLock("Ulocked", "new")).to.deep.equal({
+        acquired: false,
+        reason: "stadium-review",
+        operationId: "stadium:T1:V1",
+      });
+      expect(
+        await deductionLockCollection.findOne({ _id: "Ulocked" }),
+      ).to.equal(null);
     });
   });
 });

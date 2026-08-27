@@ -42,6 +42,7 @@ lives in the service layer.
 | `redeem.js` | DM "redeem" | Open reward redemption dialog |
 | `deduction.js` | DM "deduction" | Admin: record a reward deduction |
 | `refund.js` | DM "refund DEDUCTIONID" | Admin: refund a deduction |
+| `stadium-redeem.js` | Stadium reward button/modal; DM "stadium review/resolve" | Exchange fistbumps for Stadium points and administer uncertain redemptions |
 | `metrics.js` | DM "metrics" | Show usage metrics |
 | `report.js` | DM "report" | Generate a recognition report |
 | `help.js` | DM "help" | Show help text |
@@ -62,6 +63,7 @@ via the wrappers in `service/apiwrappers.js`).
 | `deduction.js` | Record and query reward deductions |
 | `redeem.js` | Build redemption UI (Slack Block Kit) and process redemption requests |
 | `refund.js` | Process refunds; reverse deduction records |
+| `stadium.js` | Validate, dispatch, reconcile, and resolve Stadium point redemptions |
 | `leaderboard.js` | Aggregate top givers and receivers |
 | `metrics.js` | Compute recognition counts over time windows |
 | `report.js` | Generate formatted recognition reports |
@@ -80,6 +82,7 @@ native Collection object used directly by services.
 | `recognitionCollection.js` | `recognitions` | All `:fistbump:` and `:self-fistbump:` recognition records (self-fistbumps have `recognizer === recognizee`) |
 | `goldenRecognitionCollection.js` | `goldenrecognition` | Golden fistbump transfer history |
 | `deductionCollection.js` | `deductions` | Reward redemption and deduction records |
+| `deductionLockCollection.js` | `deductionLocks` | Per-user leases that serialize balance checks and deductions |
 
 ## Database Schema
 
@@ -113,11 +116,43 @@ native Collection object used directly by services.
 
 ```javascript
 {
-  user: String,       // Slack ID of the redeemer
+  _id: ObjectId | String, // ObjectId normally; deterministic "stadium:<team>:<view>" for Stadium
+  user: String,           // Slack ID of the redeemer
   timestamp: Date,
-  refund: Boolean,    // true after a refund is issued
-  value: Number,      // Cost in fistbumps
-  message: String     // Human-readable redemption note
+  refund: Boolean,        // true after a refund is issued
+  value: Number,          // Cost in fistbumps
+  message: String,        // Human-readable note for ordinary deductions
+
+  // Stadium deductions additionally contain:
+  source: "stadium",
+  status: "reserved" | "sending" | "fulfilled" | "failed" | "needs_review" | "refunded",
+  corporateEmail: String,
+  stadiumPoints: Number,
+  ratio: { fistbumpsPerUnit: Number, pointsPerUnit: Number },
+  updatedAt: Date,
+  stadium: Object,        // Provider response or error details, when available
+  resolution: Object,     // Admin, action, and timestamp after manual resolution
+  lateConfirmationAt: Date,
+  reviewNotification: {   // Durable, leased admin-notification delivery state
+    nextAttemptAt: Date,
+    claimId: String,
+    claimUntil: Date,
+    lastAttemptAt: Date,
+    notifiedAt: Date
+  }
+}
+```
+
+### `deductionLocks`
+
+```javascript
+{
+  _id: String,        // Slack user ID; one active deduction operation per user
+  operationId: String,
+  kind: "ephemeral" | "stadium-in-flight",
+  ownerId: String,
+  createdAt: Date,
+  expiresAt: Date
 }
 ```
 

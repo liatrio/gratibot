@@ -49,5 +49,18 @@ resource "azurerm_linux_web_app" "gratibot_app_service" {
     "REACTION_EMOJI"              = var.gratibot_reaction_emoji
     "LOG_LEVEL"                   = var.gratibot_log_level
     "GRATIBOT_LIMIT"              = var.gratibot_limit
+    "STADIUM_ENABLED"             = tostring(var.stadium_enabled)
+    "STADIUM_API_BASE_URL"        = var.stadium_api_base_url
+    "STADIUM_CLIENT_ID"           = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault.gratibot.vault_uri}secrets/stadium-client-id)"
+    "STADIUM_CLIENT_SECRET"       = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault.gratibot.vault_uri}secrets/stadium-client-secret)"
+    "STADIUM_STORE_NUMBER"        = var.stadium_store_number
+    "STADIUM_STORE_URL"           = var.stadium_store_url
+    "STADIUM_PAYMENT_METHOD"      = var.stadium_payment_method
+    "STADIUM_BILLING_COUNTRY"     = var.stadium_billing_country
+    "STADIUM_BILLING_ZIPCODE"     = var.stadium_billing_zipcode
+    "STADIUM_FISTBUMPS_PER_UNIT"  = tostring(var.stadium_fistbumps_per_unit)
+    "STADIUM_POINTS_PER_UNIT"     = tostring(var.stadium_points_per_unit)
+    "STADIUM_MIN_FISTBUMPS"       = tostring(var.stadium_min_fistbumps)
+    "STADIUM_MAX_FISTBUMPS"       = var.stadium_max_fistbumps
   }
 }

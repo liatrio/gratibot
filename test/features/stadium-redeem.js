@@ -22,17 +22,28 @@ function client() {
   };
 }
 
-function submission(amount = "5") {
+function submission(
+  amount = "5",
+  email = "person@liatrio.com",
+  emailSource = "modal",
+) {
+  const values = {
+    stadium_amount: {
+      stadium_amount_value: { value: amount },
+    },
+  };
+  if (emailSource === "modal") {
+    values.stadium_email = {
+      stadium_email_value: { value: email },
+    };
+  }
   return {
     body: { user: { id: "U1" }, team: { id: "T1" } },
     view: {
       id: "V1",
+      private_metadata: JSON.stringify({ emailSource }),
       state: {
-        values: {
-          stadium_amount: {
-            stadium_amount_value: { value: amount },
-          },
-        },
+        values,
       },
     },
   };
@@ -50,10 +61,14 @@ describe("features/stadium-redeem", () => {
       pointsPerUnit: config.stadium.pointsPerUnit,
       minimumFistbumps: config.stadium.minimumFistbumps,
       maximumFistbumps: config.stadium.maximumFistbumps,
+      emailSource: config.stadium.emailSource,
+      storeUrl: config.stadium.storeUrl,
     };
     originalAdmins = [...config.redemptionAdmins];
     Object.assign(config.stadium, {
       enabled: true,
+      emailSource: "modal",
+      storeUrl: "https://stadium.example/",
       fistbumpsPerUnit: 1,
       pointsPerUnit: 1,
       minimumFistbumps: 1,
@@ -141,6 +156,30 @@ describe("features/stadium-redeem", () => {
     );
   });
 
+  it("surfaces a specific configuration error when the modal cannot be built", async () => {
+    config.stadium.emailSource = "invalid";
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("action", {
+      action_id: "stadium_redeem_open",
+    });
+    const slack = client();
+
+    await handler({
+      ack: sinon.stub().resolves(),
+      body: { user: { id: "U1" }, trigger_id: "trigger" },
+      client: slack,
+    });
+
+    expect(slack.views.open.called).to.equal(false);
+    expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
+      "email settings are invalid",
+    );
+    expect(slack.chat.postMessage.firstCall.args[0].text).not.to.include(
+      "try again",
+    );
+  });
+
   it("keeps the modal open with a validation error for an invalid amount", async () => {
     const { app, findHandler } = createMockApp();
     stadiumFeature(app);
@@ -150,6 +189,30 @@ describe("features/stadium-redeem", () => {
     expect(ack.firstCall.args[0]).to.deep.include({
       response_action: "errors",
     });
+    expect(ack.firstCall.args[0].errors).to.have.property("stadium_amount");
+  });
+
+  it("keeps the modal open with all manual-input validation errors", async () => {
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const ack = sinon.stub().resolves();
+    const redeem = sinon.stub(stadium, "redeem");
+
+    await handler({
+      ack,
+      client: client(),
+      ...submission("1.5", "person@example.com"),
+    });
+
+    expect(ack.firstCall.args[0]).to.deep.equal({
+      response_action: "errors",
+      errors: {
+        stadium_amount: "Enter a valid whole-number fistbump amount.",
+        stadium_email: "Enter a valid @liatrio.com email address.",
+      },
+    });
+    sinon.assert.notCalled(redeem);
   });
 
   it("rejects a stale modal submission when the integration is disabled", async () => {
@@ -169,7 +232,106 @@ describe("features/stadium-redeem", () => {
     );
   });
 
-  it("reads Slack email and fulfills with a deterministic view id", async () => {
+  it("fails closed when the email source is invalid", async () => {
+    config.stadium.emailSource = "fallback";
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const slack = client();
+    const ack = sinon.stub().resolves();
+    const redeem = sinon.stub(stadium, "redeem");
+
+    await handler({ ack, client: slack, ...submission() });
+
+    expect(ack.calledOnce).to.equal(true);
+    expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
+      "email settings are invalid",
+    );
+    sinon.assert.notCalled(redeem);
+  });
+
+  it("rejects a stale Slack-source modal after settings switch to modal", async () => {
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const slack = client();
+    const ack = sinon.stub().resolves();
+    const redeem = sinon.stub(stadium, "redeem");
+    const stale = submission("5", undefined, "slack");
+
+    await handler({ ack, client: slack, ...stale });
+
+    expect(ack.calledWithExactly()).to.equal(true);
+    expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
+      "settings changed",
+    );
+    sinon.assert.notCalled(slack.users.info);
+    sinon.assert.notCalled(redeem);
+  });
+
+  it("supports a legacy modal without email-source metadata", async () => {
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const slack = client();
+    const legacy = submission();
+    delete legacy.view.private_metadata;
+    const redeem = sinon.stub(stadium, "redeem").resolves({
+      status: "fulfilled",
+      stadiumPoints: 5,
+    });
+
+    await handler({
+      ack: sinon.stub().resolves(),
+      client: slack,
+      ...legacy,
+    });
+
+    sinon.assert.calledWith(redeem, {
+      user: "U1",
+      email: "person@liatrio.com",
+      fistbumps: 5,
+      redemptionId: "T1:V1",
+    });
+  });
+
+  it("rejects a stale modal-source modal after settings switch to Slack", async () => {
+    config.stadium.emailSource = "slack";
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const slack = client();
+    const ack = sinon.stub().resolves();
+    const redeem = sinon.stub(stadium, "redeem");
+
+    await handler({ ack, client: slack, ...submission() });
+
+    expect(ack.calledWithExactly()).to.equal(true);
+    expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
+      "settings changed",
+    );
+    sinon.assert.notCalled(slack.users.info);
+    sinon.assert.notCalled(redeem);
+  });
+
+  it("rejects invalid modal metadata and asks the user to reopen", async () => {
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const slack = client();
+    const ack = sinon.stub().resolves();
+    const invalid = submission();
+    invalid.view.private_metadata = "not-json";
+
+    await handler({ ack, client: slack, ...invalid });
+
+    expect(ack.calledWithExactly()).to.equal(true);
+    expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
+      "no longer valid",
+    );
+  });
+
+  it("uses a normalized manual email without reading the Slack profile", async () => {
     const { app, findHandler } = createMockApp();
     stadiumFeature(app);
     const handler = findHandler("view", "stadium_redeem_submit");
@@ -180,8 +342,48 @@ describe("features/stadium-redeem", () => {
     });
     const slack = client();
     const ack = sinon.stub().resolves();
-    await handler({ ack, client: slack, ...submission() });
+    await handler({
+      ack,
+      client: slack,
+      ...submission("5", " Person@Liatrio.com "),
+    });
     expect(ack.calledOnce).to.equal(true);
+    sinon.assert.notCalled(slack.users.info);
+    sinon.assert.calledWith(stadium.redeem, {
+      user: "U1",
+      email: "person@liatrio.com",
+      fistbumps: 5,
+      redemptionId: "T1:V1",
+    });
+    const message = slack.chat.postMessage.firstCall.args[0].text;
+    expect(message).to.include(
+      "5 fistbumps were exchanged for 5 Stadium points and sent to person@liatrio.com.",
+    );
+    expect(message).to.include("Your Stadium gift is ready to redeem");
+    expect(message).to.include("<https://stadium.example/|Open Stadium>");
+    expect(message).to.include("select *Redeem Gift*");
+    expect(message).not.to.include("SSO");
+  });
+
+  it("retains automatic Slack email lookup when configured", async () => {
+    config.stadium.emailSource = "slack";
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    sinon.stub(stadium, "redeem").resolves({
+      status: "fulfilled",
+      stadiumPoints: 5,
+      orderNumber: "ORDER",
+    });
+    const slack = client();
+
+    await handler({
+      ack: sinon.stub().resolves(),
+      client: slack,
+      ...submission("5", undefined, "slack"),
+    });
+
+    sinon.assert.calledWithExactly(slack.users.info, { user: "U1" });
     sinon.assert.calledWith(stadium.redeem, {
       user: "U1",
       email: "person@liatrio.com",
@@ -189,8 +391,31 @@ describe("features/stadium-redeem", () => {
       redemptionId: "T1:V1",
     });
     expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
-      "5 Stadium points",
+      "sent to person@liatrio.com",
     );
+  });
+
+  it("uses plain Open Stadium text when no store URL is configured", async () => {
+    config.stadium.storeUrl = "";
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    sinon.stub(stadium, "redeem").resolves({
+      status: "fulfilled",
+      stadiumPoints: 5,
+    });
+    const slack = client();
+
+    await handler({
+      ack: sinon.stub().resolves(),
+      client: slack,
+      ...submission(),
+    });
+
+    expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
+      "Open Stadium and select *Redeem Gift*",
+    );
+    expect(slack.chat.postMessage.firstCall.args[0].text).not.to.include("<");
   });
 
   it("does not expose internal errors to the user", async () => {
@@ -240,30 +465,29 @@ describe("features/stadium-redeem", () => {
     );
   });
 
-  it("surfaces the safe corporate-email requirement", async () => {
+  it("returns the safe corporate-email requirement inline", async () => {
     const { app, findHandler } = createMockApp();
     stadiumFeature(app);
     const handler = findHandler("view", "stadium_redeem_submit");
-    sinon.stub(stadium, "redeem").rejects(
-      new stadium.StadiumError("internal validation detail", "definite", {
-        userMessage:
-          "Stadium redemption requires a liatrio.com email in your Slack profile.",
-      }),
-    );
+    const redeem = sinon.stub(stadium, "redeem");
     const slack = client();
+    const ack = sinon.stub().resolves();
 
     await handler({
-      ack: sinon.stub().resolves(),
+      ack,
       client: slack,
-      ...submission(),
+      ...submission("5", "person@example.com"),
     });
 
-    expect(slack.chat.postMessage.firstCall.args[0].text).to.equal(
-      "Stadium redemption requires a liatrio.com email in your Slack profile.",
+    expect(ack.firstCall.args[0].errors.stadium_email).to.equal(
+      "Enter a valid @liatrio.com email address.",
     );
+    sinon.assert.notCalled(redeem);
+    sinon.assert.notCalled(slack.chat.postMessage);
   });
 
   it("does not describe a Slack profile lookup failure as uncertain", async () => {
+    config.stadium.emailSource = "slack";
     const { app, findHandler } = createMockApp();
     stadiumFeature(app);
     const handler = findHandler("view", "stadium_redeem_submit");
@@ -274,7 +498,7 @@ describe("features/stadium-redeem", () => {
     await handler({
       ack: sinon.stub().resolves(),
       client: slack,
-      ...submission(),
+      ...submission("5", undefined, "slack"),
     });
 
     sinon.assert.notCalled(redeem);
@@ -283,6 +507,53 @@ describe("features/stadium-redeem", () => {
     );
     expect(slack.chat.postMessage.firstCall.args[0].text).not.to.include(
       "final status",
+    );
+  });
+
+  it("directs an invalid Slack profile email back to the profile", async () => {
+    config.stadium.emailSource = "slack";
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const slack = client();
+    slack.users.info.resolves({
+      ok: true,
+      user: { profile: { email: "person@example.com" } },
+    });
+    const redeem = sinon.stub(stadium, "redeem");
+
+    await handler({
+      ack: sinon.stub().resolves(),
+      client: slack,
+      ...submission("5", undefined, "slack"),
+    });
+
+    sinon.assert.notCalled(redeem);
+    const message = slack.chat.postMessage.firstCall.args[0].text;
+    expect(message).to.include(
+      "Slack profile must contain a valid @liatrio.com email address",
+    );
+    expect(message).not.to.include("Enter a valid");
+  });
+
+  it("does not redeem when Slack returns no profile email", async () => {
+    config.stadium.emailSource = "slack";
+    const { app, findHandler } = createMockApp();
+    stadiumFeature(app);
+    const handler = findHandler("view", "stadium_redeem_submit");
+    const slack = client();
+    slack.users.info.resolves({ ok: true, user: { profile: {} } });
+    const redeem = sinon.stub(stadium, "redeem");
+
+    await handler({
+      ack: sinon.stub().resolves(),
+      client: slack,
+      ...submission("5", undefined, "slack"),
+    });
+
+    sinon.assert.notCalled(redeem);
+    expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
+      "couldn't read your corporate email",
     );
   });
 
@@ -345,7 +616,7 @@ describe("features/stadium-redeem", () => {
     });
 
     expect(slack.chat.postMessage.firstCall.args[0].text).to.include(
-      "confirmed the points",
+      "confirmed the paid order",
     );
     expect(slack.chat.postMessage.secondCall.args[0]).to.include({
       channel: "UA",

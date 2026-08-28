@@ -24,6 +24,7 @@ describe("service/stadium", () => {
       paymentMethod: "use_wallet_money",
       billingCountry: "US",
       billingZipcode: "60601",
+      emailSource: "modal",
       fistbumpsPerUnit: 2,
       pointsPerUnit: 5,
       minimumFistbumps: 2,
@@ -51,8 +52,17 @@ describe("service/stadium", () => {
     try {
       stadium.normalizeCorporateEmail("contractor@example.com");
     } catch (error) {
-      expect(error.userMessage).to.include("liatrio.com email");
+      expect(error.userMessage).to.include("@liatrio.com email");
     }
+  });
+
+  it("accepts only the documented email sources", () => {
+    expect(stadium.validateEmailSource("modal")).to.equal("modal");
+    expect(stadium.validateEmailSource("slack")).to.equal("slack");
+    expect(() => stadium.validateEmailSource("fallback")).to.throw(
+      stadium.StadiumError,
+      "Invalid Stadium email source.",
+    );
   });
 
   it("converts configured whole conversion units and rejects invalid amounts", () => {
@@ -107,7 +117,16 @@ describe("service/stadium", () => {
   it("builds a whole-number modal capped by current balance", () => {
     const modal = stadium.buildRedemptionModal(12);
     expect(modal.callback_id).to.equal("stadium_redeem_submit");
-    const input = modal.blocks[1].element;
+    expect(JSON.parse(modal.private_metadata)).to.deep.equal({
+      emailSource: "modal",
+    });
+    const email = modal.blocks.find(
+      (block) => block.block_id === "stadium_email",
+    );
+    expect(email.element.type).to.equal("email_text_input");
+    const input = modal.blocks.find(
+      (block) => block.block_id === "stadium_amount",
+    ).element;
     expect(input.type).to.equal("number_input");
     expect(input.is_decimal_allowed).to.equal(false);
     expect(input.min_value).to.equal("2");
@@ -120,7 +139,21 @@ describe("service/stadium", () => {
     expect(modal.blocks[0].text.text).to.include(
       "balance will be checked when you submit",
     );
-    expect(modal.blocks[1].element).not.to.have.property("max_value");
+    const input = modal.blocks.find(
+      (block) => block.block_id === "stadium_amount",
+    ).element;
+    expect(input).not.to.have.property("max_value");
+  });
+
+  it("omits the email field when Slack supplies the address", () => {
+    config.stadium.emailSource = "slack";
+    const modal = stadium.buildRedemptionModal();
+    expect(JSON.parse(modal.private_metadata)).to.deep.equal({
+      emailSource: "slack",
+    });
+    expect(
+      modal.blocks.some((block) => block.block_id === "stadium_email"),
+    ).to.equal(false);
   });
 
   it("authenticates, caches the token, and sends the expected points payload", async () => {

@@ -44,6 +44,7 @@ const stadiumMaximumFistbumps = process.env.STADIUM_MAX_FISTBUMPS?.trim();
 
 config.stadium = {
   enabled: process.env.STADIUM_ENABLED === "true",
+  emailSource: process.env.STADIUM_EMAIL_SOURCE || "modal",
   apiBaseUrl:
     process.env.STADIUM_API_BASE_URL ||
     "https://api.preprod.bystadium.com/api/v2",

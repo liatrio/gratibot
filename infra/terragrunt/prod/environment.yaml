@@ -5,9 +5,10 @@ environment: "prod"
 instance_capacity: "2"
 key_vault_name: "gratibot-p"
 stadium_enabled: false
+stadium_email_source: "modal"
 stadium_api_base_url: "https://api.bystadium.com/api/v2"
 stadium_store_number: "" # TODO: Set the production global organization store number.
-stadium_store_url: "" # TODO: Set the production Stadium SSO store URL.
+stadium_store_url: "" # TODO: Set the production Stadium URL.
 stadium_payment_method: "" # TODO: Set use_wallet_money, use_global_point, or both comma-separated.
 stadium_billing_country: "" # TODO: Set the production billing country ISO code.
 stadium_billing_zipcode: "" # TODO: Set the production billing postal code.

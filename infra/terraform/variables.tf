@@ -86,6 +86,17 @@ variable "stadium_enabled" {
   default     = false
 }
 
+variable "stadium_email_source" {
+  description = "Source for the Stadium recipient email: modal input or Slack profile"
+  type        = string
+  default     = "modal"
+
+  validation {
+    condition     = contains(["modal", "slack"], var.stadium_email_source)
+    error_message = "stadium_email_source must be modal or slack."
+  }
+}
+
 variable "stadium_api_base_url" {
   description = "Stadium API v2 base URL"
   type        = string
@@ -99,7 +110,7 @@ variable "stadium_store_number" {
 }
 
 variable "stadium_store_url" {
-  description = "Stadium SSO store URL shown after fulfillment"
+  description = "Stadium URL shown after successful order creation"
   type        = string
   default     = ""
 }

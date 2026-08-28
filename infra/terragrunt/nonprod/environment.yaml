@@ -3,6 +3,7 @@ gratibot_self_recognize_emoji: ":nonprod-self-fistbump:"
 gratibot_log_level: "debug"
 # Enabled after reinstalling the Slack app and completing the nonprod checks.
 stadium_enabled: true
+stadium_email_source: "modal"
 stadium_api_base_url: "https://api.preprod.bystadium.com/api/v2"
 stadium_store_number: "S508013635"
 stadium_store_url: "https://app.preprod.bystadium.com/"

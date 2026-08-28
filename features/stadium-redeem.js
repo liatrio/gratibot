@@ -41,12 +41,23 @@ async function openRedemptionModal({ ack, body, client }) {
       callingUser: body.user.id,
       error: error.message,
     });
-    await notifyUser(
-      client,
-      body.user.id,
-      "I couldn't open the Stadium redemption form. Please try again or contact an admin.",
-    );
+    const message =
+      error instanceof stadium.StadiumError && error.userMessage
+        ? error.userMessage
+        : "I couldn't open the Stadium redemption form. Please try again or contact an admin.";
+    await notifyUser(client, body.user.id, message);
   }
+}
+
+function emailSourceFromView(view) {
+  if (view.private_metadata) {
+    const metadata = JSON.parse(view.private_metadata);
+    if (!metadata || typeof metadata.emailSource !== "string") {
+      throw new Error("Missing Stadium email source metadata");
+    }
+    return stadium.validateEmailSource(metadata.emailSource);
+  }
+  return view.state.values.stadium_email ? "modal" : "slack";
 }
 
 async function submitRedemption({ ack, body, view, client }) {
@@ -59,49 +70,107 @@ async function submitRedemption({ ack, body, view, client }) {
     );
     return;
   }
+  let currentEmailSource;
+  try {
+    currentEmailSource = stadium.validateEmailSource();
+  } catch (error) {
+    await ack();
+    await notifyUser(
+      client,
+      body.user.id,
+      error.userMessage || "Stadium redemption is currently unavailable.",
+    );
+    return;
+  }
+  let emailSource;
+  try {
+    emailSource = emailSourceFromView(view);
+  } catch {
+    await ack();
+    await notifyUser(
+      client,
+      body.user.id,
+      "This Stadium redemption form is no longer valid. Please reopen it and try again.",
+    );
+    return;
+  }
+  if (emailSource !== currentEmailSource) {
+    await ack();
+    await notifyUser(
+      client,
+      body.user.id,
+      "Stadium redemption settings changed while this form was open. Please reopen it and try again.",
+    );
+    return;
+  }
+  const errors = {};
   const amount = Number(
     view.state.values.stadium_amount.stadium_amount_value.value,
   );
   try {
     stadium.fistbumpsToPoints(amount);
   } catch (error) {
-    await ack({
-      response_action: "errors",
-      errors: { stadium_amount: error.userMessage || error.message },
-    });
+    errors.stadium_amount = error.userMessage || error.message;
+  }
+  let corporateEmail;
+  if (emailSource === "modal") {
+    try {
+      corporateEmail = stadium.normalizeCorporateEmail(
+        view.state.values.stadium_email?.stadium_email_value?.value,
+      );
+    } catch (error) {
+      errors.stadium_email = error.userMessage || error.message;
+    }
+  }
+  if (Object.keys(errors).length) {
+    await ack({ response_action: "errors", errors });
     return;
   }
   await ack();
   const user = body.user.id;
-  let userInfo;
-  try {
-    userInfo = await client.users.info({ user });
-  } catch (error) {
-    winston.error("Reading Slack email for Stadium redemption failed", {
-      func: "feature.stadium-redeem.submitRedemption.usersInfo",
-      callingUser: user,
-      error: error.message,
-    });
-    await notifyUser(
-      client,
-      user,
-      "I couldn't read your corporate email from Slack. Check your profile or contact a Gratibot admin.",
-    );
-    return;
-  }
-  if (!userInfo.ok || !userInfo.user?.profile?.email) {
-    await notifyUser(
-      client,
-      user,
-      "I couldn't read your corporate email from Slack. Check your profile or contact a Gratibot admin.",
-    );
-    return;
+  if (emailSource === "slack") {
+    let userInfo;
+    try {
+      userInfo = await client.users.info({ user });
+    } catch (error) {
+      winston.error("Reading Slack email for Stadium redemption failed", {
+        func: "feature.stadium-redeem.submitRedemption.usersInfo",
+        callingUser: user,
+        error: error.message,
+      });
+      await notifyUser(
+        client,
+        user,
+        "I couldn't read your corporate email from Slack. Check your profile or contact a Gratibot admin.",
+      );
+      return;
+    }
+    if (!userInfo.ok || !userInfo.user?.profile?.email) {
+      await notifyUser(
+        client,
+        user,
+        "I couldn't read your corporate email from Slack. Check your profile or contact a Gratibot admin.",
+      );
+      return;
+    }
+    try {
+      corporateEmail = stadium.normalizeCorporateEmail(
+        userInfo.user.profile.email,
+      );
+    } catch {
+      await notifyUser(
+        client,
+        user,
+        "Your Slack profile must contain a valid @liatrio.com email address. Update your profile or contact a Gratibot admin.",
+      );
+      return;
+    }
   }
   let result;
   try {
     result = await stadium.redeem({
       user,
-      email: userInfo.user.profile.email,
+      email: corporateEmail,
       fistbumps: amount,
       redemptionId: `${body.team?.id || "team"}:${view.id}`,
     });
@@ -119,7 +188,7 @@ async function submitRedemption({ ack, body, view, client }) {
     return;
   }
   try {
-    await handleResult(client, user, amount, result);
+    await handleResult(client, user, amount, corporateEmail, result);
   } catch (error) {
     winston.error("Reporting Stadium redemption result failed", {
       func: "feature.stadium-redeem.submitRedemption",
@@ -140,7 +209,7 @@ async function submitRedemption({ ack, body, view, client }) {
   }
 }
 
-async function handleResult(client, user, amount, result) {
+async function handleResult(client, user, amount, corporateEmail, result) {
   const messages = {
     insufficient:
       "Your current balance is no longer high enough for that redemption.",
@@ -151,16 +220,16 @@ async function handleResult(client, user, amount, result) {
     needs_review:
       "Stadium's result was uncertain. Your fistbumps are held while an admin reviews it; Gratibot will not retry automatically.",
     resolution_conflict:
-      "Stadium confirmed the points after this redemption had already been resolved locally. Do not retry; a Gratibot admin has been notified.",
+      "Stadium confirmed the paid order after this redemption had already been resolved locally. Do not retry; a Gratibot admin has been notified.",
   };
   if (result.status === "fulfilled") {
     const link = config.stadium.storeUrl
-      ? ` Sign in with SSO at <${config.stadium.storeUrl}|Stadium>.`
-      : " Sign in to Stadium with SSO to use them.";
+      ? `<${config.stadium.storeUrl}|Open Stadium>`
+      : "Open Stadium";
     await notifyUser(
       client,
       user,
-      `${amount} fistbumps were exchanged for ${result.stadiumPoints} Stadium points.${link}${result.orderNumber ? ` Order: \`${result.orderNumber}\`` : ""}`,
+      `${amount} fistbumps were exchanged for ${result.stadiumPoints} Stadium points and sent to ${corporateEmail}. Your Stadium gift is ready to redeem. ${link} and select *Redeem Gift*.${result.orderNumber ? ` Order: \`${result.orderNumber}\`` : ""}`,
     );
     return;
   }

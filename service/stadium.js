@@ -6,6 +6,7 @@ const deductionCollection = require("../database/deductionCollection");
 const { randomUUID } = require("crypto");
 
 const CORPORATE_DOMAIN = "liatrio.com";
+const EMAIL_SOURCES = ["modal", "slack"];
 const REQUEST_TIMEOUT_MS = 10000;
 const REVIEW_NOTIFICATION_CLAIM_MS = 5 * 60 * 1000;
 const REVIEW_NOTIFICATION_RETRY_MS = 15 * 60 * 1000;
@@ -48,7 +49,18 @@ function validateConfiguration(stadiumConfig = config.stadium) {
   ) {
     throw new StadiumError("Invalid Stadium payment method.", "definite");
   }
+  validateEmailSource(stadiumConfig.emailSource);
   validateConversionConfiguration(stadiumConfig);
+}
+
+function validateEmailSource(emailSource = config.stadium.emailSource) {
+  if (!EMAIL_SOURCES.includes(emailSource)) {
+    throw new StadiumError("Invalid Stadium email source.", "definite", {
+      userMessage:
+        "Stadium redemption is unavailable because its email settings are invalid. Please contact a Gratibot admin.",
+    });
+  }
+  return emailSource;
 }
 
 function validateConversionConfiguration(stadiumConfig = config.stadium) {
@@ -88,10 +100,10 @@ function normalizeCorporateEmail(email) {
   const parts = normalized.split("@");
   if (parts.length !== 2 || !parts[0] || parts[1] !== CORPORATE_DOMAIN) {
     throw new StadiumError(
-      `Redemption requires a ${CORPORATE_DOMAIN} Slack profile email.`,
+      `Redemption requires an @${CORPORATE_DOMAIN} email address.`,
       "definite",
       {
-        userMessage: `Stadium redemption requires a ${CORPORATE_DOMAIN} email in your Slack profile.`,
+        userMessage: `Enter a valid @${CORPORATE_DOMAIN} email address.`,
       },
     );
   }
@@ -127,6 +139,7 @@ function buildRedemptionModal(
   currentBalance = null,
   stadiumConfig = config.stadium,
 ) {
+  const emailSource = validateEmailSource(stadiumConfig.emailSource);
   validateConversionConfiguration(stadiumConfig);
   const hasCurrentBalance = Number.isSafeInteger(currentBalance);
   const configuredMaximum = stadiumConfig.maximumFistbumps;
@@ -141,6 +154,7 @@ function buildRedemptionModal(
   return {
     type: "modal",
     callback_id: "stadium_redeem_submit",
+    private_metadata: JSON.stringify({ emailSource }),
     title: { type: "plain_text", text: "Stadium redemption" },
     submit: { type: "plain_text", text: "Redeem" },
     close: { type: "plain_text", text: "Cancel" },
@@ -149,9 +163,33 @@ function buildRedemptionModal(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Exchange fistbumps for Stadium points, then use your Liatrio SSO account at Stadium.${balanceText}\n*Rate:* ${stadiumConfig.fistbumpsPerUnit} fistbump(s) = ${stadiumConfig.pointsPerUnit} Stadium point(s)`,
+          text: `Exchange fistbumps for Stadium points. After your gift is created, open Stadium and select *Redeem Gift* to add the points to your account.${balanceText}\n*Rate:* ${stadiumConfig.fistbumpsPerUnit} fistbump(s) = ${stadiumConfig.pointsPerUnit} Stadium point(s)`,
         },
       },
+      ...(emailSource === "modal"
+        ? [
+            {
+              type: "input",
+              block_id: "stadium_email",
+              label: {
+                type: "plain_text",
+                text: "Your Liatrio email address",
+              },
+              hint: {
+                type: "plain_text",
+                text: "Enter your own @liatrio.com email address.",
+              },
+              element: {
+                type: "email_text_input",
+                action_id: "stadium_email_value",
+                placeholder: {
+                  type: "plain_text",
+                  text: "name@liatrio.com",
+                },
+              },
+            },
+          ]
+        : []),
       {
         type: "input",
         block_id: "stadium_amount",
@@ -658,6 +696,7 @@ function resetTokenCache() {
 
 module.exports = {
   StadiumError,
+  validateEmailSource,
   normalizeCorporateEmail,
   fistbumpsToPoints,
   buildRedemptionModal,

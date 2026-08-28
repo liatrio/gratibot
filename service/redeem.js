@@ -36,7 +36,7 @@ function stadiumRedemption() {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: "*Stadium points*\nExchange a whole-number amount of fistbumps for points in your Stadium account.",
+      text: "*Stadium points*\nExchange fistbumps for points in your Stadium account.",
     },
     accessory: {
       type: "button",

@@ -50,6 +50,7 @@ resource "azurerm_linux_web_app" "gratibot_app_service" {
     "LOG_LEVEL"                   = var.gratibot_log_level
     "GRATIBOT_LIMIT"              = var.gratibot_limit
     "STADIUM_ENABLED"             = tostring(var.stadium_enabled)
+    "STADIUM_EMAIL_SOURCE"        = var.stadium_email_source
     "STADIUM_API_BASE_URL"        = var.stadium_api_base_url
     "STADIUM_CLIENT_ID"           = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault.gratibot.vault_uri}secrets/stadium-client-id)"
     "STADIUM_CLIENT_SECRET"       = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault.gratibot.vault_uri}secrets/stadium-client-secret)"

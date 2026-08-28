@@ -126,7 +126,7 @@ native Collection object used directly by services.
   // Stadium deductions additionally contain:
   source: "stadium",
   status: "reserved" | "sending" | "fulfilled" | "failed" | "needs_review" | "refunded",
-  corporateEmail: String,
+  corporateEmail: String, // normalized modal input or Slack profile email
   stadiumPoints: Number,
   ratio: { fistbumpsPerUnit: Number, pointsPerUnit: Number },
   updatedAt: Date,

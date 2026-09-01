@@ -4,15 +4,15 @@ state_storage_account: "gratibotazuredatatfpd"
 environment: "prod"
 instance_capacity: "2"
 key_vault_name: "gratibot-p"
-stadium_enabled: false
-stadium_email_source: "modal"
+stadium_enabled: true
+stadium_email_source: "slack"
 stadium_api_base_url: "https://api.bystadium.com/api/v2"
-stadium_store_number: "" # TODO: Set the production global organization store number.
-stadium_store_url: "" # TODO: Set the production Stadium URL.
-stadium_payment_method: "" # TODO: Set use_wallet_money, use_global_point, or both comma-separated.
-stadium_billing_country: "" # TODO: Set the production billing country ISO code.
-stadium_billing_zipcode: "" # TODO: Set the production billing postal code.
-stadium_fistbumps_per_unit: 1
+stadium_store_number: "S689644909"
+stadium_store_url: "https://app.bystadium.com/"
+stadium_payment_method: "use_wallet_money"
+stadium_billing_country: "US"
+stadium_billing_zipcode: "95928"
+stadium_fistbumps_per_unit: 2
 stadium_points_per_unit: 1
-stadium_min_fistbumps: 1
+stadium_min_fistbumps: 2
 stadium_max_fistbumps: "" # Empty means the employee's current balance is the maximum.

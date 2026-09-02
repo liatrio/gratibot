@@ -38,6 +38,27 @@ describe("integration: service/deduction", function () {
     sinon.restore();
   });
 
+  describe("indexes", () => {
+    it("uses Cosmos-compatible single-field indexes for Stadium review filters", async () => {
+      const indexKeys = (await deductionCollection.indexes()).map(
+        (index) => index.key,
+      );
+
+      expect(indexKeys).to.deep.include({ source: 1 });
+      expect(indexKeys).to.deep.include({ status: 1 });
+      expect(indexKeys).to.deep.include({
+        "reviewNotification.nextAttemptAt": 1,
+      });
+      expect(
+        indexKeys.some(
+          (key) =>
+            Object.hasOwn(key, "reviewNotification.nextAttemptAt") &&
+            Object.keys(key).length > 1,
+        ),
+      ).to.equal(false);
+    });
+  });
+
   describe("isBalanceSufficient", () => {
     it("should return true when the user's balance is at least the deduction value", async () => {
       await recognitionCollection.insertMany([

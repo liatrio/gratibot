@@ -15,6 +15,14 @@
       "automerge": true,
       "autoApprove": true,
       "groupName": "Dependencies (non-major)"
+    },
+    {
+      "description": [
+        "Keep the MongoDB driver compatible with Cosmos Mongo API 4.2 until Cosmos is upgraded to 5.0 or newer"
+      ],
+      "matchPackageNames": ["mongodb"],
+      "allowedVersions": "<7.6.0",
+      "rangeStrategy": "pin"
     }
   ]
 }

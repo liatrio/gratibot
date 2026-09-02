@@ -1,6 +1,7 @@
 const sinon = require("sinon");
 const expect = require("chai").expect;
 const redeem = require("../../service/redeem");
+const config = require("../../config");
 const rewardCollection = require("../../database/rewardCollection");
 
 function stubFindSortToArray(results) {
@@ -115,6 +116,20 @@ describe("service/redeem", () => {
       const selector = blocks[blocks.length - 1];
       const optionNames = selector.accessory.options.map((o) => o.text.text);
       expect(optionNames).to.deep.equal(["Alpha", "Bravo", "Charlie"]);
+    });
+
+    it("adds Stadium as a separate enabled reward category", () => {
+      const original = config.stadium.enabled;
+      config.stadium.enabled = true;
+      try {
+        const blocks = redeem.buildRedeemBlocks([], 10);
+        const stadiumBlock = blocks.find(
+          (block) => block.accessory?.action_id === "stadium_redeem_open",
+        );
+        expect(stadiumBlock.text.text).to.include("Stadium points");
+      } finally {
+        config.stadium.enabled = original;
+      }
     });
   });
 

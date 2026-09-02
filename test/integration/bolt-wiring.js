@@ -12,9 +12,14 @@ const { NoOpReceiver } = require("../mocks/bolt-receiver");
 
 let balanceFeature;
 let recognizeFeature;
+let refundFeature;
+let stadiumFeature;
 let balance;
 let recognition;
 let apiwrappers;
+let deduction;
+let stadium;
+let config;
 let GratitudeError;
 
 function attachClientStubs(app) {
@@ -42,7 +47,12 @@ function attachClientStubs(app) {
   return stubs;
 }
 
-function makeApp({ withBalance = false, withRecognize = false } = {}) {
+function makeApp({
+  withBalance = false,
+  withRecognize = false,
+  withRefund = false,
+  withStadium = false,
+} = {}) {
   const app = new App({
     receiver: new NoOpReceiver(),
     token: "xoxb-test",
@@ -52,6 +62,8 @@ function makeApp({ withBalance = false, withRecognize = false } = {}) {
   });
   if (withBalance) balanceFeature(app);
   if (withRecognize) recognizeFeature(app);
+  if (withRefund) refundFeature(app);
+  if (withStadium) stadiumFeature(app);
   const stubs = attachClientStubs(app);
   return { app, stubs };
 }
@@ -80,9 +92,14 @@ describe("integration: bolt-wiring", function () {
   before(() => {
     balanceFeature = require("../../features/balance");
     recognizeFeature = require("../../features/recognize");
+    refundFeature = require("../../features/refund");
+    stadiumFeature = require("../../features/stadium-redeem");
     balance = require("../../service/balance");
     recognition = require("../../service/recognition");
     apiwrappers = require("../../service/apiwrappers");
+    deduction = require("../../service/deduction");
+    stadium = require("../../service/stadium");
+    config = require("../../config");
     ({ GratitudeError } = require("../../service/errors"));
   });
 
@@ -170,6 +187,156 @@ describe("integration: bolt-wiring", function () {
 
       expect(balance.currentBalance.callCount).to.equal(0);
       expect(stubs.postMessage.callCount).to.equal(0);
+    });
+  });
+
+  describe("refund command routing", () => {
+    it("keeps refund prose out of the Stadium resolution handler", async () => {
+      const originalAdmins = [...config.redemptionAdmins];
+      config.redemptionAdmins.splice(
+        0,
+        config.redemptionAdmins.length,
+        "Ucaller",
+      );
+      try {
+        const { app, stubs } = makeApp({
+          withRefund: true,
+          withStadium: true,
+        });
+        const genericRefund = sinon.stub(deduction, "refundDeduction");
+        const stadiumResolve = sinon.stub(stadium, "resolveRedemption");
+
+        await app.processEvent({
+          body: eventBody({
+            channelType: "im",
+            channel: "Ddm",
+            text: "refund 62171d78b5daaa0011771cfd — not the stadium resolve path",
+            ts: "2.0",
+            eventId: "Ev-refund-prose",
+          }),
+          ack: sinon.stub(),
+        });
+
+        sinon.assert.notCalled(genericRefund);
+        sinon.assert.notCalled(stadiumResolve);
+        expect(stubs.postMessage.callCount).to.equal(1);
+        expect(stubs.postMessage.firstCall.args[0].text).to.equal(
+          "Usage: `refund <deduction-id>`",
+        );
+      } finally {
+        config.redemptionAdmins.splice(
+          0,
+          config.redemptionAdmins.length,
+          ...originalAdmins,
+        );
+      }
+    });
+
+    it("routes a generic refund command after a newline", async () => {
+      const originalAdmins = [...config.redemptionAdmins];
+      config.redemptionAdmins.splice(
+        0,
+        config.redemptionAdmins.length,
+        "Ucaller",
+      );
+      try {
+        const { app } = makeApp({ withRefund: true });
+        const genericRefund = sinon
+          .stub(deduction, "refundDeduction")
+          .resolves({ status: "refunded" });
+
+        await app.processEvent({
+          body: eventBody({
+            channelType: "im",
+            channel: "Ddm",
+            text: "Refunding this one:\nrefund 62171d78b5daaa0011771cfd",
+            ts: "2.1",
+            eventId: "Ev-multiline-refund",
+          }),
+          ack: sinon.stub(),
+        });
+
+        sinon.assert.calledWith(genericRefund, "62171d78b5daaa0011771cfd");
+      } finally {
+        config.redemptionAdmins.splice(
+          0,
+          config.redemptionAdmins.length,
+          ...originalAdmins,
+        );
+      }
+    });
+
+    it("routes malformed refunds to the usage response", async () => {
+      const originalAdmins = [...config.redemptionAdmins];
+      config.redemptionAdmins.splice(
+        0,
+        config.redemptionAdmins.length,
+        "Ucaller",
+      );
+      try {
+        const { app, stubs } = makeApp({ withRefund: true });
+        const genericRefund = sinon.stub(deduction, "refundDeduction");
+
+        await app.processEvent({
+          body: eventBody({
+            channelType: "im",
+            channel: "Ddm",
+            text: "refund 1234",
+            ts: "2.2",
+            eventId: "Ev-malformed-refund",
+          }),
+          ack: sinon.stub(),
+        });
+
+        sinon.assert.notCalled(genericRefund);
+        expect(stubs.postMessage.firstCall.args[0].text).to.include("Usage:");
+      } finally {
+        config.redemptionAdmins.splice(
+          0,
+          config.redemptionAdmins.length,
+          ...originalAdmins,
+        );
+      }
+    });
+
+    it("does not send a Stadium resolution through the generic refund handler", async () => {
+      const originalAdmins = [...config.redemptionAdmins];
+      config.redemptionAdmins.splice(
+        0,
+        config.redemptionAdmins.length,
+        "Ucaller",
+      );
+      try {
+        const { app, stubs } = makeApp({
+          withRefund: true,
+          withStadium: true,
+        });
+        const genericRefund = sinon.stub(deduction, "refundDeduction");
+        sinon
+          .stub(stadium, "resolveRedemption")
+          .resolves({ status: "not_found" });
+
+        await app.processEvent({
+          body: eventBody({
+            channelType: "im",
+            channel: "Ddm",
+            text: "stadium resolve stadium:T1:V1 refund",
+            ts: "2.2",
+            eventId: "Ev-stadium-refund",
+          }),
+          ack: sinon.stub(),
+        });
+
+        expect(genericRefund.called).to.equal(false);
+        expect(stadium.resolveRedemption.calledOnce).to.equal(true);
+        expect(stubs.postMessage.callCount).to.equal(1);
+      } finally {
+        config.redemptionAdmins.splice(
+          0,
+          config.redemptionAdmins.length,
+          ...originalAdmins,
+        );
+      }
     });
   });
 

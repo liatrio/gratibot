@@ -4,7 +4,7 @@ const refund = require("../service/refund");
 
 module.exports = function (app) {
   app.message(
-    /refund/i,
+    /^(?!.*\bstadium\s+resolve\b.*\brefund\b).*\brefund\b/is,
     anyOf(directMention, directMessage),
     refund.respondToRefund,
   );

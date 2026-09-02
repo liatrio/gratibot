@@ -23,6 +23,11 @@ function buildClient() {
 const USER_REDEEM_MATCHER = /redeem/i;
 
 describe("features/redeem", () => {
+  beforeEach(() => {
+    sinon.stub(deduction, "acquireLock").resolves({ acquired: true });
+    sinon.stub(deduction, "releaseLock").resolves();
+  });
+
   afterEach(() => {
     sinon.restore();
   });
@@ -166,6 +171,28 @@ describe("features/redeem", () => {
       expect(text).to.include("Please provide the link");
     });
 
+    it("should retain the balance guard for a priced Liatrio Store reward", async () => {
+      const { app, findHandler } = createMockApp();
+      redeemFeature(app);
+      const actionHandler = findHandler("action", { action_id: "redeem" });
+      sinon.stub(redeem, "fetchActiveRewardById").resolves({
+        _id: "R-store",
+        name: "Liatrio Store",
+        cost: 20,
+        kind: "liatrio-store",
+      });
+      sinon.stub(deduction, "isBalanceSufficient").resolves(false);
+      const client = buildClient();
+      await actionHandler({
+        ack: sinon.stub().resolves(),
+        body: bodyWithRewardId("R-store"),
+        context: { botToken: "xoxb" },
+        client,
+      });
+      expect(client.conversations.open.called).to.equal(false);
+      expect(client.chat.postEphemeral.calledOnce).to.equal(true);
+    });
+
     it("should call createDeduction for a regular (non-Liatrio-Store) kind", async () => {
       const { app, findHandler } = createMockApp();
       redeemFeature(app);
@@ -263,6 +290,35 @@ describe("features/redeem", () => {
       expect(client.chat.postEphemeral.calledOnce).to.equal(true);
       expect(client.chat.postEphemeral.firstCall.args[0].text).to.include(
         "Your current balance isn't high enough",
+      );
+    });
+
+    it("should explain when a Stadium review blocks another reward", async () => {
+      const { app, findHandler } = createMockApp();
+      redeemFeature(app);
+      const actionHandler = findHandler("action", { action_id: "redeem" });
+      sinon.stub(redeem, "fetchActiveRewardById").resolves({
+        _id: "R-review",
+        name: "Sticker",
+        cost: 5,
+        kind: null,
+      });
+      deduction.acquireLock.resolves({
+        acquired: false,
+        reason: "stadium-review",
+        operationId: "stadium:T1:V1",
+      });
+      const client = buildClient();
+
+      await actionHandler({
+        ack: sinon.stub().resolves(),
+        body: bodyWithRewardId("R-review"),
+        context: { botToken: "xoxb" },
+        client,
+      });
+
+      expect(client.chat.postEphemeral.firstCall.args[0].text).to.include(
+        "awaiting admin review",
       );
     });
 

@@ -27,7 +27,24 @@ function buildRedeemBlocks(rewards, currentBalance) {
     redeemHelpText(currentBalance),
     ...redeemItems(rewards),
     redeemSelector(rewards),
+    ...(config.stadium.enabled ? [stadiumRedemption()] : []),
   ];
+}
+
+function stadiumRedemption() {
+  return {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: "*Stadium points*\nExchange fistbumps for points in your Stadium account.",
+    },
+    accessory: {
+      type: "button",
+      action_id: "stadium_redeem_open",
+      text: { type: "plain_text", text: "Redeem with Stadium" },
+      style: "primary",
+    },
+  };
 }
 
 function redeemHeader() {
@@ -138,4 +155,5 @@ module.exports = {
   redeemHelpText,
   redeemItems,
   redeemSelector,
+  stadiumRedemption,
 };

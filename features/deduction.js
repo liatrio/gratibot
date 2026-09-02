@@ -58,22 +58,38 @@ async function respondToDeduction({ message, client }) {
   const user = messageText[2].match(userRegex)[1];
   const value = +messageText[3];
 
-  if (!(await deduction.isBalanceSufficient(user, value))) {
+  const operationId = `admin-deduction:${message.ts || Date.now()}`;
+  const lockResult = await deduction.acquireLock(user, operationId);
+  if (!lockResult.acquired) {
+    const text =
+      lockResult.reason === "stadium-review"
+        ? `<@${user}> has a Stadium redemption awaiting review (${lockResult.operationId}). Run \`stadium review\` to resolve it before creating another deduction.`
+        : `<@${user}> already has a deduction or redemption in progress.`;
     await respondToUser(client, message, {
-      text: `<@${user}> does not have a large enough balance to deduct ${value} fistbumps.`,
+      text,
     });
     return;
   }
+  try {
+    if (!(await deduction.isBalanceSufficient(user, value))) {
+      await respondToUser(client, message, {
+        text: `<@${user}> does not have a large enough balance to deduct ${value} fistbumps.`,
+      });
+      return;
+    }
 
-  const deductionInfo = await deduction.createDeduction(
-    user,
-    value,
-    message.text,
-  );
+    const deductionInfo = await deduction.createDeduction(
+      user,
+      value,
+      message.text,
+    );
 
-  await client.chat.postMessage({
-    channel: message.channel,
-    user: message.user,
-    text: `A deduction of ${value} fistbumps has been made for <@${user}>. Deduction ID is \`${deductionInfo._id}\``,
-  });
+    await client.chat.postMessage({
+      channel: message.channel,
+      user: message.user,
+      text: `A deduction of ${value} fistbumps has been made for <@${user}>. Deduction ID is \`${deductionInfo}\``,
+    });
+  } finally {
+    await deduction.releaseLock(user, operationId);
+  }
 }

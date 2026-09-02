@@ -3,6 +3,10 @@ const express = require("express");
 const webserver = express();
 const winston = require("./winston");
 const client = require("./database/db");
+const config = require("./config");
+const stadium = require("./service/stadium");
+
+const RECONCILIATION_INTERVAL_MS = 60 * 1000;
 
 const app = new App({
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
@@ -63,6 +67,83 @@ webserver.get("/health", async (req, res) => {
   winston.debug("Health check passed");
 });
 
+async function notifyReconciliation(reconciliation) {
+  const notifications = [];
+  for (const record of reconciliation.refundedRecords) {
+    notifications.push(
+      app.client.chat.postMessage({
+        channel: record.user,
+        text: `Your interrupted Stadium redemption \`${record._id}\` did not reach Stadium. Your fistbumps were restored.`,
+      }),
+    );
+  }
+  for (const record of reconciliation.needsReviewRecords) {
+    notifications.push(
+      app.client.chat.postMessage({
+        channel: record.user,
+        text: `Your interrupted Stadium redemption \`${record._id}\` has an uncertain result. Your fistbumps remain held while an admin reviews it.`,
+      }),
+    );
+  }
+  const results = await Promise.allSettled(notifications);
+  const failed = results.filter((result) => result.status === "rejected");
+  if (failed.length) {
+    winston.error("Some Stadium reconciliation notifications failed", {
+      func: "app.notifyReconciliation",
+      failedCount: failed.length,
+    });
+  }
+}
+
+async function notifyOutstandingStadiumReviews() {
+  const claims = await stadium.claimReviewNotifications();
+  for (const { record, claimId } of claims) {
+    const results = await Promise.allSettled(
+      config.redemptionAdmins.map((admin) =>
+        app.client.chat.postMessage({
+          channel: admin,
+          text: `Stadium redemption \`${record._id}\` for <@${record.user}> needs review. Run \`stadium review\`, then either \`stadium resolve ${record._id} fulfilled\` to confirm fulfillment or \`stadium resolve ${record._id} refund\` to restore the fistbumps.`,
+        }),
+      ),
+    );
+    const delivered = results.some((result) => result.status === "fulfilled");
+    const failedCount = results.filter(
+      (result) => result.status === "rejected",
+    ).length;
+    if (!delivered || failedCount) {
+      winston.error("Some Stadium review admin notifications failed", {
+        func: "app.notifyOutstandingStadiumReviews",
+        redemptionId: record._id,
+        failedCount,
+        adminCount: config.redemptionAdmins.length,
+      });
+    }
+    await stadium.completeReviewNotification(record._id, claimId, delivered);
+  }
+  return claims.length;
+}
+
+async function runStadiumReconciliation() {
+  const reconciliation = await stadium.reconcilePending();
+  await notifyReconciliation(reconciliation);
+  const adminNotifications = await notifyOutstandingStadiumReviews();
+  const details = {
+    func: "app.runStadiumReconciliation",
+    refunded: reconciliation.refunded,
+    needsReview: reconciliation.needsReview,
+    adminNotifications,
+  };
+  if (
+    reconciliation.refunded ||
+    reconciliation.needsReview ||
+    adminNotifications
+  ) {
+    winston.info("Stadium redemption reconciliation completed", details);
+  } else {
+    winston.debug("Stadium redemption reconciliation completed", details);
+  }
+}
+
 (async () => {
   try {
     await client.connect();
@@ -76,8 +157,25 @@ webserver.get("/health", async (req, res) => {
         require("./features/" + file)(app);
       });
 
+    try {
+      await runStadiumReconciliation();
+    } catch (error) {
+      winston.error("Startup Stadium reconciliation failed", {
+        func: "app.startupReconciliation",
+        error: error.message,
+      });
+    }
     await app.start();
     webserver.listen(process.env.PORT || 3000);
+    const reconciliationTimer = setInterval(() => {
+      runStadiumReconciliation().catch((error) => {
+        winston.error("Periodic Stadium reconciliation failed", {
+          func: "app.reconciliationTimer",
+          error: error.message,
+        });
+      });
+    }, RECONCILIATION_INTERVAL_MS);
+    reconciliationTimer.unref();
 
     winston.info("⚡️ Bolt app is running!");
   } catch (e) {

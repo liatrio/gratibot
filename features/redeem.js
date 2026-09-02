@@ -42,36 +42,67 @@ async function redeemItem({ ack, body, context, client }) {
 
     const { name, cost, kind } = reward;
 
-    if (!(await deduction.isBalanceSufficient(userID, cost))) {
-      return client.chat.postEphemeral({
-        channel: body.channel.id,
-        user: userID,
-        text: "Your current balance isn't high enough to deduct that much",
-      });
-    }
-
-    const result = await client.conversations.open({
-      token: context.botToken,
-      users: redeem.redeemNotificationUsers(userID),
-    });
-
     let redemptionMessage = `<@${userID}> has selected ${name}`;
     if (kind === "liatrio-store") {
+      if (!(await deduction.isBalanceSufficient(userID, cost))) {
+        return client.chat.postEphemeral({
+          channel: body.channel.id,
+          user: userID,
+          text: "Your current balance isn't high enough to deduct that much",
+        });
+      }
+      const result = await client.conversations.open({
+        token: context.botToken,
+        users: redeem.redeemNotificationUsers(userID),
+      });
       redemptionMessage += `. Please provide the link of the item from the <https://liatrio.axomo.com/|Liatrio Store>.`;
+      await client.chat.postMessage({
+        channel: result.channel.id,
+        token: context.botToken,
+        text: redemptionMessage,
+      });
     } else {
-      redemptionMessage += ` for ${cost} fistbumps.`;
-      const deductionID = await deduction.createDeduction(
-        userID,
-        cost,
-        redemptionMessage,
-      );
-      redemptionMessage += ` Deduction ID is \`${deductionID}\``;
+      const operationId = `reward:${body.actions[0].action_ts || rewardId}`;
+      const lockResult = await deduction.acquireLock(userID, operationId);
+      if (!lockResult.acquired) {
+        const text =
+          lockResult.reason === "stadium-review"
+            ? "A Stadium redemption is awaiting admin review. You can redeem another reward after it is resolved."
+            : "You already have a redemption in progress. Please try again shortly.";
+        return client.chat.postEphemeral({
+          channel: body.channel.id,
+          user: userID,
+          text,
+        });
+      }
+      try {
+        if (!(await deduction.isBalanceSufficient(userID, cost))) {
+          return client.chat.postEphemeral({
+            channel: body.channel.id,
+            user: userID,
+            text: "Your current balance isn't high enough to deduct that much",
+          });
+        }
+        const result = await client.conversations.open({
+          token: context.botToken,
+          users: redeem.redeemNotificationUsers(userID),
+        });
+        redemptionMessage += ` for ${cost} fistbumps.`;
+        const deductionID = await deduction.createDeduction(
+          userID,
+          cost,
+          redemptionMessage,
+        );
+        redemptionMessage += ` Deduction ID is \`${deductionID}\``;
+        await client.chat.postMessage({
+          channel: result.channel.id,
+          token: context.botToken,
+          text: redemptionMessage,
+        });
+      } finally {
+        await deduction.releaseLock(userID, operationId);
+      }
     }
-    await client.chat.postMessage({
-      channel: result.channel.id,
-      token: context.botToken,
-      text: redemptionMessage,
-    });
   } catch (error) {
     winston.error("redeemItem failed", {
       func: "feature.redeem.redeemItem",

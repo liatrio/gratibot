@@ -40,4 +40,27 @@ config.redemptionAdmins = process.env.REDEMPTION_ADMINS?.split(",") || [
   "U04666K57CP", // Danielle Johnson
 ];
 
+const stadiumMaximumFistbumps = process.env.STADIUM_MAX_FISTBUMPS?.trim();
+
+config.stadium = {
+  enabled: process.env.STADIUM_ENABLED === "true",
+  emailSource: process.env.STADIUM_EMAIL_SOURCE || "modal",
+  apiBaseUrl:
+    process.env.STADIUM_API_BASE_URL ||
+    "https://api.preprod.bystadium.com/api/v2",
+  clientId: process.env.STADIUM_CLIENT_ID,
+  clientSecret: process.env.STADIUM_CLIENT_SECRET,
+  storeNumber: process.env.STADIUM_STORE_NUMBER,
+  storeUrl: process.env.STADIUM_STORE_URL,
+  paymentMethod: process.env.STADIUM_PAYMENT_METHOD,
+  billingCountry: process.env.STADIUM_BILLING_COUNTRY,
+  billingZipcode: process.env.STADIUM_BILLING_ZIPCODE,
+  fistbumpsPerUnit: Number(process.env.STADIUM_FISTBUMPS_PER_UNIT || 1),
+  pointsPerUnit: Number(process.env.STADIUM_POINTS_PER_UNIT || 1),
+  minimumFistbumps: Number(process.env.STADIUM_MIN_FISTBUMPS || 1),
+  maximumFistbumps: stadiumMaximumFistbumps
+    ? Number(stadiumMaximumFistbumps)
+    : null,
+};
+
 module.exports = config;

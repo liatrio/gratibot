@@ -1,12 +1,9 @@
-const globals = require("globals");
-const eslint = require("@eslint/js");
-const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
-const _mochaPlugin = require("eslint-plugin-mocha");
-// eslint-plugin-mocha is an ES module; require() interop varies across Node
-// versions — use .default if present, otherwise take the module directly.
-const mochaPlugin = _mochaPlugin.default ?? _mochaPlugin;
+import globals from "globals";
+import eslint from "@eslint/js";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import mochaPlugin from "eslint-plugin-mocha";
 
-module.exports = [
+export default [
   eslint.configs.recommended,
   eslintPluginPrettierRecommended,
   {
@@ -24,6 +21,12 @@ module.exports = [
       "prettier/prettier": "error",
       ...mochaPlugin.configs.recommended.rules,
       "mocha/no-mocha-arrows": "off", // Temporary to not include excessive changes in eslint upgrade
+    },
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: {
+      sourceType: "module",
     },
   },
 ];

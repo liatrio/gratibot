@@ -12,8 +12,8 @@
     "test": "npm run test:unit && npm run test:integration && c8 report --check-coverage",
     "test:unit": "c8 --no-check-coverage --reporter=none mocha 'test/**/*.js' --require test/setup.js --ignore 'test/integration/**'",
     "test:integration": "c8 --no-clean --no-check-coverage --reporter=none mocha 'test/integration/**/*.js' --require test/setup.js --require test/integration/setup.js",
-    "lint": "eslint '*.js' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**'",
-    "lint:fix": "eslint '*.js' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**' --fix",
+    "lint": "eslint '*.{js,mjs}' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**'",
+    "lint:fix": "eslint '*.{js,mjs}' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**' --fix",
     "release": "semantic-release"
   },
   "dependencies": {

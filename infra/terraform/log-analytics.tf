@@ -15,8 +15,4 @@ resource "azurerm_monitor_diagnostic_setting" "gratibot-logs" {
   enabled_log {
     category = "AppServiceConsoleLogs"
   }
-  metric {
-    category = "AllMetrics"
-    enabled  = false
-  }
 }

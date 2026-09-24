@@ -12,8 +12,8 @@
     "test": "npm run test:unit && npm run test:integration && c8 report --check-coverage",
     "test:unit": "c8 --no-check-coverage --reporter=none mocha 'test/**/*.js' --require test/setup.js --ignore 'test/integration/**'",
     "test:integration": "c8 --no-clean --no-check-coverage --reporter=none mocha 'test/integration/**/*.js' --require test/setup.js --require test/integration/setup.js",
-    "lint": "eslint '*.js' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**'",
-    "lint:fix": "eslint '*.js' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**' --fix",
+    "lint": "eslint '*.{js,mjs}' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**'",
+    "lint:fix": "eslint '*.{js,mjs}' 'features/**' 'service/**' 'database/**' 'middleware/**' 'test/**' --fix",
     "release": "semantic-release"
   },
   "dependencies": {
@@ -33,7 +33,7 @@
     "chai-as-promised": "^8.0.0",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.0.0",
-    "eslint-plugin-mocha": "^11.0.0",
+    "eslint-plugin-mocha": "^12.0.0",
     "eslint-plugin-prettier": "^5.2.1",
     "globals": "^17.0.0",
     "husky": "^9.1.7",

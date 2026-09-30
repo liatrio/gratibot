@@ -14,3 +14,9 @@ creation event triggers the production workflow, which requires a code owner to
 review the Terraform plan. After approval, it automatically deploys to
 Gratibot's prod environment, which corresponds to the 'gratibot' bot inside of
 Liatrio's Slack workspace.
+
+The plan for review is rendered in the workflow run's summary. Plan files embed
+Terraform state, including secrets, so they are never uploaded as artifacts;
+the apply job re-plans at deploy time instead. If the infrastructure changed
+after the plan was reviewed, the applied changes may differ, so avoid leaving a
+prod deployment waiting on approval for long.

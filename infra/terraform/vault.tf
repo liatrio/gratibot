@@ -14,13 +14,3 @@ resource "azurerm_key_vault_secret" "mongo_connection_string" {
   value        = azurerm_cosmosdb_account.db_account.primary_mongodb_connection_string
   key_vault_id = data.azurerm_key_vault.gratibot.id
 }
-
-data "azurerm_key_vault_secret" "app_token" {
-  name         = "app-token"
-  key_vault_id = data.azurerm_key_vault.gratibot.id
-}
-
-data "azurerm_key_vault_secret" "bot_user_token" {
-  name         = "bot-user-token"
-  key_vault_id = data.azurerm_key_vault.gratibot.id
-}

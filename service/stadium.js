@@ -481,6 +481,8 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
     }
     const classification =
       error.classification || (dispatchStarted ? "ambiguous" : "definite");
+    // Stadium's error text is for logs only; keep it off the deduction record.
+    const { responseError, ...storedDetails } = error.details ?? {};
     const nextStatus =
       classification === "definite" ? "failed" : "needs_review";
     const transitionTime = new Date();
@@ -495,7 +497,7 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
             },
           }
         : {}),
-      ...(error.details !== undefined ? { stadium: error.details } : {}),
+      ...(error.details !== undefined ? { stadium: storedDetails } : {}),
     };
     const transitionableStatuses = dispatchStarted
       ? ["sending"]
@@ -516,7 +518,7 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
         redemptionId: id,
         error: error.message,
         httpStatus: error.details?.httpStatus,
-        responseError: error.details?.responseError,
+        responseError,
       });
       await deduction.releaseLock(user, id);
       return { status: "failed", id };
@@ -526,6 +528,8 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
       callingUser: user,
       redemptionId: id,
       error: error.message,
+      httpStatus: error.details?.httpStatus,
+      responseError,
     });
     await deduction.releaseLock(user, id);
     return { status: "needs_review", id };

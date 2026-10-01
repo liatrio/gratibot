@@ -258,6 +258,9 @@ describe("service/stadium", () => {
     });
 
     expect(result.status).to.equal("failed");
+    expect(
+      deductionCollection.updateOne.lastCall.args[1].$set.stadium,
+    ).to.deep.equal({ httpStatus: 422 });
     expect(logStub.calledOnce).to.equal(true);
     expect(logStub.firstCall.args[1]).to.deep.include({
       httpStatus: 422,

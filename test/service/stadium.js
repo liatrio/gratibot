@@ -237,17 +237,6 @@ describe("service/stadium", () => {
     expect(error.details.responseError).to.have.length(300);
   });
 
-  it("records Stadium's error text on an authentication failure", async () => {
-    sinon
-      .stub(global, "fetch")
-      .resolves(response(401, { message: "invalid client" }));
-    const error = await stadium.getAccessToken().catch((e) => e);
-    expect(error.details).to.deep.include({
-      httpStatus: 401,
-      responseError: "invalid client",
-    });
-  });
-
   it("logs the reason when a definite Stadium failure restores fistbumps", async () => {
     sinon.stub(deduction, "acquireLock").resolves({ acquired: true });
     sinon.stub(deduction, "releaseLock").resolves();

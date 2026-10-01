@@ -424,17 +424,27 @@ async function giverSlackNotification(gratitude) {
     excludingGiver = ", excluding yourself";
   }
 
+  const mentions = joinMentions(gratitude.receivers.map((r) => r.id));
+  const verb = totalGratitudeValue > 1 ? "have" : "has";
+  const perReceiver =
+    gratitude.receivers.length > 1 ? ` (\`${gratitude.count}\` each)` : "";
+
   blocks.push({
     type: "section",
     text: {
       type: "mrkdwn",
-      text:
-        totalGratitudeValue > 1
-          ? `Your \`${totalGratitudeValue}\` ${recognitionType} have been sent${excludingGiver}. You have \`${gratitudeRemaining}\` left to give today.`
-          : `Your \`${totalGratitudeValue}\` ${recognitionType} has been sent${excludingGiver}. You have \`${gratitudeRemaining}\` left to give today.`,
+      text: `Your \`${totalGratitudeValue}\` ${recognitionType} ${verb} been sent${perReceiver} to ${mentions}${excludingGiver}. You have \`${gratitudeRemaining}\` left to give today.`,
     },
   });
   return { blocks };
+}
+
+function joinMentions(ids) {
+  const mentions = ids.map((id) => `<@${id}>`);
+  if (mentions.length <= 2) {
+    return mentions.join(" and ");
+  }
+  return `${mentions.slice(0, -1).join(", ")}, and ${mentions.at(-1)}`;
 }
 
 async function giverGoldenSlackNotification(gratitude) {

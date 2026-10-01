@@ -2,6 +2,7 @@ const sinon = require("sinon");
 const expect = require("chai").expect;
 
 const config = require("../../config");
+const winston = require("../../winston");
 const stadium = require("../../service/stadium");
 const balance = require("../../service/balance");
 const deduction = require("../../service/deduction");
@@ -223,6 +224,57 @@ describe("service/stadium", () => {
     ).to.be.rejected.then((error) =>
       expect(error.classification).to.equal("ambiguous"),
     );
+  });
+
+  it("records Stadium's error text on a rejected points request", async () => {
+    const fetchStub = sinon.stub(global, "fetch");
+    fetchStub.onCall(0).resolves(response(200, { token: "token" }));
+    fetchStub.onCall(1).resolves(response(422, { error: "x".repeat(500) }));
+    const error = await stadium
+      .sendPoints({ email: "x", points: 1, redemptionId: "one" })
+      .catch((e) => e);
+    expect(error.details.httpStatus).to.equal(422);
+    expect(error.details.responseError).to.have.length(300);
+  });
+
+  it("records Stadium's error text on an authentication failure", async () => {
+    sinon
+      .stub(global, "fetch")
+      .resolves(response(401, { message: "invalid client" }));
+    const error = await stadium.getAccessToken().catch((e) => e);
+    expect(error.details).to.deep.include({
+      httpStatus: 401,
+      responseError: "invalid client",
+    });
+  });
+
+  it("logs the reason when a definite Stadium failure restores fistbumps", async () => {
+    sinon.stub(deduction, "acquireLock").resolves({ acquired: true });
+    sinon.stub(deduction, "releaseLock").resolves();
+    sinon.stub(balance, "currentBalance").resolves(10);
+    sinon.stub(deductionCollection, "insertOne").resolves({});
+    sinon.stub(deductionCollection, "updateOne").resolves({ modifiedCount: 1 });
+    const logStub = sinon.stub(winston, "error");
+    const fetchStub = sinon.stub(global, "fetch");
+    fetchStub.onCall(0).resolves(response(200, { token: "token" }));
+    fetchStub
+      .onCall(1)
+      .resolves(response(422, { error: "insufficient wallet balance" }));
+
+    const result = await stadium.redeem({
+      user: "U1",
+      email: "user@liatrio.com",
+      fistbumps: 4,
+      redemptionId: "rejected",
+    });
+
+    expect(result.status).to.equal("failed");
+    expect(logStub.calledOnce).to.equal(true);
+    expect(logStub.firstCall.args[1]).to.deep.include({
+      httpStatus: 422,
+      responseError: "insufficient wallet balance",
+      redemptionId: "stadium:rejected",
+    });
   });
 
   it("evicts a cached token after Stadium returns 401", async () => {

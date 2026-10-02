@@ -22,6 +22,15 @@ class StadiumError extends Error {
   }
 }
 
+// Stadium's error text is stored for admin diagnosis; keep it short and
+// string-only so a verbose or unexpected response body cannot bloat the record.
+function responseErrorText(body) {
+  const raw = body?.error ?? body?.message ?? body?.errors;
+  if (raw === undefined || raw === null) return undefined;
+  const text = typeof raw === "string" ? raw : JSON.stringify(raw);
+  return text.slice(0, 300);
+}
+
 function validateConfiguration(stadiumConfig = config.stadium) {
   const required = [
     "apiBaseUrl",
@@ -319,6 +328,7 @@ async function getAccessToken(stadiumConfig = config.stadium) {
   if (!response.ok || !body?.token) {
     throw new StadiumError("Stadium authentication failed.", "definite", {
       httpStatus: response.status,
+      responseError: responseErrorText(body),
     });
   }
   const expiresAt = body.expires_at
@@ -373,6 +383,7 @@ async function sendPoints(
       classification,
       {
         httpStatus: response.status,
+        responseError: responseErrorText(body),
       },
     );
   }
@@ -470,6 +481,8 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
     }
     const classification =
       error.classification || (dispatchStarted ? "ambiguous" : "definite");
+    // Stadium's error text is for logs only; keep it off the deduction record.
+    const { responseError, ...storedDetails } = error.details ?? {};
     const nextStatus =
       classification === "definite" ? "failed" : "needs_review";
     const transitionTime = new Date();
@@ -484,7 +497,7 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
             },
           }
         : {}),
-      ...(error.details !== undefined ? { stadium: error.details } : {}),
+      ...(error.details !== undefined ? { stadium: storedDetails } : {}),
     };
     const transitionableStatuses = dispatchStarted
       ? ["sending"]
@@ -499,6 +512,14 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
       return resultFromCurrentRecord(current, id);
     }
     if (classification === "definite") {
+      winston.error("Stadium redemption failed; fistbumps restored", {
+        func: "service.stadium.redeem",
+        callingUser: user,
+        redemptionId: id,
+        error: error.message,
+        httpStatus: error.details?.httpStatus,
+        responseError,
+      });
       await deduction.releaseLock(user, id);
       return { status: "failed", id };
     }
@@ -507,6 +528,8 @@ async function redeem({ user, email, fistbumps, redemptionId }) {
       callingUser: user,
       redemptionId: id,
       error: error.message,
+      httpStatus: error.details?.httpStatus,
+      responseError,
     });
     await deduction.releaseLock(user, id);
     return { status: "needs_review", id };

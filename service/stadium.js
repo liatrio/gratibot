@@ -172,7 +172,7 @@ function buildRedemptionModal(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Exchange fistbumps for Stadium points. After your gift is created, open Stadium and select *Redeem Gift* to add the points to your account.${balanceText}\n*Rate:* ${stadiumConfig.fistbumpsPerUnit} fistbump(s) = ${stadiumConfig.pointsPerUnit} Stadium points`,
+          text: `Exchange fistbumps for Stadium points. After your gift is created, open Stadium and select *Redeem Gift* to add the points to your account.${balanceText}\n*Rate:* ${stadiumConfig.fistbumpsPerUnit} fistbump(s) = $${stadiumConfig.pointsPerUnit} store credit(s)`,
         },
       },
       ...(emailSource === "modal"

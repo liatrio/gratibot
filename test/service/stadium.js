@@ -134,6 +134,13 @@ describe("service/stadium", () => {
     expect(input.max_value).to.equal("12");
   });
 
+  it("describes the rate as fistbumps per store credit", () => {
+    const modal = stadium.buildRedemptionModal(12);
+    expect(modal.blocks[0].text.text).to.match(
+      /\*Rate:\* \d+ fistbump = \$\d+ store credit\(s\)$/,
+    );
+  });
+
   it("builds an immediately-openable modal without querying a balance", () => {
     config.stadium.maximumFistbumps = null;
     const modal = stadium.buildRedemptionModal();

@@ -127,9 +127,6 @@ describe("service/redeem", () => {
           (block) => block.accessory?.action_id === "stadium_redeem_open",
         );
         expect(stadiumBlock.text.text).to.include("Stadium points");
-        expect(stadiumBlock.text.text).to.include(
-          `*Rate:* ${config.stadium.fistbumpsPerUnit} fistbump = $${config.stadium.pointsPerUnit} store credit(s)`,
-        );
       } finally {
         config.stadium.enabled = original;
       }

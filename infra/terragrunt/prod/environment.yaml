@@ -8,7 +8,7 @@ stadium_enabled: true
 stadium_email_source: "slack"
 stadium_api_base_url: "https://api.bystadium.com/api/v2"
 stadium_store_number: "S617782357"
-stadium_store_url: "https://app.bystadium.com/"
+stadium_store_url: "https://swag.liatr.io/"
 stadium_payment_method: "use_wallet_money"
 stadium_billing_country: "US"
 stadium_billing_zipcode: "95928"

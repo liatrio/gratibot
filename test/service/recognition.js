@@ -1643,7 +1643,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "Your `1` :fistbump: has been sent. You have `5` left to give today.",
+              text: "Your `1` :fistbump: has been sent to <@Receiver>. You have `5` left to give today.",
             },
           },
         ],
@@ -1652,6 +1652,38 @@ describe("service/recognition", () => {
       const response = await recognition.giverSlackNotification(gratitude);
 
       expect(response).to.deep.equal(expectedResponse);
+    });
+
+    it("should list two receivers joined with 'and'", async () => {
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(1);
+      const gratitude = {
+        giver: { id: "Giver", tz: "America/Los_Angeles" },
+        receivers: [{ id: "R1" }, { id: "R2" }],
+        count: 2,
+        type: ":fistbump:",
+      };
+
+      const response = await recognition.giverSlackNotification(gratitude);
+
+      expect(response.blocks[0].text.text).to.equal(
+        "Your `4` :fistbump: have been sent (`2` each) to <@R1> and <@R2>. You have `1` left to give today.",
+      );
+    });
+
+    it("should list three receivers with an Oxford comma", async () => {
+      sinon.stub(balance, "dailyGratitudeRemaining").resolves(2);
+      const gratitude = {
+        giver: { id: "Giver", tz: "America/Los_Angeles" },
+        receivers: [{ id: "R1" }, { id: "R2" }, { id: "R3" }],
+        count: 1,
+        type: ":fistbump:",
+      };
+
+      const response = await recognition.giverSlackNotification(gratitude);
+
+      expect(response.blocks[0].text.text).to.equal(
+        "Your `3` :fistbump: have been sent (`1` each) to <@R1>, <@R2>, and <@R3>. You have `2` left to give today.",
+      );
     });
 
     it("should use appropriate grammar for multiple fistbumps", async () => {
@@ -1675,7 +1707,7 @@ describe("service/recognition", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "Your `2` :fistbump: have been sent. You have `5` left to give today.",
+              text: "Your `2` :fistbump: have been sent to <@Receiver>. You have `5` left to give today.",
             },
           },
         ],
